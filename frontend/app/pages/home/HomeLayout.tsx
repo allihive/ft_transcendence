@@ -5,6 +5,7 @@ import controller from './assets/controller.png'
 import orangeCircle from './assets/orangeCircle.png'
 import lines from './assets/3lines.png'
 
+
 export function HomePage(): JSX.Element {
 	const [activeItem, setActiveItem] = useState("home");
 	return (
