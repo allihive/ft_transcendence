@@ -39,10 +39,10 @@ function BlueBox() {
 					className="p-2 border-2 border-black rounded-lg mt-4" />
 				<button onClick={handleSubmitClick} className="border-2 border-black bg-brown px-6 py-2 rounded-lg text-black mt-4">Submit</button>
 				{showGoogleSignIn && <Login onLoginSuccess={handleGoogleLoginSuccess} />}
-				<button onClick={handleGoogleClick} className="border-2 border-black rounded-lg mt-4">
+				<button onClick={handleGoogleClick} className="p-2 border-2 border-black rounded-lg mt-8">
 				Sign in with Google
 				</button>
-				<button onClick={handleNewUser} className="border-2 border-black px-6 py-2 rounded-lg text-black mt-10">New User</button>
+				<button onClick={handleNewUser} className="border-2 border-black px-6 py-2 rounded-lg text-black mt-8">New User</button>
 			</div>
 		) : (
 		<div className="absolute top-[75%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center space-y-4">

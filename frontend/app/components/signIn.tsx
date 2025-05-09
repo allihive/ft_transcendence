@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GoogleLogin } from '@react-oauth/google';
+// import { GoogleLogin } from '@react-oauth/google';
 
 // Google login, this asks now username and password too. I dont know if it is necessary. 
 // Username could be nice to have.

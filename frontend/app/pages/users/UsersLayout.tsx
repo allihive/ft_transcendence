@@ -1,4 +1,4 @@
-import { NavBar } from '../../components/navbar'
+import { NavBar } from '../../components/NavBar'
 import { useState, type JSX } from "react"
 
 export function UsersPage(): JSX.Element {

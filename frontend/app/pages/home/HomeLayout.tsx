@@ -1,11 +1,9 @@
-import { NavBar } from '../../components/NavBar'
 import { useState, type JSX } from "react"
 import BlueBox from './homePageBox'
 import controller from './assets/controller.png'
 import orangeCircle from './assets/orangeCircle.png'
 import lines from './assets/3lines.png'
 import { ThemeToggle } from '~/components/lightDarkToggle'
-
 
 export function HomePage(): JSX.Element {
 	const [activeItem, setActiveItem] = useState("home");
