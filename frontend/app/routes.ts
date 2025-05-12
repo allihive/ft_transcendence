@@ -6,7 +6,7 @@ export default [
 		route("play", "./routes/play.tsx"),
 		route("tournament", "./routes/tournament.tsx"),
 			layout("./routes/users/UsersLayout.tsx", [
-				route("users", "./routes/users/users.tsx"),
+				route("users", "./routes/users/newUser.tsx"),
 				route("profile", "./routes/users/userAccount.tsx"),
 				route("friends", "./routes/users/userFriends.tsx"),
 				route("stats", "./routes/users/userStats.tsx")
