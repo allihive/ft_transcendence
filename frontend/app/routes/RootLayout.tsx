@@ -1,6 +1,6 @@
 import { Outlet } from "react-router";
 import { useState, type JSX } from "react";
-import { NavBar } from "~/components/navbar";
+import { NavBar } from "~/components/NavBar";
 
 export default function RootLayout(): JSX.Element {
 	const [activeItem, setActiveItem] = useState("home");
