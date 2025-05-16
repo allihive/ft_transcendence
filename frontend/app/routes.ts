@@ -5,6 +5,7 @@ export default [
 		index("routes/Home.tsx"),
 		route("play", "./routes/Play.tsx"),
 		route("tournament", "./routes/Tournament.tsx"),
+		route("login", "./routes/HomeLogin.tsx"),
 		
 		...prefix("users", [
 			layout("./routes/users/UsersLayout.tsx", [

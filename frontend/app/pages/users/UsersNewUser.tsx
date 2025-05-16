@@ -4,7 +4,7 @@ import { FaGoogle } from "react-icons/fa";
 
 export function NewUsersPage(): JSX.Element {
 	const navigate = useNavigate();
-	const handleSubmitClick = () => navigate("/profile")
+	const handleSubmitClick = () => navigate("/users/profile")
 
 	return (
 		<>
