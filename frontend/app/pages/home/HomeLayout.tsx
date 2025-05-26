@@ -26,7 +26,7 @@ export function HomePage(): JSX.Element {
 						<p className="text-black dark:text-background text-center font-body">Sumin</p>
 						<p className="text-black dark:text-background text-center font-body">Hoang</p>
 						<p className="text-black dark:text-background text-center font-body">Joseph</p>
-						<p className="text-black dark:text-background text-center font-body">Timmo</p>
+						<p className="text-black dark:text-background text-center font-body">Timo</p>
 					</div>
 					<div className="flex flex-col items-center">
 						<img src={orangeCircle} alt="orangeCicle" className="w-32 h-auto" />
