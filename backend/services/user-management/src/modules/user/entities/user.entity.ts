@@ -12,8 +12,8 @@ export class User {
 	@Property({ type: "boolean", nullable: false, default: false, name: "email_verified" })
     emailVerified?: boolean;
 
-	@Property({ type: "string", nullable: false, length: 50, unique: true, name: "username" })
-    userName!: string;
+	@Property({ type: "string", nullable: true, length: 50, unique: true, name: "username" })
+    userName?: string;
 
 	@Property({ type: "string", nullable: true, length: 100 })
     name?: string;

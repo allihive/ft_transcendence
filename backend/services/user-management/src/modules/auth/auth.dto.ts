@@ -8,9 +8,15 @@ export const LoginDtoSchema = Type.Object(
 	{ additionalProperties: false }
 );
 
+export const LogoutParamsDtoSchema = Type.Object(
+	{ id: Type.String({ format: "uuid" }) },
+	{ additionalProperties: false }
+);
+
 export const RegisterDtoSchema = Type.Object(
 	{
 		email: Type.String({ format: "email" }),
+		userName: Type.Optional(Type.String({ minLength: 3 })),
 		password: Type.String({ minLength: 8 }),
 		confirmPassword: Type.String({ minLength: 8 })
 	},
@@ -37,6 +43,7 @@ export const ResetPasswordDtoSchema = Type.Object(
 );
 
 export type LoginDto = Static<typeof LoginDtoSchema>;
+export type LogoutParamsDto = Static<typeof LogoutParamsDtoSchema>;
 export type RegisterDto = Static<typeof RegisterDtoSchema>;
 export type RefreshTokenDto = Static<typeof RefreshTokenDtoSchema>;
 export type ForgotPasswordDto = Static<typeof ForgotPasswordDtoSchema>;
