@@ -1,6 +1,10 @@
 import { type RouteConfig, index, prefix, layout, route } from "@react-router/dev/routes";
 
+
+
 export default [
+	route(".well-known/*", "./wellKnownStub.tsx"),
+
 	layout("./routes/RootLayout.tsx", [
 		index("routes/Home.tsx"),
 		route("play", "./routes/Play.tsx"),

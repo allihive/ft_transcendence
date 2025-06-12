@@ -1,10 +1,12 @@
-import { RefObject } from 'react';
-import { Mesh } from 'babylonjs';
+import type { RefObject } from 'react';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
+
+
 
 export function paddleMovement(
-  redRef: RefObject<Mesh | null>,
-  blackRef: RefObject<Mesh | null>,
-  paddleSpeed: number
+  paddle1Ref: RefObject<Mesh | null>,
+  paddle2Ref: RefObject<Mesh | null>,
+  paddleSpeed: number = 0.07
 ) {
   const minX = -3.5;
   const maxX = 3.5;
@@ -25,27 +27,27 @@ export function paddleMovement(
 
     if (paddleRef.current) {
       paddleRef.current.position.x = clamped;
-      paddleRef.current.position.z = fixedZ; // lock z
+      paddleRef.current.position.z = fixedZ;
     }
 
     return clamped;
   };
 
   const move = () => {
-    // Red paddle (top)
+    // Paddle 1
     if (pressedKeys.has('a')) {
-      redX = movePaddle(redRef, redX, -1, 5); // move left
+      redX = movePaddle(paddle1Ref, redX, -1, 5); // move left
     }
     if (pressedKeys.has('q')) {
-      redX = movePaddle(redRef, redX, 1, 5); // move right
+      redX = movePaddle(paddle1Ref, redX, 1, 5); // move right
     }
 
-    // Black paddle (bottom)
+    // Paddle 2
     if (pressedKeys.has('l')) {
-      blackX = movePaddle(blackRef, blackX, -1, -5); // move left
+      blackX = movePaddle(paddle2Ref, blackX, -1, -5); // move left
     }
     if (pressedKeys.has('p')) {
-      blackX = movePaddle(blackRef, blackX, 1, -5); // move right
+      blackX = movePaddle(paddle2Ref, blackX, 1, -5); // move right
     }
 
     requestAnimationFrame(move);

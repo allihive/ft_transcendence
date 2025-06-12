@@ -9,6 +9,8 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@babylonjs/core": "^8.11.0",
+    "@babylonjs/gui": "^8.11.0",
     "@react-oauth/google": "^0.12.2",
     "@react-router/node": "^7.5.3",
     "@react-router/serve": "^7.5.3",

@@ -1,0 +1,80 @@
+	const handleCredentialResponse = async (response: any) => {
+		const idToken = response.credential;
+
+		const payload = JSON.parse(atob(idToken.split('.')[1]));
+		setUserInfo(payload);
+
+		if (mode === 'login') {
+			try {
+				const res = await fetch('http://localhost:3000/api/auth/google', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						idToken,
+						mode: 'login',
+						googleId: payload.sub,
+						email: payload.email,
+					}),
+				});
+
+				if (!res.ok) {
+					const error = await res.json();
+					if (error.reason === 'user_not_found') {
+						alert('User not found. Please sign up.');
+						// Optionally: redirect or inform parent
+						return;
+					}
+					throw new Error(error.message || 'Login failed');
+				}
+
+				const result = await res.json();
+				console.log('✅ Login success:', result);
+				onLoginSuccess(result);
+			} catch (err) {
+				console.error('❌ Login error:', err);
+				alert('Login failed. Please try again.');
+			}
+		} else {
+			// Show username form for signup
+			setIsFormVisible(true);
+		}
+	};
+
+	const handleFormSubmit = async () => {
+		if (!username) {
+			alert('Please enter a username!');
+			return;
+		}
+
+		const finalUser = { ...userInfo, username };
+
+		try {
+			const res = await fetch('http://localhost:3000/api/auth/google', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					mode: 'signup',
+					googleId: finalUser.sub,
+					email: finalUser.email,
+					username,
+				}),
+			});
+
+			if (!res.ok) {
+				const error = await res.json();
+				alert(error.message || 'Signup failed');
+				return;
+			}
+
+			const result = await res.json();
+			console.log('✅ Signup success:', result);
+			onLoginSuccess(result);
+		} catch (err) {
+			console.error('❌ Signup error:', err);
+			alert('Signup failed. Please try again.');
+		}
+	};

@@ -1,4 +1,6 @@
-import { Mesh, Scene, Vector3} from "babylonjs";
+import { Scene } from '@babylonjs/core/scene';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { score } from "./scoring";
 
 //get random angle for the ball
@@ -113,7 +115,9 @@ export function startBallMovement(
   paddle1: Mesh,
   paddle2: Mesh,
   topwall1: Mesh,
-  topwall2: Mesh
+  topwall2: Mesh,
+  playersRef: React.RefObject<{ id: string; username: string; score: number }[]>,
+  setPlayers: React.Dispatch<React.SetStateAction<{ id: string; username: string; score: number }[]>>
 ) {
  
   let angle = getInitialAngle();
@@ -134,35 +138,46 @@ export function startBallMovement(
     paddle2: { value: false },
     
   };
-  
-  scene.onBeforeRenderObservable.add(() => {
 
-    const currentTime = performance.now();
-    const deltaTime = (currentTime - lastFrameTime) / 1000;
-    
-    
-    const moveVector = direction.clone().scale(speed.value * deltaTime);
-    ball.position.addInPlace(moveVector);
+  let lastSideWallBounceTime = 0;
+const sideWallCooldown = 1000; // 1 second cooldown
 
-    //collission to side walls. This is buggy, make it better 
-    const xLimit = 3.6;
-    if (ball.position.x > xLimit || ball.position.x < -xLimit) {
-      direction.x *= -1;
+scene.onBeforeRenderObservable.add(() => {
+  const currentTime = performance.now();
+  const deltaTime = (currentTime - lastFrameTime) / 1000;
+
+  // Move the ball based on current direction and speed
+  const moveVector = direction.clone().scale(speed.value * deltaTime);
+  ball.position.addInPlace(moveVector);
+
+  // === SIDE WALL COLLISION WITH COOLDOWN ===
+  const xLimit = 3.6;
+  const isPastCooldown = currentTime - lastSideWallBounceTime > sideWallCooldown;
+
+  if ((ball.position.x > xLimit || ball.position.x < -xLimit) && isPastCooldown) {
+    direction.x *= -1;
+    lastSideWallBounceTime = currentTime;
+
+    // Optional: prevent sticking to the wall
+    if (ball.position.x > xLimit) {
+      ball.position.x = xLimit - 0.05;
+    } else if (ball.position.x < -xLimit) {
+      ball.position.x = -xLimit + 0.05;
     }
-
-    //COLLISSION HANDLING
-    checkAndHandlePaddleCollision(ball, paddle1, direction, collisionState.paddle1, 'paddle1', lastBounceTime, collisionCooldown, speed, false);
-    checkAndHandlePaddleCollision(ball, paddle2, direction, collisionState.paddle2, 'paddle2', lastBounceTime, collisionCooldown, speed, true);
-
-
-    // Scoring zone //score counting needs to be done it is still a mess
-  const zLimit = 6;
-  
-  if (ball.position.z < -zLimit || ball.position.z > zLimit) {
-    score(ball, topwall1, topwall2, angle, direction, speed, zLimit);
   }
 
-    lastFrameTime = currentTime;
-  });
+  // === PADDLE COLLISIONS (these override direction and speed) ===
+  checkAndHandlePaddleCollision(ball, paddle1, direction, collisionState.paddle1, 'paddle1', lastBounceTime, collisionCooldown, speed, false);
+  checkAndHandlePaddleCollision(ball, paddle2, direction, collisionState.paddle2, 'paddle2', lastBounceTime, collisionCooldown, speed, true);
+
+  // === SCORING LOGIC ===
+  const zLimit = 6;
+  if (ball.position.z < -zLimit || ball.position.z > zLimit) {
+    score(ball, topwall1, topwall2, angle, direction, speed, zLimit, playersRef.current, setPlayers);
+  }
+
+  lastFrameTime = currentTime;
+});
+
 }
 

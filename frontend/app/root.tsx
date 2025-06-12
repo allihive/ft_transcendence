@@ -9,7 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-// import { GoogleOAuthProvider } from "@react-oauth/google";
+import { useEffect } from "react";
 
 
 export const links: Route.LinksFunction = () => [
@@ -45,11 +45,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return (
-    // <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-	 /* </GoogleOAuthProvider> */
-      <Outlet />
-  );
+      useEffect(() => {
+        if (!window.google) {
+          const script = document.createElement("script");
+          script.src = "https://accounts.google.com/gsi/client";
+          script.async = true;
+          script.defer = true;
+          script.onload = () => console.log("✅ Google API loaded dynamically");
+          document.head.appendChild(script);
+        }
+      }, []);
+
+      return <Outlet />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
@@ -57,13 +64,22 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let details = "An unexpected error occurred.";
   let stack: string | undefined;
 
+  // Log every error for inspection
+  console.error("⚠️ Route Error Caught:", error);
+
   if (isRouteErrorResponse(error)) {
     message = error.status === 404 ? "404" : "Error";
     details =
       error.status === 404
         ? "The requested page could not be found."
         : error.statusText || details;
-  } else if (import.meta.env.DEV && error && error instanceof Error) {
+
+    console.warn("❓ Route error details:", {
+      status: error.status,
+      statusText: error.statusText,
+      data: error.data,
+    });
+  } else if (import.meta.env.DEV && error instanceof Error) {
     details = error.message;
     stack = error.stack;
   }

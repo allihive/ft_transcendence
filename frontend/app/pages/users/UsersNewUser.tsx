@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form"
 import type { SubmitHandler } from "react-hook-form";
 import { useNavigate } from "react-router"
 import { FaGoogle } from "react-icons/fa";
+import GoogleSignup from './googleSignup';
+
 
 type FormValues = {
 	name: string;
@@ -15,7 +17,7 @@ type FormValues = {
 
 export function NewUsersPage(): JSX.Element {
 	const navigate = useNavigate();
-	const [showGoogleSignIn, setShowGoogleSignIn] = useState(false);
+	const [showGoogleSignUp, setShowGoogleSignUp] = useState(false);
 	const handleSubmitClick = () => navigate("/users/profile")
 	
 	const {
@@ -43,9 +45,11 @@ export function NewUsersPage(): JSX.Element {
 		}
 	};
 	
-	const handleGoogleLoginSuccess = (userInfo: any) => {
-		console.log('Final user info:', userInfo);
-		setShowGoogleSignIn(false);
+
+
+	const handleGoogleSignupSuccess = (user: any) => {
+		console.log("✅ Signup success:", user);
+		setShowGoogleSignUp(false);
 	};
 
 	return (
@@ -128,11 +132,25 @@ export function NewUsersPage(): JSX.Element {
 				<button type="submit" className="border-2 border-black bg-brown px-6 py-2 rounded-lg text-black mt-4">Enter</button>
 			</form>
 			<div className="flex flex-grow justify-center items-center mx-8 mt-10 border-t border-black dark:border-background ">
-				<button className="flex justify-center items-center flex-col px-4 py-2 mt-10">
-					<FaGoogle size={80} className="border dark:border-background px-4 rounded-full dark:fill-background" />
-					<p className="text-lg font-title border border-black dark:border-background px-4 py-2 rounded-xl dark:text-background mt-8">
-						Create user with Google</p>
-				</button>
+			<button
+				onClick={() => setShowGoogleSignUp(true)}
+				className="flex justify-center items-center flex-col px-4 py-2 mt-10"
+			>
+				<FaGoogle
+					size={80}
+					className="border dark:border-background px-4 rounded-full dark:fill-background"
+				/>
+				<p className="text-lg font-title border border-black dark:border-background px-4 py-2 rounded-xl dark:text-background mt-8">
+					Create user with Google
+				</p>
+			</button>
+
+			{showGoogleSignUp && (
+				<GoogleSignup
+					onSignupSuccess={handleGoogleSignupSuccess}
+					onSignupFailure={(errMsg) => alert(errMsg)}
+				/>
+			)}
 			</div>
 		</>
 	)
