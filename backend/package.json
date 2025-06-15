@@ -1,0 +1,40 @@
+{
+	"name": "backend",
+	"version": "1.0.0",
+	"main": "main.ts",
+	"author": "Hoang Tran",
+	"license": "ISC",
+	"keywords": [],
+	"description": "",
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"start": "node dist/main.js",
+		"dev": "node --env-file .env --watch -r ts-node/register src/main.ts",
+		"migration:create": "mikro-orm migration:create",
+		"migration:up": "mikro-orm migration:up",
+		"migration:down": "mikro-orm migration:down",
+		"schema:dump": "mikro-orm schema:update --dump",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"dependencies": {
+		"@fastify/cookie": "^11.0.2",
+		"@fastify/jwt": "^9.1.0",
+		"@fastify/type-provider-typebox": "^5.1.0",
+		"@mikro-orm/core": "^6.4.15",
+		"@mikro-orm/migrations": "^6.4.15",
+		"@mikro-orm/reflection": "^6.4.15",
+		"@mikro-orm/sqlite": "^6.4.15",
+		"@sinclair/typebox": "^0.34.33",
+		"bcrypt": "^6.0.0",
+		"fastify": "^5.3.2",
+		"fastify-plugin": "^5.0.1",
+		"google-auth-library": "^9.15.1"
+	},
+	"devDependencies": {
+		"@mikro-orm/cli": "^6.4.15",
+		"@types/bcrypt": "^5.0.2",
+		"@types/node": "^22.15.14",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.8.3"
+	}
+}
