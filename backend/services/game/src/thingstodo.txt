@@ -1,0 +1,143 @@
+my microservice is listening for matchmaking
+- my response: sending back the one ONLINE player that's closest to the score + the player making the request.
+	- so I need to send request to REAL time to see who's online 
+	- randomized choose one player and send the two player ID to clients
+
+
+game histroy microservice:
+	the client sends a request for player's game history
+		- I need a database of player history.
+		- i should be listen for game ending to record the game results
+
+serviceName.modules.ts
+serviceName.controller.ts
+serviceName.service.ts
+
+
+database
+
+tree
+src/
+├── modules/
+│   ├── database/
+│   │   ├── index.ts            # Shared DB connection
+│   │   ├── migrations/         # Shared migrations
+│   │   ├── schemas/
+│   │   │   ├── gameHistory.ts  # Game history tables
+│   │   │   └── matchmaking.ts  # Matchmaking tables
+│   │   └── repositories/       # Shared data access
+│   ├── game-history/
+│   │   ├── game-history.modules.ts
+│   │   ├── game-history.controller.ts
+│   │   └── game-history.service.ts
+│   └── matchmaking/
+│       ├── matchmaking.modules.ts
+│       ├── matchmaking.controller.ts
+│       └── matchmaking.service.ts
+
+index.ts = the entry point of the database moduel, it handles the connection and initial setup.
+
+schemas/ (Data Structure Definitions)
+	contains the typescript types/interfaces and SQL table Definitions
+	define what the data looks like 
+	
+migrations/ (Database version control)
+	SQL files or scripts that alter your database schema overtime
+	- track changes
+	- rollback safely if something breaks
+	- sync environments
+repositories/ (Data Access Layer)
+	classes/functions that handles CRUD operation
+	abstract raw SQL away from your services
+
+how the layer works
+Service Layer (game-history.service.ts)
+  ↓ Uses
+Repository Layer (repositories/)
+  ↓ Uses
+Database Connection (index.ts)
+  ↓ Relies on
+Schema Definitions (schemas/)
+  ↓ Updated via
+Migrations (migrations/)
+
+matchmaking
+
+2. Define the matchmaking schema
+In src/modules/database/schemas/matchmaking.ts, define the data structure for matchmaking (e.g., player ID, score, status).
+
+3. Implement the service
+In matchmaking.service.ts, write logic to:
+Receive matchmaking requests.
+Query real-time service for online players.
+Find the closest score.
+Randomly select a player if needed.
+Return the two player IDs.
+
+4. Set up the controller
+In matchmaking.controller.ts, expose an endpoint (e.g., /matchmake) that triggers the matchmaking logic.
+5. Wire up the module
+In matchmaking.modules.ts, register the service and controller.
+Once matchmaking works and you can pair players, move on to the game history microservice.
+This way, you’ll have real matches to record in your history database.
+
+
+
+typescript variable type:
+any - if you declare a variable and don't set it to anything then it can be any 
+	you can turn off the noimplicitAny
+arrays - `let numbers: number[]` - make numbers, an array of numbers. have built in functions .forEach()
+unknown -
+never 
+enums - a list of related constants 
+tuple - like map in C++ `let user: [number, string] = [1, 'Happy']. Its a fixed eleemnt array where each element is a particular type
+
+function - always make sure to annotate the value and return type.
+eg. 
+	function calculateTax(income: number): number {
+		return result;
+	};
+	function calculateTax(income: number): void {
+		(void so no return)
+	};
+
+you can make a parameter optional by adding a ?
+	function calculateTax(income: number, taxYear?: number): number {
+		return result;
+	};
+OR you can give a default value to the parameter in the function declaration
+	function calculateTax(income: number, taxYear = 2022): number
+
+You can also give a Union Types with |
+	function calculateTax(income: number | string)
+
+Intersection type:
+
+type Draggable = {
+	drag: () => void
+}
+
+type Resizeable = {
+	resize: () => void
+}
+
+type UIWidget = Draggable & Resizeable;
+
+let textBox: UIWidge = {
+	drag () => {},
+	resize: () => {}
+}
+
+literal type: its exact and specific. 
+
+type Quantity = 50 | 100;
+
+nullable types:
+	typescript is very strict with null variable
+
+
+type is a way to define a custom name for any type, more flexible than union
+
+
+Objects
+	readonly id: number //prevents the variable being changed

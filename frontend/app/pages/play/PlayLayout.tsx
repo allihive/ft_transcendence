@@ -1,18 +1,27 @@
-// import { NavBar } from '../../components/NavBar'
-import { useState, type JSX } from "react"
-import BabylonScene from '../../game/BabylonScene'
+import { useState, useEffect, type JSX } from "react"
+import { NavLink } from "react-router"
 
 export function PlayPage(): JSX.Element {
-	// const [activeItem, setActiveItem] = useState("play");
-
-	const player1 = { id: 'player1_id', username: 'Alice' };
-	const player2 = { id: 'player2_id', username: 'Timo' };
+	const [isPlaying, setIsPlaying] = useState(false);
+	useEffect(() => {
+		fetch(`http://localhost:3000/api/matchmaking/join`)
+		.then((res) => res.json())
+		.catch((err) => console.error("Failed to create match", err))
+	})
 
 	return (
-		<div>
-		<h1>Game Setup</h1>
-		{/* Pass player1 and player2 data to the BabylonScene component */}
-		<BabylonScene player1={player1} player2={player2} />
+		<>
+		<div className="flex items-center justify-center w-full px-8 my-4">
+				<div className="flex-grow max-w-xl mx-8 border-t border-black dark:border-white"></div>
+				<span className="px-4 text-black dark:text-background font-title">New User</span>
+				<div className="flex-grow max-w-2xl mx-8 border-t border-black dark:border-white"></div>
+			</div>
+		<div className="flex flex-col justify-center items-center mt-10 font-title ">
+			<NavLink to="/twoPlayers" className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4">2 Players</NavLink>
+			<button className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4"
+				>Remote Online Player</button>
 		</div>
-	);
-};
+			
+		</>
+	)
+}

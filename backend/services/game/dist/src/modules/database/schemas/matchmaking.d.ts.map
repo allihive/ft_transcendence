@@ -1,0 +1,1 @@
+{"version":3,"file":"matchmaking.d.ts","sourceRoot":"","sources":["../../../../../src/modules/database/schemas/matchmaking.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,gBAAgB;IAChC,EAAE,EAAE,MAAM,CAAC;IACX,QAAQ,EAAE,MAAM,CAAC;IACjB,KAAK,EAAE,MAAM,CAAC;IACd,MAAM,EAAE,QAAQ,GAAG,SAAS,GAAG,SAAS,CAAC;IACzC,SAAS,EAAE,MAAM,CAAC;CAClB;AAED,eAAO,MAAM,qBAAqB,6PAQjC,CAAC"}

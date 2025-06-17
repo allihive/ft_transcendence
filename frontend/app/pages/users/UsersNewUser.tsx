@@ -13,7 +13,8 @@ type FormValues = {
 	password: string;
 	confirmPassword: string;
 }
-
+/*import fs from "fs"; to save information to a json file, but this is backend
+import express from "express";*/
 
 export function NewUsersPage(): JSX.Element {
 	const navigate = useNavigate();
@@ -31,7 +32,7 @@ export function NewUsersPage(): JSX.Element {
 	
 	const onSubmit: SubmitHandler<FormValues> = async (data) => {
 		try {
-			const response = await fetch("/api/submit", {
+			const response = await fetch("http://localhost:3000/api/auth/login", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",

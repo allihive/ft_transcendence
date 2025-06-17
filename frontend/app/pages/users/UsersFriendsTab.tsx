@@ -1,4 +1,5 @@
-import { useState, type JSX } from "react"
+import { useState, useEffect, type JSX } from "react"
+import type { PlayerGameResult } from "../../../../backend/services/game/src/modules/game-history/gameHistory.service"
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { CiCircleCheck } from "react-icons/ci";
 import { BiSolidMessageRounded } from "react-icons/bi";
@@ -11,6 +12,31 @@ import { BiSolidMessageRounded } from "react-icons/bi";
 //onlick for message button
 
 export function UsersFriends(): JSX.Element {
+	const test_playerId = 1;
+
+	const [matches, setMatches] = useState<PlayerGameResult[]>([]);
+
+	useEffect(() => {
+		console.log(`PlayerId: ${test_playerId}`);
+	  fetch(`http://localhost:3000/api/game-history/${test_playerId}`)
+		.then((res) => res.json())
+		.then((data) => {
+			if (data.success && data.data && Array.isArray(data.data.games)) {
+				setMatches(data.data.games);
+			  } else {
+				console.warn('Unexpected data format:', data);
+				setMatches([]);}
+	})
+		.catch((err) => console.error("Failed to fetch matches:", err));
+	}, []);
+	// console.log("matches:", matches)
+	// matches.forEach(match => {
+	// console.log("Match date:", match.date);
+	// console.log("MatchId", match.matchId );
+	// console.log("Match opponent", match.opponent );
+	// console.log("Match result", match.result );
+	// });
+
 	return (
 		<>
 		<div className="flex items-center justify-center w-full px-8 my-4">
@@ -54,7 +80,7 @@ export function UsersFriends(): JSX.Element {
 						<button className="text-red-500" ><IoIosCloseCircleOutline size={24}/></button>
 					</div>
 				</td>
-				<td className="px-12 py-4 text-left">Timmo</td>
+				<td className="px-12 py-4 text-left">Timo</td>
 			</tr>
 			</tbody>
 			</table>
@@ -63,43 +89,20 @@ export function UsersFriends(): JSX.Element {
 					<tr>
 						<th className="font-title text-darkOrange px-12 py-8 text-left ">Name</th>
 						<th className="font-title text-darkOrange px-12 py-8 text-left ">Rank</th>
-						<th className="font-title text-darkOrange px-12 py-8 text-left ">History</th>
+						<th className="font-title text-darkOrange px-12 py-8 text-left ">Status</th>
 						<th className="font-title text-darkOrange px-12 py-8 text-left ">Message</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr className="font-title">
-						<td className="px-12 py-2 text-center">Hoang</td>
-						<td className="px-12 py-2 text-center">5</td>
-						<td className="px-12 py-2 text-center">6 games</td>
+						<td className="px-12 py-2 text-center">{friend.name}</td>
+						<td className="px-12 py-2 text-center">{friend.rank}</td>
+						<td className="px-12 py-2 text-center">{friend.status}</td>
 						<td className="px-12 py-2 text-center">
 							<button className="text-pop flex items-center justify-center w-full"><BiSolidMessageRounded size={32}/></button>
 						</td>
 					</tr>
-					<tr className="font-title">
-						<td className="px-12 py-4 text-center">Sumin</td>
-						<td className="px-12 py-4 text-center">5</td>
-						<td className="px-12 py-4 text-center">6 games</td>
-						<td className="px-12 py-4 text-center">
-							<button className="text-pop flex items-center justify-center w-full"><BiSolidMessageRounded size={32}/></button>
-						</td>
-					</tr>
-					<tr className="font-title">
-						<td className="px-12 py-4 text-center">TimmoS</td>
-						<td className="px-12 py-4 text-center">2</td>
-						<td className="px-12 py-4 text-center">10 games</td>
-						<td className="px-12 py-4 text-center">
-							<button className="text-pop flex items-center justify-center w-full"><BiSolidMessageRounded size={32}/></button>
-						</td>
-					</tr>
-					<tr className="font-title">
-						<td className="px-12 py-4 text-center">AliceL</td>
-						<td className="px-12 py-4 text-center">2</td>
-						<td className="px-12 py-4 text-center">10 games</td>
-						<td className="px-12 py-4 text-center">
-							<button className="text-pop flex items-center justify-center w-full"><BiSolidMessageRounded size={32}/></button>
-						</td>
-					</tr>
+				
 				</tbody>
 			</table>
 	

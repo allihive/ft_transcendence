@@ -1,25 +1,42 @@
-import { type JSX } from "react"
+import { useState, useEffect, type JSX } from "react"
+import type { PlayerGameResult } from "../../../../backend/services/game/src/modules/game-history/gameHistory.service"
 
-// interface GameData {
-// 	data: string;
-// 	opponent: string;
-// 	score: string;
-// 	result: string;
+// interface PlayerGameResult {
+//   matchId: string;           // Unique match identifier
+//   date: string;             // When the game was played (formatted date)
+//   opponent: number;         // The opponent's player ID
+//   playerScore: number;      // This player's score
+//   opponentScore: number;    // Opponent's score
+//   result: 'WIN' | 'LOSS';   // Did this player win or lose?
 // }
+// 11.6 we need to find a way to playerId to it fetches the correct gameHistory
+
+const test_playerId = 1;
 
 export function UsersStats(): JSX.Element {
 	//have name be passed as props?
-	// const [matches, setMatches] = useState<Match[]>([]);
+	const [matches, setMatches] = useState<PlayerGameResult[]>([]);
 
-	// useEffect(() => {
-	//   fetch("http://localhost:3001/api/matches")
-	// 	.then((res) => res.json())
-	// 	.then((data) => setMatches(data))
-	// 	.catch((err) => console.error("Failed to fetch matches:", err));
-	// }, []);
-	//        {matches.map((match, index) => (
-	// <tr key={index} className="border-b border-black dark:border-lightOrange"> put this in tbody
-
+	useEffect(() => {
+		console.log(`PlayerId: ${test_playerId}`);
+	  fetch(`http://localhost:3000/api/game-history/${test_playerId}`)
+		.then((res) => res.json())
+		.then((data) => {
+			if (data.success && data.data && Array.isArray(data.data.games)) {
+				setMatches(data.data.games);
+			  } else {
+				console.warn('Unexpected data format:', data);
+				setMatches([]);}
+	})
+		.catch((err) => console.error("Failed to fetch matches:", err));
+	}, []);
+	// console.log("matches:", matches)
+	matches.forEach(match => {
+    console.log("Match date:", match.date);
+	console.log("MatchId", match.matchId );
+	console.log("Match opponent", match.opponent );
+	console.log("Match result", match.result );
+  	});
 	return (
 		<>
 			<div className="flex items-center justify-center w-full px-8 my-4">
@@ -40,24 +57,15 @@ export function UsersStats(): JSX.Element {
 					</tr>
 				</thead>
 				<tbody className="font-body text-black dark:text-background">
-					<tr className="border-b border:black dark:border-lightOrange">
-						<td className="px-12 py-4 text-left">15/4</td>
-						<td className="px-12 py-4 text-left">username</td>
-						<td className="px-12 py-4 text-left">5-6</td>
-						<td className="px-12 py-4 text-left">loss</td>
+					{matches.map((match) => (
+					<tr key={match.matchId} className="border-b border-black dark:border-lightOrange">
+						<td className="px-12 py-4 text-left">{match.date}</td>
+						<td className="px-12 py-4 text-left">{match.opponent}</td>
+						<td className="px-12 py-4 text-left">{match.opponentScore} - {match.playerScore}</td>
+						<td className={`px-12 py-4 text-left ${
+    					match.result === 'WIN' ? 'text-green-500' : 'text-red-500'}`}>{match.result}</td>
 					</tr>
-					<tr className="border-b border:black dark:border-lightOrange">
-						<td className="px-12 py-4 text-left">15/4</td>
-						<td className="px-12 py-4 text-left">username</td>
-						<td className="px-12 py-4 text-left">5-6</td>
-						<td className="px-12 py-4 text-left">loss</td>
-					</tr>
-					<tr className="border-b border:black dark:border-lightOrange">
-						<td className="px-12 py-4 text-left">15/4</td>
-						<td className="px-12 py-4 text-left">username</td>
-						<td className="px-12 py-4 text-left">5-6</td>
-						<td className="px-12 py-4 text-left">loss</td>
-					</tr>
+					))}
 				</tbody>
 			</table>
 		</>
