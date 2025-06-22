@@ -74,10 +74,6 @@ export class AuthService {
 		});
 	}
 
-	async logout(em: EntityManager, id: string) {
-
-	}
-
 	async register(em: EntityManager, createUserDto: CreateUserDto): Promise<User> {
 		return this.userService.createUser(em, createUserDto);
 	}

@@ -1,11 +1,18 @@
 import { FastifyPluginAsync } from "fastify";
 import { CreateUserDto, CreateUserDtoSchema, getUserResponseDto } from "../user/user.dto";
-import { GoogleLoginDto, GoogleLoginDtoSchema, LoginDto, LoginDtoSchema, LogoutParamsDto, LogoutParamsDtoSchema } from "./auth.dto";
+import { GoogleLoginDto, GoogleLoginDtoSchema, LoginDto, LoginDtoSchema } from "./auth.dto";
+import { ForbiddenException } from "../../common/exceptions/ForbiddenException";
+import { cookieConfig } from "../../config/cookie.config";
+import { BadRequestException } from "../../common/exceptions/BadRequestException";
 
 export const authController: FastifyPluginAsync = async (app) => {
 	app.post("/login", {
 		schema: { body: LoginDtoSchema },
 		handler: async (request, reply) => {
+			if (request.user) {
+				throw new BadRequestException("You are already authenticated, please sign out first");
+			}
+
 			const em = request.entityManager;
 			const user = await app.authService.login(em, request.body as LoginDto);
 			const userResponseDto = getUserResponseDto(user);
@@ -21,6 +28,10 @@ export const authController: FastifyPluginAsync = async (app) => {
 	app.post("/google", {
 		schema: { body: GoogleLoginDtoSchema },
 		handler: async (request, reply) => {
+			if (request.user) {
+				throw new BadRequestException("You are already authenticated, please sign out first");
+			}
+			
 			const { idToken } = request.body as GoogleLoginDto;
 			const em = request.entityManager;
 			const user = await app.authService.loginWithGoogle(em, idToken);
@@ -37,6 +48,10 @@ export const authController: FastifyPluginAsync = async (app) => {
 	app.post("/register", {
 		schema: { body: CreateUserDtoSchema },
 		handler: async (request, reply) => {
+			if (request.user) {
+				throw new ForbiddenException("Authenticated user can not register again");
+			}
+
 			const em = request.entityManager;
 			const user = await app.authService.register(em, request.body as CreateUserDto);
 			const userResponseDto = getUserResponseDto(user);
@@ -50,12 +65,15 @@ export const authController: FastifyPluginAsync = async (app) => {
 	});
 
 	app.post("/logout", {
-		schema: { params: LogoutParamsDtoSchema },
 		handler: async (request, reply) => {
-			const em = request.entityManager;
-			const { id } = request.params as LogoutParamsDto;
-			await app.authService.logout(em, id);
-			return reply.code(201).send();
+			if (request.user) {
+				return reply
+					.clearCookie("accessToken", cookieConfig)
+					.code(204)
+					.send();
+			}
+
+			return reply.code(204).send();
 		}
 	});
 };

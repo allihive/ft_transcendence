@@ -13,11 +13,6 @@ export const GoogleLoginDtoSchema = Type.Object(
 	{ additionalProperties: false }
 );
 
-export const LogoutParamsDtoSchema = Type.Object(
-	{ id: Type.String({ format: "uuid" }) },
-	{ additionalProperties: false }
-);
-
 export const ForgotPasswordDtoSchema = Type.Object(
 	{ email: Type.String({ format: "email" }) },
 	{ additionalProperties: false }
@@ -44,7 +39,6 @@ export const CreateUserProviderDtoSchema = Type.Object(
 
 export type LoginDto = Static<typeof LoginDtoSchema>;
 export type GoogleLoginDto = Static<typeof GoogleLoginDtoSchema>;
-export type LogoutParamsDto = Static<typeof LogoutParamsDtoSchema>;
 export type ForgotPasswordDto = Static<typeof ForgotPasswordDtoSchema>;
 export type ResetPasswordDto = Static<typeof ResetPasswordDtoSchema>;
 export type CreateUserProviderDto = Static<typeof CreateUserProviderDtoSchema>;

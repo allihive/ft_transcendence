@@ -3,3 +3,5 @@ dist/
 temp/
 migrations/
 sqlite.db
+*.txt
+.DS_Store

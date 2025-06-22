@@ -3,10 +3,12 @@ import jwt from "@fastify/jwt";
 import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
 import { ErrorResponseDto } from "./common/dto/error-response";
-import { databaseModule } from "./modules/database/database.module";
 import { CryptoService } from "./common/utils/CryptoService";
-import { userModule } from "./modules/user/user.module";
+import { cookieConfig } from "./config/cookie.config";
 import { authModule } from "./modules/auth/auth.module";
+import { databaseModule } from "./modules/database/database.module";
+import { UserResponseDto } from "./modules/user/user.dto";
+import { userModule } from "./modules/user/user.module";
 
 declare module "fastify" {
 	interface FastifyInstance {
@@ -17,18 +19,9 @@ declare module "fastify" {
 export const createApp = async (opts: FastifyServerOptions): Promise<FastifyInstance> => {
 	const app = Fastify(opts).withTypeProvider<TypeBoxTypeProvider>();
 
-	app.decorate("cryptoService", new CryptoService());
-
 	await app.register(cookie, {
 		secret: process.env.COOKIE_SECRET!,
-		parseOptions: {
-			path: "/", // Available across the entire application
-			signed: true, // Ensure integrity but avoid signing if unnecessary
-			httpOnly: true, // Prevent client-side access for security
-			secure: process.env.NODE_ENV === "production", // Enforce HTTPS in production
-			sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // Prevent CSRF attacks
-			maxAge: 60 * 60 * 24 * 7 // 7 days expiration
-		}
+		parseOptions: cookieConfig
 	});
 
 	await app.register(jwt, {
@@ -36,15 +29,19 @@ export const createApp = async (opts: FastifyServerOptions): Promise<FastifyInst
 		cookie: { cookieName: "accessToken", signed: true }
 	});
 
+	app.decorate("cryptoService", new CryptoService());
+
 	await app.register(databaseModule);
 	await app.register(userModule, { prefix: "/api/users" });
 	await app.register(authModule, { prefix: "/api/auth" });
 
-	// app.addHook("onRequest", (request, reply, done) => {
-	// 	request.getDecorator();
-	// 	reply.clearCookie();
-	// 	done();
-	// });
+	app.addHook("onRequest", async (request, reply) => {
+		try {
+			await request.jwtVerify<UserResponseDto>();
+		} catch (error) {
+			console.log((error as Record<string, any>)?.message ?? "Unauthorized");
+		}
+	});
 
 	app.setErrorHandler((error, request, reply) => {
 		request.log.error(error);
