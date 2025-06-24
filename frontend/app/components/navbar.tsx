@@ -48,7 +48,7 @@ export function NavBar(): JSX.Element {
 						}` }>
 				<RiPingPongFill size={48}/>
 			</NavLink>
-			<NavLink to="/users" 
+			<NavLink to="/users/profile" 
 				className={({ isActive }) =>
 					`px-4 py-4 font-title
 						${isActive ? "text-lightOrange dark:text-pop"

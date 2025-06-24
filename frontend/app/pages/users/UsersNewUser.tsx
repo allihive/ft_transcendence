@@ -19,7 +19,7 @@ import express from "express";*/
 export function NewUsersPage(): JSX.Element {
 	const navigate = useNavigate();
 	const [showGoogleSignUp, setShowGoogleSignUp] = useState(false);
-	const handleSubmitClick = () => navigate("/users/profile")
+	const handleSubmitClick = () => navigate("/users")
 	
 	const {
 		register,
@@ -32,7 +32,7 @@ export function NewUsersPage(): JSX.Element {
 	
 	const onSubmit: SubmitHandler<FormValues> = async (data) => {
 		try {
-			const response = await fetch("http://localhost:3000/api/auth/login", {
+			const response = await fetch("http://localhost:3000/api/auth/register", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -45,7 +45,6 @@ export function NewUsersPage(): JSX.Element {
 			console.error("Error submitting form:", error);
 		}
 	};
-	
 
 
 	const handleGoogleSignupSuccess = (user: any) => {
@@ -74,12 +73,12 @@ export function NewUsersPage(): JSX.Element {
 						message: "Email required",
 					},
 					pattern: {
-						value: /^[a-zA-Z0-9_]+@[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+$/,
+						value: /^[a-zA-Z0-9_.]+@[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+$/,
 						message: "Please enter a valid email",
 					},
 					})
 				}
-					type="test"
+					type="email"
 					placeholder="Email"
 					className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4">
 				</input>

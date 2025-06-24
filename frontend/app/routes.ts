@@ -1,7 +1,5 @@
 import { type RouteConfig, index, prefix, layout, route } from "@react-router/dev/routes";
 
-
-
 export default [
 	route(".well-known/*", "./wellKnownStub.tsx"),
 
@@ -11,10 +9,11 @@ export default [
 		route("twoPlayers", "./routes/play/TwoPlayers.tsx"),
 		route("tournament", "./routes/Tournament.tsx"),
 		route("login", "./routes/HomeLogin.tsx"),
+		route("register", "./routes/Register.tsx"),
 		route("chat", "./routes/Chat.tsx"),
 		...prefix("users", [
 			layout("./routes/users/UsersLayout.tsx", [
-				index("./routes/users/NewUser.tsx"),
+				// route("", "./routes/users/UserAccount.tsx"),
 				route("profile", "./routes/users/UserAccount.tsx"),
 				route("friends", "./routes/users/UserFriends.tsx"),
 				route("stats", "./routes/users/UserStats.tsx"),

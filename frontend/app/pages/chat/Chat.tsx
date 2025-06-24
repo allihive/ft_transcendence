@@ -37,7 +37,7 @@ export function ChatPage(): JSX.Element {
 							</div>
 						</div>
 					</div>
-					<div className="w-3/4 flex flex-col font-title text-lg border dark:bg-darkMode bg-lightOrange rounded-lg px-4 py-4">
+					<div className="w-3/4 flex flex-col font-title text-lg border bg-lightOrange dark:bg-darkMode border-background rounded-lg px-4 py-4">
 						<p className="mb-2 text-center">Sumin</p>
 
 						{/* Message List */}
@@ -47,11 +47,11 @@ export function ChatPage(): JSX.Element {
 						</div>
 
 						{/* Input Area pinned at bottom */}
-						<div className="pt-2 border-t mt-2 flex flex-row justify-between gap-x-6">
+						<div className="pt-2 border-t dark:border-background mt-2 flex flex-row justify-between gap-x-6">
 							<input
 								type="text"
 								placeholder="Message here"
-								className="font-body border w-full rounded-xl p-2"
+								className="font-body border dark:border-background w-full rounded-xl p-2"
 							/>
 							<button className="border rounded-full p-4 bg-background">
 								<FiSend />

@@ -46,7 +46,7 @@ export function HomeLogin() {
 	const handleGoogleClick = () => setShowGoogleLogin(true);
 
 	const handleSubmitClick = () => navigate("/tournament");
-	const handleNewUser = () => navigate("/users");
+	const handleNewUser = () => navigate("/register");
 
 	return (
 		<>
@@ -60,7 +60,7 @@ export function HomeLogin() {
 							message: "Email required",
 						},
 						pattern: {
-							value: /^[a-zA-Z0-9_]+@[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+$/,
+							value: /^[a-zA-Z0-9_.]+@[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+$/,
 							message: "Please enter a valid email",
 						},
 						})
@@ -112,7 +112,7 @@ export function HomeLogin() {
 							console.log("Backend error response:", errMsg);
 							if (errMsg === "user_not_found") {
 								if (confirm("No account found. Would you like to sign up?")) {
-									navigate("/users");
+									navigate("/users/profile");
 								}
 							} else {
 								alert(errMsg);
