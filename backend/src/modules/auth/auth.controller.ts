@@ -31,7 +31,7 @@ export const authController: FastifyPluginAsync = async (app) => {
 			if (request.user) {
 				throw new BadRequestException("You are already authenticated, please sign out first");
 			}
-			
+
 			const { idToken } = request.body as GoogleLoginDto;
 			const em = request.entityManager;
 			const user = await app.authService.loginWithGoogle(em, idToken);

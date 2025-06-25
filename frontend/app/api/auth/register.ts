@@ -7,7 +7,7 @@ export const register = async ({ email, name, password, avatarUrl }: {
 	password: string,
 	avatarUrl?: string
 }): Promise<User> => {
-	return fetchJson<User>(`${import.meta.env.VITE_API_BASE_URL}/api/auth/register`, {
+	return fetchJson<User>(`${import.meta.env.VITE_API_BASE_URL}/auth/register`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",

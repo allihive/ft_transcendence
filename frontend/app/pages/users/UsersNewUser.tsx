@@ -19,8 +19,8 @@ import express from "express";*/
 export function NewUsersPage(): JSX.Element {
 	const navigate = useNavigate();
 	const [showGoogleSignUp, setShowGoogleSignUp] = useState(false);
-	const handleSubmitClick = () => navigate("/users")
-	
+	const handleSubmitClick = () => navigate("/users/profile")
+
 	const {
 		register,
 		handleSubmit,
@@ -29,10 +29,10 @@ export function NewUsersPage(): JSX.Element {
 	} = useForm<FormValues>();
 
 	const password = watch("password");
-	
+
 	const onSubmit: SubmitHandler<FormValues> = async (data) => {
 		try {
-			const response = await fetch("http://localhost:3000/api/auth/register", {
+			const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/register`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",

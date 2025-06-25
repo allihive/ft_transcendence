@@ -9,7 +9,7 @@ export default [
 		route("twoPlayers", "./routes/play/TwoPlayers.tsx"),
 		route("tournament", "./routes/Tournament.tsx"),
 		route("login", "./routes/HomeLogin.tsx"),
-		route("register", "./routes/Register.tsx"),
+		route("register", "./routes/register.tsx"),
 		route("chat", "./routes/Chat.tsx"),
 		...prefix("users", [
 			layout("./routes/users/UsersLayout.tsx", [

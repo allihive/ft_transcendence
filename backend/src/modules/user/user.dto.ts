@@ -19,7 +19,7 @@ export const CreateUserDtoSchema = Type.Object(
 		email: Type.String({ format: "email" }),
 		name: Type.String({ minLength: 2, maxLength: 100 }),
 		password: Type.Optional(Type.String({ minLength: 8 })),
-		authMethod: Type.Enum(AuthMethod),
+		authMethod: Type.Enum(AuthMethod, { default: AuthMethod.PASSWORD }),
 		avatarUrl: Type.Optional(Type.String({ format: "uri" }))
 	},
 	{ additionalProperties: false }
