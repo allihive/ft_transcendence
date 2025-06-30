@@ -8,7 +8,7 @@ export default [
 		route("play", "./routes/play/Play.tsx"),
 		route("twoPlayers", "./routes/play/TwoPlayers.tsx"),
 		route("tournament", "./routes/Tournament.tsx"),
-		route("login", "./routes/HomeLogin.tsx"),
+		route("login", "./routes/login.tsx"),
 		route("register", "./routes/register.tsx"),
 		route("chat", "./routes/Chat.tsx"),
 		...prefix("users", [
@@ -17,8 +17,8 @@ export default [
 				route("profile", "./routes/users/UserAccount.tsx"),
 				route("friends", "./routes/users/UserFriends.tsx"),
 				route("stats", "./routes/users/UserStats.tsx"),
+			]),
 		]),
 	]),
-]),
 ] satisfies RouteConfig;
 

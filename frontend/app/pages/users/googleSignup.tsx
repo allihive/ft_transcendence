@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
-declare global {
-	interface Window {
-		google: any;
-	}
-}
+// declare global {
+// 	interface Window {
+// 		google: any;
+// 	}
+// }
 
 interface GoogleSignupProps {
 	onSignupSuccess: (user: any) => void;

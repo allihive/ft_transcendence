@@ -8,6 +8,7 @@ interface ImportMetaEnv {
 	readonly VITE_APP_TITLE: string;
 	readonly VITE_API_BASE_URL;
 	readonly VITE_GOOGLE_CLIENT_ID;
+	readonly VITE_GOOGLE_GIS_CLIENT_URL;
 }
 
 interface ImportMeta {
