@@ -45,6 +45,7 @@ export class UserService {
 		const userData: RequiredEntityData<User> = {
 			email: createUserDto.email,
 			name: createUserDto.name,
+			username: createUserDto.username,
 			passwordHash: createUserDto.password ? this.cryptoService.hash(createUserDto.password) : null,
 			authMethod: createUserDto.authMethod,
 			avatarUrl: createUserDto.avatarUrl

@@ -1,5 +1,6 @@
 import { FastifyPluginAsync } from "fastify";
 
+import { NotFoundException } from "../../common/exceptions/NotFoundException";
 import {
 	CreateUserDto,
 	CreateUserDtoSchema,
@@ -7,12 +8,12 @@ import {
 	DeleteUserParamsDtoSchema,
 	FindPaginatedUsersQueryDto,
 	FindPaginatedUsersQueryDtoSchema,
-	FindUserParamsDto,
-	FindUserParamsDtoSchema,
 	UpdateUserDto,
 	UpdateUserDtoSchema,
 	UpdateUserParamsDto,
 	UpdateUserParamsDtoSchema,
+	UsernameParamsDto,
+	UsernameParamsDtoSchema
 } from "./user.dto";
 
 export const userController: FastifyPluginAsync = async (app) => {
@@ -26,13 +27,17 @@ export const userController: FastifyPluginAsync = async (app) => {
 		}
 	});
 
-	// Get details of a specific user by ID
-	app.get("/:id", {
-		schema: { params: FindUserParamsDtoSchema },
+	app.get("/:username", {
+		schema: { params: UsernameParamsDtoSchema },
 		handler: async (request, reply) => {
 			const em = request.entityManager;
-			const { id } = request.params as FindUserParamsDto
-			const user = await app.userService.findUser(em, { id });
+			const { username } = request.params as UsernameParamsDto;
+			const user = await app.userService.findUser(em, { username });
+
+			if (!user) {
+				throw new NotFoundException(`No user found with username '${username}'`);
+			}
+
 			return reply.code(200).send(user);
 		}
 	});

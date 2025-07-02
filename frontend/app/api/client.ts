@@ -20,8 +20,7 @@ export const fetchJson = async<T> (url: string, options?: RequestInit): Promise<
 		const response = await fetch(url, options);
 
 		if (!response.ok) {
-			const message = getErrorMessage(response.status);
-			throw new HttpError(message);
+			throw new HttpError(response.statusText);
 		}
 
 		const data: T = await response.json();

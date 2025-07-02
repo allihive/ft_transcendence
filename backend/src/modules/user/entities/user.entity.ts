@@ -20,6 +20,9 @@ export class User {
 	@Property({ type: "string", nullable: false, length: 100 })
 	name!: string;
 
+	@Property({ type: "string", nullable: false, unique: true, length: 30 })
+	username!: string;
+
 	@Property({ type: "string", nullable: true, length: 255, name: "password_hash" })
 	passwordHash: string | null = null;
 

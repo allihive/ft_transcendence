@@ -32,6 +32,17 @@ const getPayload = async (authClient: OAuth2Client, googleIdToken: string): Prom
 	};
 };
 
+const generateUsername = (name: string): string => {
+	let base = name.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+
+	if (base.length > 26) {
+		base = base.slice(0, 26);
+	}
+
+    const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+    return `${base}${randomSuffix}`;
+}
+
 export class AuthService {
 	constructor(
 		private readonly authRepository: AuthRepository,
@@ -56,6 +67,7 @@ export class AuthService {
 				user = await this.userService.createUser(em, {
 					email,
 					name,
+					username: generateUsername(name),
 					authMethod: AuthMethod.GOOGLE,
 					avatarUrl
 				});
