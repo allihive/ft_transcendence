@@ -69,7 +69,7 @@ export class AuthService {
 					name,
 					username: generateUsername(name),
 					authMethod: AuthMethod.GOOGLE,
-					avatarUrl: avatarUrl ?? `${process.env.BASE_URL}/uploads/avatar.png`
+					avatarUrl: avatarUrl ?? "/files/2ca09462-3930-4dbc-b3cc-5e9b4b09d525.png"
 				});
 			}
 
