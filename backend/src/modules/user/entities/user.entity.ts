@@ -29,8 +29,8 @@ export class User {
 	@Property({ type: "string", nullable: false, default: AuthMethod.PASSWORD, name: "auth_method" })
 	authMethod!: AuthMethod;
 
-	@Property({ type: "text", nullable: true, name: "avatar_url" })
-	avatarUrl?: string;
+	@Property({ type: "text", nullable: false, name: "avatar_url" })
+	avatarUrl!: string;
 
 	@Property({ type: "boolean", nullable: false, default: true, name: "is_active" })
 	isActive?: boolean;

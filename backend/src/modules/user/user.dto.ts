@@ -35,7 +35,7 @@ export const CreateUserDtoSchema = Type.Object(
 		}),
 		password: Type.Optional(Type.String({ minLength: 8 })),
 		authMethod: Type.Enum(AuthMethod, { default: AuthMethod.PASSWORD }),
-		avatarUrl: Type.Optional(Type.String({ format: "uri" }))
+		avatarUrl: Type.String({ format: "uri" })
 	},
 	{ additionalProperties: false }
 );

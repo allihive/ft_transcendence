@@ -3,7 +3,16 @@ import { createApp } from "./app";
 const start = async (): Promise<void> => {
 	try {
 		const app = await createApp({
-			logger: true,
+			logger: {
+				transport: {
+					target: "pino-pretty",
+					options: {
+						colorize: true,
+						translateTime: "SYS:standard",
+						ignore: "pid,hostname"
+					}
+				}
+			},
 			pluginTimeout: 10000
 		});
 
