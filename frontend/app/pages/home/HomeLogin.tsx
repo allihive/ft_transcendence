@@ -1,16 +1,25 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import type { SubmitHandler } from "react-hook-form";
+import GoogleLogin  from '../users/googleLogin';
+import { FaGoogle } from "react-icons/fa";
+import controller from './assets/controller.png'
+import orangeCircle from './assets/orangeCircle.png'
+import lines from './assets/3lines.png'
 import { Link, useNavigate } from "react-router";
 import { loginWithGoogle } from "~/api/auth/login";
 import { GoogleLoginButton } from "~/components/buttons/google-login/GoogleLoginButton";
 import { LoginForm } from "~/components/forms/login/LoginForm";
-import lines from './assets/3lines.png';
-import controller from './assets/controller.png';
-import orangeCircle from './assets/orangeCircle.png';
+import type { User } from "~/api/types"
+import { useAuth } from "~/stores/useAuth";
 
 //things to fix later: handle submit click, if success -> navigate to tournament page
 //if failure give wrong name or password
 //will have to check with the data base if it's correct
 
 export function HomeLogin() {
+	const setUser = useAuth((state) => state.setUser);
+	const user = useAuth((state) => state.user);
 	const navigate = useNavigate();
 
 	return (
@@ -20,18 +29,21 @@ export function HomeLogin() {
 					<LoginForm
 						onSuccess={(user) => {
 							console.log(`Logged in as ${user.email}`);
+							setUser(user);
+							console.log("user name: ", user);
+							navigate("/play");
 							// forward client to home page now
 						}}
 					/>
 					{/*GOOGLE LOG IN*/}
-					<div className="flex-grow mx-8 mt-2 border-t border-black dark:border-white"></div>
 
-					<div className="flex flex-grow justify-center items-center mx-8 mt-2 border-t border-black">
+					<div className="flex flex-grow justify-center items-center mx-8 mt-4 border-t border-black">
 						<GoogleLoginButton
 							clientId={`${import.meta.env.VITE_GOOGLE_CLIENT_ID}`}
 							onSuccess={async (credential: string) => {
 								const user = await loginWithGoogle(credential);
 								console.log("onSuccess after loginWithGoogle:", user);
+								navigate("/play");
 								// forward client to home page now
 							}}
 						/>

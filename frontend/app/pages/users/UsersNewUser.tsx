@@ -1,15 +1,17 @@
 import { useState, type JSX } from "react"
 import { useForm } from "react-hook-form"
 import type { SubmitHandler } from "react-hook-form";
-import { useNavigate } from "react-router"
 import { FaGoogle } from "react-icons/fa";
 import GoogleSignup from './googleSignup';
+import { register as registerApi } from "app/api/auth/register"
+import { useNavigate } from "react-router";
 
 
 type FormValues = {
 	name: string;
 	email: string;
 	username: string;
+	avatarUrl?: string;
 	password: string;
 	confirmPassword: string;
 }
@@ -17,10 +19,9 @@ type FormValues = {
 import express from "express";*/
 
 export function NewUsersPage(): JSX.Element {
-	const navigate = useNavigate();
 	const [showGoogleSignUp, setShowGoogleSignUp] = useState(false);
-	const handleSubmitClick = () => navigate("/users/profile")
-
+	const navigate = useNavigate();
+	
 	const {
 		register,
 		handleSubmit,
@@ -32,20 +33,20 @@ export function NewUsersPage(): JSX.Element {
 
 	const onSubmit: SubmitHandler<FormValues> = async (data) => {
 		try {
-			const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/register`, {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify(data),
-			});
-			const result = await response.json();
+			const result = await registerApi ({
+				email: data.email,
+				username: data.username,
+				password: data.password,
+				name: data.name,
+				avatarUrl: data.avatarUrl,
+			})
 			console.log("Success:", result);
+			alert("New User created!");
+			navigate("/play");
 		} catch (error) {
 			console.error("Error submitting form:", error);
 		}
 	};
-
 
 	const handleGoogleSignupSuccess = (user: any) => {
 		console.log("✅ Signup success:", user);
@@ -61,12 +62,19 @@ export function NewUsersPage(): JSX.Element {
 
 			</div>
 			<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col justify-center items-center mt-10 font-title">
+				<input
+					{...register("avatarUrl")}
+					type="file"
+					accept="image/*"
+					placeholder="image"
+					className="p-2 border-2 font-body max-w-xl border-black dark:border-background dark:text-background rounded-lg mt-4" />
+				{errors.avatarUrl && <p className="text-xs font-body text-red-500">{errors.avatarUrl.message}</p>}
 				<input {...register("name", {required: "name"})}
 					type="text"
 					placeholder="Name"
 					className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4">
 				</input>
-				{errors.name && <p className="text-xs font-body">{errors.name.message}</p>}
+				{errors.name && <p className="text-xs font-body text-red-500">{errors.name.message}</p>}
 				<input {...register("email", {
 					required: {
 						value: true,
@@ -82,15 +90,15 @@ export function NewUsersPage(): JSX.Element {
 					placeholder="Email"
 					className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4">
 				</input>
-				{errors.email && <p className="text-xs font-body">{errors.email.message}</p>}
+				{errors.email && <p className="text-xs font-body text-red-500">{errors.email.message}</p>}
 				<input {...register("username", {
 						required: {
 							message: "Username is required",
 							value: true
 						},
 						pattern: {
-							value: /^[a-zA-Z0-9_]+$/,
-							message: "Uppercase, lowercase, numbers, and underscore(_) accepted",
+							value: /^[a-zA-Z0-9_-]+$/,
+							message: "Uppercase, lowercase, numbers, - , _ accepted",
 						},
 						minLength: {
 							value: 6,
@@ -101,7 +109,7 @@ export function NewUsersPage(): JSX.Element {
 					placeholder="Username"
 					className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4">
 				</input>
-				{errors.username && <p className="text-xs font-body">{errors.username.message}</p>}
+				{errors.username && <p className="text-xs font-body text-red-500">{errors.username.message}</p>}
 				<input {...register("password", {
 					required: {
 						message: "Password is required",
@@ -120,7 +128,7 @@ export function NewUsersPage(): JSX.Element {
 					placeholder="Password"
 					className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4">
 				</input>
-				{errors.password&& <p className="text-xs font-body">{errors.password.message}</p>}
+				{errors.password&& <p className="text-xs font-body text-red-500">{errors.password.message}</p>}
 				<input {...register("confirmPassword", {
 					required: "Please confirm your password",
 					validate: value => value === password || "Passwords do not match"})}
@@ -128,7 +136,7 @@ export function NewUsersPage(): JSX.Element {
 					placeholder="Confirm password"
 					className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4">
 				</input>
-				{errors.confirmPassword&& <p className="text-xs font-body">{errors.confirmPassword.message}</p>}
+				{errors.confirmPassword&& <p className="text-xs font-body text-red-500">{errors.confirmPassword.message}</p>}
 				<button type="submit" className="border-2 border-black bg-brown px-6 py-2 rounded-lg text-black mt-4">Enter</button>
 			</form>
 			<div className="flex flex-grow justify-center items-center mx-8 mt-10 border-t border-black dark:border-background ">

@@ -1,9 +1,10 @@
 import { fetchJson } from "../client";
 import type { User } from "../types";
 
-export const register = async ({ email, name, password, avatarUrl }: {
+export const register = async ({ email, name, username, password, avatarUrl }: {
 	email: string,
 	name?: string,
+	username: string,
 	password: string,
 	avatarUrl?: string
 }): Promise<User> => {

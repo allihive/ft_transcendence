@@ -3,21 +3,23 @@ import type { SubmitHandler } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import type { FormValues, LoginFormProps } from "./types";
 import { login } from "~/api/auth/login";
+import { useAuth } from "~/stores/useAuth";
 
 export function LoginForm(props: LoginFormProps): JSX.Element {
+	const { onSuccess } = props;
 	const {
 		register,
 		handleSubmit,
 		formState: { errors },
-	} = useForm<FormValues>();
+	} = useForm<FormValues>();	
 
 	const onSubmit: SubmitHandler<FormValues> = async (data) => {
 		try {
 			const user = await login(data.email, data.password);
-			// save user to zustand here
+			onSuccess(user);
 		} catch (error) {
 			// alert() for quick showcase but popup error message dialog is preferred
-			alert("Login failed");
+			alert((error as Error).message);
 		}
 	};
 

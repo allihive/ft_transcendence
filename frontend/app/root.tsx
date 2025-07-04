@@ -9,6 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { Toaster } from "react-hot-toast"
 import { useEffect } from "react";
 
 
@@ -45,7 +46,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-	return <Outlet />;
+	return (
+		<>
+			<Toaster position="top-right" />
+			<Outlet />
+		</>
+);
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
