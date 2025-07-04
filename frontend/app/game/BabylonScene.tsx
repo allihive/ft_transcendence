@@ -35,6 +35,7 @@ const BabylonScene: React.FC<BabylonSceneProps> = ({ player1, player2 }) => {
   const playersRef = useRef(players);
   const [gameEnded, setGameEnded] = useState(false);
   const [winnerName, setWinnerName] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   // Keep score ref in sync
   useEffect(() => {
@@ -54,6 +55,22 @@ const BabylonScene: React.FC<BabylonSceneProps> = ({ player1, player2 }) => {
     (window as any).setGameOverState = (winner: string) => {
       setGameEnded(true);
       setWinnerName(winner);
+    };
+  }, []);
+
+  // Global countdown functions
+  useEffect(() => {
+    (window as any).showCountdown = (number: number) => {
+      setCountdown(number);
+    };
+
+    (window as any).hideCountdown = () => {
+      setCountdown(null);
+    };
+
+    return () => {
+      delete (window as any).showCountdown;
+      delete (window as any).hideCountdown;
     };
   }, []);
 
@@ -79,23 +96,44 @@ const BabylonScene: React.FC<BabylonSceneProps> = ({ player1, player2 }) => {
     player1ScoreTextRef.current = player1ScoreText;
     player2ScoreTextRef.current = player2ScoreText;
 
-    startBallMovement(
+    // Start paddle movement and get update function
+    const paddleMovementSystem = paddleMovement(paddle1Ref, paddle2Ref);
+
+    // Start ball movement and get cleanup function
+    const ballMovementCleanup = startBallMovement(
       scene,
       ballRef.current!,
       paddle1Ref.current!,
       paddle2Ref.current!,
-      topwall1Ref.current!,
       topwall2Ref.current!,
+      topwall1Ref.current!,
       playersRef,
-      setPlayers
+      setPlayers,
+      paddleMovementSystem.update // Pass the paddle update function
     );
 
-    paddleMovement(paddle1Ref, paddle2Ref);
-
+    // Start render loop
     engine.runRenderLoop(() => scene.render());
-    window.addEventListener('resize', () => engine.resize());
+    
+    // Add resize listener
+    const resizeHandler = () => engine.resize();
+    window.addEventListener('resize', resizeHandler);
 
     return () => {
+      // Cleanup paddle movement
+      if (paddleMovementSystem.cleanup) {
+        paddleMovementSystem.cleanup();
+      }
+
+      // Cleanup ball movement
+      if (ballMovementCleanup) {
+        ballMovementCleanup();
+      }
+
+      // Remove resize listener
+      window.removeEventListener('resize', resizeHandler);
+
+      // Dispose scene and engine
       scene.dispose();
       engine.dispose();
     };
@@ -103,7 +141,25 @@ const BabylonScene: React.FC<BabylonSceneProps> = ({ player1, player2 }) => {
 
   return (
     <div className="scene-container">
-      <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
+      <canvas 
+        ref={canvasRef} 
+        style={{ 
+          width: '100%', 
+          height: '100%',
+          maxWidth: '100%',
+          maxHeight: '100vh',
+          display: 'block'
+        }} 
+      />
+      
+      {/* Countdown overlay */}
+      {countdown !== null && (
+        <div className="countdown-overlay">
+          <div className="countdown-number">{countdown}</div>
+        </div>
+      )}
+      
+      {/* Game over overlay */}
       {gameEnded && (
         <div className="game-over">
           <h1>GAME OVER</h1>

@@ -11,6 +11,7 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { TextBlock } from "@babylonjs/gui/2D/controls/textBlock";
+import { Rectangle } from "@babylonjs/gui/2D/controls/rectangle";
 
 import backgroundImg from './assets/backgroundStage.png'; // Importing the background image
 
@@ -82,7 +83,7 @@ export const createScene = (
   paddle2.parent = group;
   paddle2.position = new Vector3(0, 0.1, -5);
   const paddle2Material = new StandardMaterial('blackPaddleMat', scene);
-  paddle2Material.diffuseColor = new Color3(0, 0, 1); // Black
+  paddle2Material.diffuseColor = new Color3(0, 0, 1); // Blue
   paddle2.material = paddle2Material;
   paddle2Ref.current = paddle2;
 
@@ -133,26 +134,38 @@ export const createScene = (
   // Set up the GUI for displaying scores
   const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI", true, scene);
 
-  // Score UI player 1
+  // Score UI player 1 (Red paddle)
   const player1ScoreText = new TextBlock();
   player1ScoreText.text = `${players[0].username}: ${players[0].score}`;
-  player1ScoreText.color = "white";
-  player1ScoreText.fontSize = 24;
+  player1ScoreText.color = "#ff0000";
+  player1ScoreText.fontSize = 32;
+  player1ScoreText.fontFamily = "Arial, sans-serif";
   player1ScoreText.textHorizontalAlignment = 0;
   player1ScoreText.textVerticalAlignment = 0;
-  player1ScoreText.left = "10px";
-  player1ScoreText.top = "10px";
+  player1ScoreText.horizontalAlignment = 0;
+  player1ScoreText.left = "30px";
+  player1ScoreText.top = "30px";
+  player1ScoreText.shadowBlur = 2;
+  player1ScoreText.shadowColor = "#ffffff";
+  player1ScoreText.shadowOffsetX = 1;
+  player1ScoreText.shadowOffsetY = 1;
   advancedTexture.addControl(player1ScoreText);
 
-  // UI player 2
+  // Score UI player 2 (Blue paddle)
   const player2ScoreText = new TextBlock();
   player2ScoreText.text = `${players[1].username}: ${players[1].score}`;
-  player2ScoreText.color = "white";
-  player2ScoreText.fontSize = 24;
+  player2ScoreText.color = "#0000ff"; 
+  player2ScoreText.fontSize = 32; 
+  player2ScoreText.fontFamily = "Arial, sans-serif";
   player2ScoreText.textHorizontalAlignment = 1;
   player2ScoreText.textVerticalAlignment = 0;
-  player2ScoreText.left = "calc(100% - 10px)";
-  player2ScoreText.top = "10px";
+  player2ScoreText.horizontalAlignment = 2; 
+  player2ScoreText.left = "-30px"; 
+  player2ScoreText.top = "30px";
+  player2ScoreText.shadowBlur = 2;
+  player2ScoreText.shadowColor = "#ffffff";
+  player2ScoreText.shadowOffsetX = -1;
+  player2ScoreText.shadowOffsetY = 1;
   advancedTexture.addControl(player2ScoreText);
 
   // Update the score UI when players score

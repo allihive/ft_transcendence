@@ -21,43 +21,80 @@ export function getInitialAngle(): number {
 	return angle;
 }
 
-//this function should handle the collision between the ball and the paddle
+// Predictive collision detection for paddle
+function predictPaddleCollision(
+  ballPos: Vector3,
+  ballRadius: number,
+  moveVector: Vector3,
+  paddle: Mesh
+): { hit: boolean; time: number; position: Vector3 } | null {
+  const paddleBB = paddle.getBoundingInfo().boundingBox;
+  const paddleMin = paddleBB.minimumWorld;
+  const paddleMax = paddleBB.maximumWorld;
+
+
+  let tZ = Infinity;
+  let hitZ = false;
+  
+  if (moveVector.z !== 0) {
+    const paddleZ = paddle.position.z > 0 ? paddleMin.z : paddleMax.z;
+    tZ = (paddleZ - ballPos.z) / moveVector.z;
+    
+    if (tZ >= 0 && tZ <= 1) {
+      const futureX = ballPos.x + moveVector.x * tZ;
+      const futureY = ballPos.y + moveVector.y * tZ;
+      
+      if (futureX >= paddleMin.x - ballRadius && 
+          futureX <= paddleMax.x + ballRadius &&
+          futureY >= paddleMin.y - ballRadius && 
+          futureY <= paddleMax.y + ballRadius) {
+        hitZ = true;
+      }
+    }
+  }
+
+  if (hitZ && tZ < 1) {
+    const collisionPos = ballPos.clone().add(moveVector.scale(tZ));
+    return {
+      hit: true,
+      time: tZ,
+      position: collisionPos
+    };
+  }
+
+  return null;
+}
 
 export function handlePaddleCollision(
   ball: Mesh,
   paddle: Mesh,
   direction: Vector3,
+  collisionPos: Vector3,
   isLeftPaddle: boolean 
 ) {
   const paddleBB = paddle.getBoundingInfo().boundingBox;
   const paddleCenter = paddle.position;
   const paddleHalfWidth = (paddleBB.maximum.x - paddleBB.minimum.x) / 2;
 
-  // where the ball hit the paddle
-  const relativeHitX = (ball.position.x - paddleCenter.x) / paddleHalfWidth;
+  const relativeHitX = (collisionPos.x - paddleCenter.x) / paddleHalfWidth;
   const clampedX = Math.max(-1, Math.min(1, relativeHitX));
 
-  
-  const maxBounceAngle = Math.PI / 4; // 45 degrees
+  const maxBounceAngle = Math.PI / 4;
 
-  // Calculate bounce angle based on X hit
   const bounceAngle = clampedX * maxBounceAngle;
 
-  // Forward direction (Z)
   const outZ = isLeftPaddle ? 1 : -1;
 
-  // Compute new direction vector on X-Z plane
   const newDirX = Math.sin(bounceAngle);
   const newDirZ = Math.cos(bounceAngle) * outZ;
 
   direction.set(newDirX, 0, newDirZ);
   direction.normalize();
 
-  // Prevent sticking
-  const pushBack = direction.scale(0.2);
-  ball.position.addInPlace(pushBack);
+  ball.position.copyFrom(collisionPos);
+  const offset = direction.scale(0.1);
+  ball.position.addInPlace(offset);
 }
-
 
 export function isAABBColliding(a: Mesh, b: Mesh): boolean {
   const aMin = a.getBoundingInfo().boundingBox.minimumWorld;
@@ -76,38 +113,6 @@ export function isAABBColliding(a: Mesh, b: Mesh): boolean {
   );
 }
 
-
-
-function checkAndHandlePaddleCollision(
-  ball: Mesh,
-  paddle: Mesh,
-  direction: Vector3,
-  collisionRef: { value: boolean },
-  lastBounceKey: 'paddle1' | 'paddle2',
-  lastBounceTime: { paddle1: number; paddle2: number },
-  collisionCooldown: number,
-  speed: { value: number },
-  isLeftPaddle: boolean
-) {
-  const isColliding = isAABBColliding(ball, paddle);
-  const now = performance.now();
-
-  if (isColliding && !collisionRef.value && now - lastBounceTime[lastBounceKey] > collisionCooldown) {
-    // Collision happened, handle the collision
-    handlePaddleCollision(ball, paddle, direction, isLeftPaddle);;
-    
-    // Increase speed after collision
-    speed.value += 0.5;
-
-    // Update the last bounce time for cooldown
-    lastBounceTime[lastBounceKey] = now;
-  }
-
-  // Update the collision state for the next frame
-  collisionRef.value = isColliding;
-}
-
-
 //balls starts from centre and goes towards one end randomly angled
 export function startBallMovement(
   scene: Scene,
@@ -117,67 +122,158 @@ export function startBallMovement(
   topwall1: Mesh,
   topwall2: Mesh,
   playersRef: React.RefObject<{ id: string; username: string; score: number }[]>,
-  setPlayers: React.Dispatch<React.SetStateAction<{ id: string; username: string; score: number }[]>>
+  setPlayers: React.Dispatch<React.SetStateAction<{ id: string; username: string; score: number }[]>>,
+  paddleMovementUpdate?: (deltaTime: number) => void
 ) {
  
   let angle = getInitialAngle();
   const direction = new Vector3(Math.cos(angle), 0, Math.sin(angle));
 
-
-  let speed = { value: 5 };
+  let speed = { value: 0 }; // Start with 0 speed until countdown finishes
   let lastFrameTime = performance.now();
   
-  const collisionCooldown = 600;
+  const collisionCooldown = 100;
   const lastBounceTime = {
     paddle1: 0,
     paddle2: 0,
   };
 
-  const collisionState = {
-    paddle1: { value: false },
-    paddle2: { value: false },
-    
-  };
-
   let lastSideWallBounceTime = 0;
-const sideWallCooldown = 1000; // 1 second cooldown
+  const sideWallCooldown = 100;
+  const ballRadius = 0.2;
 
-scene.onBeforeRenderObservable.add(() => {
+const timeoutCleanups: (() => void)[] = [];
+
+let gameStarted = false;
+
+const startInitialCountdown = () => {
+  let countdown = 3;
+  
+  const countdownInterval = setInterval(() => {
+    if ((window as any).showCountdown) {
+      (window as any).showCountdown(countdown);
+    }
+    
+    countdown--;
+    
+    if (countdown === 0) {
+      clearInterval(countdownInterval);
+      
+      setTimeout(() => {
+
+        if ((window as any).hideCountdown) {
+          (window as any).hideCountdown();
+        }
+        
+
+        gameStarted = true;
+        speed.value = 3; 
+        direction.set(Math.cos(angle), 0, Math.sin(angle));
+      }, 1000); 
+    }
+  }, 1000);
+  
+  timeoutCleanups.push(() => clearInterval(countdownInterval));
+};
+
+startInitialCountdown();
+
+const observer = scene.onBeforeRenderObservable.add(() => {
   const currentTime = performance.now();
   const deltaTime = (currentTime - lastFrameTime) / 1000;
 
-  // Move the ball based on current direction and speed
-  const moveVector = direction.clone().scale(speed.value * deltaTime);
-  ball.position.addInPlace(moveVector);
-
-  // === SIDE WALL COLLISION WITH COOLDOWN ===
-  const xLimit = 3.6;
-  const isPastCooldown = currentTime - lastSideWallBounceTime > sideWallCooldown;
-
-  if ((ball.position.x > xLimit || ball.position.x < -xLimit) && isPastCooldown) {
-    direction.x *= -1;
-    lastSideWallBounceTime = currentTime;
-
-    // Optional: prevent sticking to the wall
-    if (ball.position.x > xLimit) {
-      ball.position.x = xLimit - 0.05;
-    } else if (ball.position.x < -xLimit) {
-      ball.position.x = -xLimit + 0.05;
-    }
+  if (paddleMovementUpdate) {
+    paddleMovementUpdate(deltaTime);
   }
 
-  // === PADDLE COLLISIONS (these override direction and speed) ===
-  checkAndHandlePaddleCollision(ball, paddle1, direction, collisionState.paddle1, 'paddle1', lastBounceTime, collisionCooldown, speed, false);
-  checkAndHandlePaddleCollision(ball, paddle2, direction, collisionState.paddle2, 'paddle2', lastBounceTime, collisionCooldown, speed, true);
+  if (gameStarted) {
+    const moveVector = direction.clone().scale(speed.value * deltaTime);
+    const ballPos = ball.position.clone();
 
-  // === SCORING LOGIC ===
-  const zLimit = 6;
-  if (ball.position.z < -zLimit || ball.position.z > zLimit) {
-    score(ball, topwall1, topwall2, angle, direction, speed, zLimit, playersRef.current, setPlayers);
+    // === PREDICTIVE PADDLE COLLISION DETECTION ===
+    let collisionHappened = false;
+    
+    // Check paddle1 collision
+    if (direction.z > 0 && currentTime - lastBounceTime.paddle1 > collisionCooldown) {
+      const collision = predictPaddleCollision(ballPos, ballRadius, moveVector, paddle1);
+      if (collision) {
+        handlePaddleCollision(ball, paddle1, direction, collision.position, false);
+
+        speed.value += 0.2;
+        lastBounceTime.paddle1 = currentTime;
+        collisionHappened = true;
+        
+
+        if ((window as any).onBallSpeedIncrease) {
+          (window as any).onBallSpeedIncrease(speed.value);
+        }
+      }
+    }
+
+    // Check paddle2 collision
+    if (direction.z < 0 && !collisionHappened && currentTime - lastBounceTime.paddle2 > collisionCooldown) {
+      const collision = predictPaddleCollision(ballPos, ballRadius, moveVector, paddle2);
+      if (collision) {
+        handlePaddleCollision(ball, paddle2, direction, collision.position, true);
+
+        speed.value += 0.2;
+        lastBounceTime.paddle2 = currentTime;
+        collisionHappened = true;
+        
+        if ((window as any).onBallSpeedIncrease) {
+          (window as any).onBallSpeedIncrease(speed.value);
+        }
+      }
+    }
+
+    if (!collisionHappened) {
+      ball.position.addInPlace(moveVector);
+    }
+
+    // === SIDE WALL COLLISION ===
+    const xLimit = 3.7;
+    const isPastCooldown = currentTime - lastSideWallBounceTime > sideWallCooldown;
+
+    if ((ball.position.x > xLimit || ball.position.x < -xLimit) && isPastCooldown) {
+      direction.x *= -1;
+      lastSideWallBounceTime = currentTime;
+
+      if (ball.position.x > xLimit) {
+        ball.position.x = xLimit - 0.05;
+      } else if (ball.position.x < -xLimit) {
+        ball.position.x = -xLimit + 0.05;
+      }
+    }
+
+    // === SCORING LOGIC ===
+    const zLimit = 6;
+    if (ball.position.z < -zLimit || ball.position.z > zLimit) {
+      const scoringCleanup = score(ball, topwall1, topwall2, angle, direction, speed, zLimit, playersRef.current, setPlayers);
+      if (scoringCleanup && typeof scoringCleanup === 'function') {
+        timeoutCleanups.push(scoringCleanup);
+      }
+    }
   }
 
   lastFrameTime = currentTime;
 });
+
+return () => {
+  if (observer) {
+    scene.onBeforeRenderObservable.remove(observer);
+  }
+  
+  // Clean up all timeout cleanups safely
+  timeoutCleanups.forEach(cleanup => {
+    if (typeof cleanup === 'function') {
+      try {
+        cleanup();
+      } catch (error) {
+        console.warn('Cleanup function error:', error);
+      }
+    }
+  });
+};
 
 }
 
