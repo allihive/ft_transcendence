@@ -1,4 +1,4 @@
-import { type JSX } from "react";
+import { type JSX, useState } from "react";
 import { useForm } from "react-hook-form";
 import { updateUser } from "~/api/users/updateUser";
 import type { SubmitHandler } from "react-hook-form";
@@ -13,12 +13,36 @@ export function UpdateForm(props: LoginFormProps): JSX.Element {
 		register,
 		watch,
 		handleSubmit,
+		setValue,
 		formState: { errors },
 	} = useForm<UpdateUserData>();
-
+	
 	const setUser = useAuth((state) => state.setUser);
 	const user = useAuth((state) => state.user);
 	const password = watch("newPassword");
+
+	const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files[0];
+		if (!file) return;
+
+		const formData = new FormData();
+		formData.append('avatar', file);
+
+		try {
+			const response = await fetch('/api/upload-avatar', {
+				method: 'POST',
+				body: formData,
+			});
+			if (!response.ok) {
+				throw new Error('Failed to upload image')
+			}
+			const data = await response.json();
+			setValue('avatarUrl', data.url);
+		}
+		catch (error) {
+			console.error(error)
+		}
+	}
 
 	const onSubmit: SubmitHandler<UpdateUserData> = async (data) => {
 		try {
@@ -46,7 +70,7 @@ export function UpdateForm(props: LoginFormProps): JSX.Element {
 				type="file"
 				accept="image/*"
 				placeholder={user?.avatarUrl}
-				onChange={(e) => console.log(e.target.files[0])}
+				onChange={handleImage}
 				className="p-2 border-2 font-body max-w-xl border-black dark:border-background dark:text-background rounded-lg mt-4" />
 				{errors.avatarUrl && <p className="text-xs font-body text-red-500">{errors.avatarUrl.message}</p>}
 			<div className="font-title text-md mt-8 dark:text-background">Name</div>

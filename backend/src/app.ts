@@ -3,7 +3,7 @@ import cookie from "@fastify/cookie";
 import jwt from "@fastify/jwt";
 import fastifyMultipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
-import { join, resolve } from "path";
+import { resolve } from "path";
 import { authModule } from "./modules/auth/auth.module";
 import { cookieConfig } from "./config/cookie.config";
 import { CryptoService } from "./common/utils/CryptoService";
