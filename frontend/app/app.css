@@ -1,16 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Press+Start+2P&display=swap');
 @import "tailwindcss";
 
+@layer components {
+	button {
+		@apply cursor-pointer;
+	}
+}
+
 @theme {
-		--font-body: 'Orbitron', sans-serif;
-		--font-title: 'Press Start 2P', system-ui;
-	
-		--color-background: #EDF0F1;
-		--color-black: #0B081b;
-		--color-lightOrange: #FBBB83;
-		--color-darkOrange: #BD542E;
-		--color-brown: #985D3e;
-		--color-pop: #59E2CA;
-		--color-darkMode: #3F5152;
-		--color-darkBlue: #253534;
+	--font-body: 'Orbitron', sans-serif;
+	--font-title: 'Press Start 2P', system-ui;
+
+	--color-background: #EDF0F1;
+	--color-black: #0B081b;
+	--color-lightOrange: #FBBB83;
+	--color-darkOrange: #BD542E;
+	--color-brown: #985D3e;
+	--color-pop: #59E2CA;
+	--color-darkMode: #3F5152;
+	--color-darkBlue: #253534;
 }

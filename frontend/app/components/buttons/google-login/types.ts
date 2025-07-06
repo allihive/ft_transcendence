@@ -53,9 +53,10 @@ declare global {
 	}
 }
 
+export type GoogleLoginHandler = (credential: string) => void;
+
 export type GoogleLoginButtonProps = {
 	clientId: string;
-	onSuccess: (credential: string) => void;
-	onError?: (error: Error) => void;
+	onLogin: GoogleLoginHandler;
 	buttonConfig?: GsiButtonConfiguration
 };

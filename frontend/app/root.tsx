@@ -7,11 +7,9 @@ import {
 	ScrollRestoration,
 } from "react-router";
 
+import { Toaster } from "react-hot-toast";
 import type { Route } from "./+types/root";
 import "./app.css";
-import { Toaster } from "react-hot-toast"
-import { useEffect } from "react";
-
 
 export const links: Route.LinksFunction = () => [
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -51,7 +49,7 @@ export default function App() {
 			<Toaster position="top-right" />
 			<Outlet />
 		</>
-);
+	);
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

@@ -4,19 +4,19 @@ import { setupGIS } from "./setupGIS";
 
 export function GoogleLoginButton(props: GoogleLoginButtonProps): JSX.Element {
 	const divRef = useRef<HTMLDivElement>(null);
-	const { clientId, onSuccess, onError } = props;
+	const { clientId, onLogin } = props;
 
 	useEffect(() => {
 		if (!divRef.current) {
 			return;
 		}
 
-		setupGIS({ clientId, parent: divRef.current, onSuccess, onError });
+		setupGIS({ clientId, parent: divRef.current, onLogin });
 
 		return () => {
 			window.google?.accounts.id.cancel();
 		};
-	}, [clientId, onSuccess, onError]);
+	}, [clientId, onLogin]);
 
 	return <div ref={divRef}></div>;
 }

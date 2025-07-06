@@ -35,7 +35,7 @@ export const CreateUserDtoSchema = Type.Object(
 		}),
 		password: Type.Optional(Type.String({ minLength: 8 })),
 		authMethod: Type.Enum(AuthMethod, { default: AuthMethod.PASSWORD }),
-		avatarUrl: Type.String({ format: "uri-reference" })
+		avatarUrl: Type.String({ format: "uri-reference", default: "/files/2ca09462-3930-4dbc-b3cc-5e9b4b09d525.png" })
 	},
 	{ additionalProperties: false }
 );

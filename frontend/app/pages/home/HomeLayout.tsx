@@ -33,7 +33,7 @@ export function HomePage(): JSX.Element {
 						<img src={lines} alt="3 lines" className="w-32 h-auto mt-10" />
 					</div>
 				</div>
-				</div>
 			</div>
+		</div>
 	)
 }

@@ -1,12 +1,13 @@
+import type { GoogleLoginHandler } from "./types";
+
 type GisConfig = {
 	clientId: string;
 	parent: HTMLElement;
-	onSuccess: (credential: string) => void;
-	onError?: (error: Error) => void;
+	onLogin: GoogleLoginHandler;
 };
 
 const initializeGIS = (config: GisConfig): void => {
-	const { clientId, parent, onSuccess, onError } = config;
+	const { clientId, parent, onLogin } = config;
 
 	if (!window.google || !parent) {
 		return;
@@ -15,17 +16,7 @@ const initializeGIS = (config: GisConfig): void => {
 	window.google.accounts.id.initialize({
 		client_id: clientId,
 		ux_mode: "popup",
-		callback: (response) => {
-			console.log("GIS callback invoked");
-			if (response.credential) {
-				console.log("✅ Successfully initialized Google Identity Service (GIS).");
-				onSuccess(response.credential);
-			} else {
-				const error = new Error("❌ Failed to initialize Google Identity Service (GIS).");
-				console.error(error.message);
-				onError?.(error);
-			}
-		},
+		callback: (response) => onLogin(response.credential),
 	});
 
 	window.google.accounts.id.renderButton(parent, {
@@ -38,7 +29,7 @@ const initializeGIS = (config: GisConfig): void => {
 };
 
 const loadGIS = (config: GisConfig): void => {
-	const { clientId, parent, onSuccess, onError } = config;
+	const { clientId, parent, onLogin } = config;
 
 	const script = document.createElement("script");
 	script.src = import.meta.env.VITE_GOOGLE_GIS_CLIENT_URL;
@@ -47,7 +38,7 @@ const loadGIS = (config: GisConfig): void => {
 
 	script.onload = () => {
 		console.log("✅ Successfully loaded Google GIS script.");
-		initializeGIS({ clientId, parent, onSuccess, onError });
+		initializeGIS({ clientId, parent, onLogin });
 	};
 
 	script.onerror = () => {

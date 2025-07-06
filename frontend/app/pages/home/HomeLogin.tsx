@@ -1,17 +1,11 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import type { SubmitHandler } from "react-hook-form";
-import GoogleLogin  from '../users/googleLogin';
-import { FaGoogle } from "react-icons/fa";
-import controller from './assets/controller.png'
-import orangeCircle from './assets/orangeCircle.png'
-import lines from './assets/3lines.png'
 import { Link, useNavigate } from "react-router";
 import { loginWithGoogle } from "~/api/auth/login";
 import { GoogleLoginButton } from "~/components/buttons/google-login/GoogleLoginButton";
-import { LoginForm } from "~/components/forms/login/LoginForm";
-import type { User } from "~/api/types"
+import { LoginForm } from "~/components/forms/user/login/UserLoginForm";
 import { useAuth } from "~/stores/useAuth";
+import lines from './assets/3lines.png';
+import controller from './assets/controller.png';
+import orangeCircle from './assets/orangeCircle.png';
 
 //things to fix later: handle submit click, if success -> navigate to tournament page
 //if failure give wrong name or password
@@ -32,7 +26,6 @@ export function HomeLogin() {
 							setUser(user);
 							console.log("user name: ", user);
 							navigate("/play");
-							// forward client to home page now
 						}}
 					/>
 					{/*GOOGLE LOG IN*/}
@@ -41,10 +34,13 @@ export function HomeLogin() {
 						<GoogleLoginButton
 							clientId={`${import.meta.env.VITE_GOOGLE_CLIENT_ID}`}
 							onSuccess={async (credential: string) => {
-								const user = await loginWithGoogle(credential);
-								console.log("onSuccess after loginWithGoogle:", user);
-								navigate("/play");
-								// forward client to home page now
+								try {
+									const user = await loginWithGoogle(credential);
+									console.log("onSuccess after loginWithGoogle:", user);
+									navigate("/play");
+								} catch (error) {
+									alert((error as Error).message);
+								}
 							}}
 						/>
 					</div>

@@ -1,32 +1,93 @@
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
-import type { User } from "../api/types";
-
-// export const fetchCurrentUser = async (): Promise<User> => {
-// 	return fetchJson<User>(`${import.meta.env.VITE_API_BASE_URL}/users`, {
-// 		method: "GET",
-// 		headers: {
-// 			"Content-Type": "application/json",
-// 		},
-// 		})
-// 	https://medium.com/@jkc5186/managing-user-sessions-with-zustand-in-react-5bf30f6bc536}
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { logout as logoutApi } from "~/api/auth/logout";
+import { register as registerApi } from "~/api/auth/register";
+import { login as loginApi, loginWithGoogle as loginWithGoogleApi } from "~/api/auth/login";
+import type { User, UserRegisterData } from "../api/types";
 
 type AuthState = {
 	user: User | null;
 	setUser: (user: User | null) => void;
-	logout: () => void;
-}
+	login: (email: string, password: string) => Promise<User>;
+	loginWithGoogle: (credential: string) => Promise<User>;
+	register: (userRegisterData: UserRegisterData) => Promise<User>;
+	logout: () => Promise<void>;
+	isLoggingIn: boolean;
+	isLoggingOut: boolean;
+	isRegistering: boolean;
+};
 
 export const useAuth = create<AuthState>()(
-	persist<AuthState>(
+	persist(
 		(set) => ({
 			user: null,
-			setUser: (user) => set({user}),
-			logout: () => set({user: null}),
+			isLoggingIn: false,
+			isLoggingOut: false,
+			isRegistering: false,
+			setUser: (user) => set({ user }),
+
+			login: async (email: string, password: string) => {
+				set({ isLoggingIn: true });
+
+				try {
+					const user = await loginApi(email, password);
+					set({ user });
+					return user;
+				} catch (error) {
+					throw error;
+				} finally {
+					set({ isLoggingIn: true });
+				}
+			},
+
+			loginWithGoogle: async (credential: string) => {
+				set({ isLoggingIn: true });
+
+				try {
+					const user = await loginWithGoogleApi(credential);
+					set({ user });
+					return user;
+				} catch (error) {
+					throw error;
+				} finally {
+					set({ isLoggingIn: true });
+				}
+			},
+
+			register: async (userRegisterData) => {
+				set({ isRegistering: true });
+
+				try {
+					const user = await registerApi(userRegisterData);
+					set({ user });
+					return user;
+				} catch (error) {
+					throw error;
+				} finally {
+					set({ isRegistering: false });
+				}
+			},
+
+			logout: async () => {
+				set({ isLoggingOut: true });
+
+				try {
+					await logoutApi();
+					await useAuth.persist.getOptions().storage?.removeItem("auth");
+					set({ user: null, isLoggingIn: false, isRegistering: false });
+				} catch (error) {
+					throw error;
+				} finally {
+					set({ isLoggingOut: false });
+				}
+			}
 		}),
 		{
-			name: "user-session",
-			storage: createJSONStorage(() => localStorage)
+			name: "auth",
+			storage: createJSONStorage(() => localStorage),
+			partialize: (state) => ({
+				user: state.user
+			}),
 		}
 	)
 );

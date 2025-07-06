@@ -1,16 +1,10 @@
 import { fetchJson } from "../client";
-import type { User } from "../types";
+import type { User, UserRegisterData } from "../types";
 
-export const register = async ({ email, name, username, password, avatarUrl }: {
-	email: string,
-	name: string,
-	username: string,
-	password: string,
-	avatarUrl: string
-}): Promise<User> => {
+export const register = async (userRegisterData: UserRegisterData): Promise<User> => {
 	return fetchJson<User>(`${import.meta.env.VITE_API_BASE_URL}/api/auth/register`, {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ email, name, username, password, avatarUrl })
+		body: JSON.stringify(userRegisterData)
 	});
 };

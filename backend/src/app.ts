@@ -25,7 +25,19 @@ export const createApp = async (opts: FastifyServerOptions): Promise<FastifyInst
 	const app = Fastify(opts).withTypeProvider<TypeBoxTypeProvider>();
 
 	const UPLOAD_PATH = resolve(process.env.UPLOAD_DIR!);
-	console.log(UPLOAD_PATH);
+
+	app.setErrorHandler((error, request, reply) => {
+		request.log.error(error);
+
+		const errorResponse: ErrorResponseDto = {
+			statusCode: error.statusCode ?? 500,
+			code: error.code ?? "INTERNAL_SERVER_ERROR",
+			message: error.message ?? "Something went wrong on our end. Please try again later."
+		};
+
+		console.log("setErrorHandler():", errorResponse);
+		return reply.code(errorResponse.statusCode).send(errorResponse);
+	});
 
 	await app.register(fastifyStatic, { root: UPLOAD_PATH });
 
@@ -64,17 +76,7 @@ export const createApp = async (opts: FastifyServerOptions): Promise<FastifyInst
 		}
 	});
 
-	app.setErrorHandler((error, request, reply) => {
-		request.log.error(error);
 
-		const errorResponse: ErrorResponseDto = {
-			statusCode: error.statusCode ?? 500,
-			code: error.code ?? "INTERNAL_SERVER_ERROR",
-			message: error.message ?? "Something went wrong on our end. Please try again later."
-		};
-
-		return reply.code(errorResponse.statusCode).send(errorResponse);
-	});
 
 	return app;
 }
