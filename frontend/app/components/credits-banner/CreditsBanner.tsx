@@ -5,6 +5,10 @@ import lines from "./assets/3lines.png";
 
 export function CreditsBanner(): JSX.Element {
 	return (
+		<>
+		<div className="flex items-center mt-8 justify-center">
+			<h1 className="text-black dark:text-darkOrange font-title text-3xl h-full ">Transcendence</h1>
+		</div>
 		<div className="flex flex-row items-start space-x-30">
 			<img src={controller} alt="up-down-arrows" className="w-32 h-auto" />
 			<div className="flex flex-col items-center mt-8 justify-center border-2 border-black dark:border-background rounded-lg p-4">
@@ -20,5 +24,6 @@ export function CreditsBanner(): JSX.Element {
 				<img src={lines} alt="3 lines" className="w-32 h-auto mt-10" />
 			</div>
 		</div>
+		</>
 	);
 }

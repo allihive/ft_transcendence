@@ -38,10 +38,12 @@ export default function Login() {
 
 	return (
 		<div className="flex flex-col justify-center items-center w-full pb-16 pt-8">
-			<div className="w-[600px] h-[450px] relative bg-pop border-4 border-black rounded-md shadow-md justify-center items-center pb-16 space-y-4">
+			<div className="w-[600px] h-[420px] relative bg-pop border-4 border-black rounded-md shadow-md justify-center items-center pb-16 space-y-4">
 				<UserLoginForm onLogin={loginHandler} />
 
-				<div className="flex flex-grow justify-center items-center mx-8 mt-4 border-t border-black">
+				<div className="border-t pt-2"></div>
+
+				<div className="flex flex-grow justify-center items-center mx-8 mt-4 border-black">
 					<GoogleLoginButton
 						clientId={`${import.meta.env.VITE_GOOGLE_CLIENT_ID}`}
 						onLogin={googleLoginHandler}

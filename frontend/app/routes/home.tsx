@@ -10,12 +10,7 @@ export default function Home() {
 					<NavLink to="/login" className="text-black text-center pt-4 pb-4 px-6 text-2xl font-title border-2 border-black rounded-lg">Login</NavLink>
 				</div>
 			</div>
-			<div className="flex-1 p-6 flex flex-col items-center justify-center">
-				<div className="flex items-center mt-8 justify-center">
-					<h1 className="text-black dark:text-darkOrange font-title text-3xl h-full ">Transcendence</h1>
-				</div>
 				<CreditsBanner />
-			</div>
 		</div>
 	);
 }

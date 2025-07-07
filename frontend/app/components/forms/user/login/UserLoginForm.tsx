@@ -13,7 +13,7 @@ export function UserLoginForm(props: LoginFormProps): JSX.Element {
 	return (
 		<form
 			onSubmit={handleSubmit(onSubmit)}
-			className="flex flex-col justify-center items-center mt-4 font-title"
+			className="flex flex-col justify-center items-center mt-4 font-title pb-2"
 		>
 			<input
 				type="text"
