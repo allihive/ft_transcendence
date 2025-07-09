@@ -8,6 +8,7 @@ import {
 } from "react-router";
 
 import { Toaster } from "react-hot-toast";
+import "./utils";
 import type { Route } from "./+types/root";
 import "./app.css";
 

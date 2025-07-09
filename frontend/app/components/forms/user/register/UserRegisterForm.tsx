@@ -2,10 +2,12 @@ import { type JSX } from "react";
 import type { SubmitHandler } from "react-hook-form";
 import { useForm } from "react-hook-form";
 import type { RegisterFormProps, UserRegisterFormData, UserRegisterFormValues } from "./types";
+import { useTranslation, Trans } from "react-i18next";
 
 export function UserRegisterForm(props: RegisterFormProps): JSX.Element {
 	const { onRegister, isProcessing } = props;
 	const { register, handleSubmit, getValues, formState: { errors } } = useForm<UserRegisterFormValues>();
+	const { t } = useTranslation();
 
 	const onSubmit: SubmitHandler<UserRegisterFormValues> = async (data, event) => {
 		const userRegisterFormData: UserRegisterFormData = {
@@ -23,7 +25,7 @@ export function UserRegisterForm(props: RegisterFormProps): JSX.Element {
 		<>
 			<div className="flex items-center justify-center w-full px-8 my-4">
 				<div className="flex-grow max-w-xl mx-8 border-t border-black dark:border-white"></div>
-				<span className="px-4 text-black dark:text-background font-title">New User</span>
+				<span className="px-4 text-black dark:text-background font-title">{t('newUser')}</span>
 				<div className="flex-grow max-w-2xl mx-8 border-t border-black dark:border-white"></div>
 
 			</div>
@@ -32,21 +34,19 @@ export function UserRegisterForm(props: RegisterFormProps): JSX.Element {
 					{...register("avatars")}
 					type="file"
 					accept=".jpeg, .jpg, .png, image/jpeg, image/png"
-					placeholder="image"
+					placeholder={t('image')}
 					className="p-2 border-2 font-body max-w-xl border-black dark:border-background dark:text-background rounded-lg mt-4"
 				/>
-
 				{errors.avatars ? <p className="text-xs font-body text-red-500">{errors.avatars.message}</p> : null}
-
 				<input
 					{...register("name", {
 						required: {
 							value: true,
-							message: "Name is required"
+							message: t("formErrors.nameRequired")
 						}
 					})}
 					type="text"
-					placeholder="Name"
+					placeholder={t('name')}
 					className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4"
 				/>
 
@@ -56,15 +56,15 @@ export function UserRegisterForm(props: RegisterFormProps): JSX.Element {
 					{...register("email", {
 						required: {
 							value: true,
-							message: "Email is required",
+							message: t("formErrors.emailRequired")
 						},
 						pattern: {
 							value: /^[a-zA-Z0-9_.]+@[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+$/,
-							message: "Please enter a valid email",
+							message: t('formErrors.validEmail')
 						},
 					})}
 					type="email"
-					placeholder="Email"
+					placeholder={t('email')}
 					className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4"
 				/>
 
@@ -74,19 +74,19 @@ export function UserRegisterForm(props: RegisterFormProps): JSX.Element {
 					{...register("username", {
 						required: {
 							value: true,
-							message: "Username is required"
+							message: t('formErrors.usernameRequired')
 						},
 						pattern: {
 							value: /^[a-zA-Z0-9_-]+$/,
-							message: "Uppercase, lowercase, numbers, - , _ accepted",
+							message: t('formErrors.usernameRequirements')
 						},
 						minLength: {
 							value: 6,
-							message: "Username must have 6 characters",
+							message: t('formErrors.usernameMin'),
 						}
 					})}
 					type="text"
-					placeholder="Username"
+					placeholder={t('username')}
 					className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4"
 				/>
 
@@ -95,12 +95,12 @@ export function UserRegisterForm(props: RegisterFormProps): JSX.Element {
 				<input
 					{...register("password", {
 						required: {
-							message: "Password is required",
+							message: t("formErrors.passwordRequired"),
 							value: true,
 						},
 						pattern: {
 							value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).+$/,
-							message: "One uppercase (A-Z), one lowercase (a-z), one special character(%$ or 0-9)",
+							message: t('formErrors.passwordRequirements'),
 						},
 						minLength: {
 							value: 6,
@@ -108,7 +108,7 @@ export function UserRegisterForm(props: RegisterFormProps): JSX.Element {
 						}
 					})}
 					type="password"
-					placeholder="Password"
+					placeholder={t('password')}
 					className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4"
 				/>
 
@@ -116,11 +116,11 @@ export function UserRegisterForm(props: RegisterFormProps): JSX.Element {
 
 				<input
 					{...register("confirmPassword", {
-						required: "Please confirm your password",
-						validate: (value) => value === getValues("password") || "Passwords do not match"
+						required: t('formErrors.conFirmPassword'),
+						validate: (value) => value === getValues("password") || t('formErrors.mismatchPassword')
 					})}
 					type="password"
-					placeholder="Confirm password"
+					placeholder={t('confirmPassword')}
 					className="p-2 border-2 border-black bg-lightOrange hover:bg-darkOrange rounded-lg mt-4"
 				/>
 
@@ -131,7 +131,7 @@ export function UserRegisterForm(props: RegisterFormProps): JSX.Element {
 					disabled={isProcessing}
 					className="border-2 border-black bg-brown px-6 py-2 rounded-lg text-black mt-4"
 				>
-					Register
+					{t('register')}
 				</button>
 			</form>
 		</>

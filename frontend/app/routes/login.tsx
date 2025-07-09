@@ -6,6 +6,7 @@ import { UserLoginForm } from "~/components/forms/user/login/UserLoginForm";
 import { GoogleLoginButton } from "~/components/buttons/google-login/GoogleLoginButton";
 import type { LoginHandler } from "~/components/forms/user/login/types";
 import type { GoogleLoginHandler } from "~/components/buttons/google-login/types";
+import { useTranslation } from "react-i18next";
 
 export async function clientLoader(): Promise<void> {
 	if (useAuth.getState().user) {
@@ -17,6 +18,7 @@ export default function Login() {
 	const navigate = useNavigate();
 	const login = useAuth((state) => state.login);
 	const loginWithGoogle = useAuth((state) => state.loginWithGoogle);
+	const {t} = useTranslation();
 
 	const loginHandler: LoginHandler = async (data) => {
 		try {
@@ -55,7 +57,7 @@ export default function Login() {
 						to="/register"
 						className="border font-title border-black px-6 py-2 rounded-lg text-black mt-4"
 					>
-						Register New User
+						{t('newUser')}
 					</NavLink>
 				</div>
 			</div>

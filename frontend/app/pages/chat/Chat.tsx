@@ -1,4 +1,5 @@
 import { useState, useEffect, type JSX } from "react"
+import { useTranslation } from "react-i18next";
 import { FiSend } from "react-icons/fi";
 
 export function ChatPage(): JSX.Element {
@@ -13,13 +14,14 @@ export function ChatPage(): JSX.Element {
 	// const receiver = msg.members;
 	// const groupName = msg.room.name;
 	// need a go get messages and 
+	const {t} = useTranslation();
 
 	return (
 		<>
 			<div className="py-12 px-4">
 				<div className="flex flex-row w-full gap-2 h-screen">
 					<div className="w-1/4 bg-lightOrange border rounded-lg px-4 py-4">
-						<p className="text-center font-title text-lg">Chats</p>
+						<p className="text-center font-title text-lg">{t('chats')}</p>
 						<div className="flex flex-col py-4 gap-y-4">
 							<div className="border border-darkBlue bg-darkBlue rounded-md font-body py-2 px-2">
 								<p className="text-background">Sumin</p>
@@ -50,7 +52,7 @@ export function ChatPage(): JSX.Element {
 						<div className="pt-2 border-t dark:border-background mt-2 flex flex-row justify-between gap-x-6">
 							<input
 								type="text"
-								placeholder="Message here"
+								placeholder={t('message')}
 								className="font-body border dark:border-background w-full rounded-xl p-2"
 							/>
 							<button className="border rounded-full p-4 bg-background">

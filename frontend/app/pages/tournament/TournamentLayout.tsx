@@ -1,22 +1,24 @@
 import { GiLaurelsTrophy } from "react-icons/gi";
 import { useState, type JSX } from "react"
+import { useTranslation } from "react-i18next";
 
 export function TournamentPage(): JSX.Element {
+	const { t } = useTranslation();
 
 	return (
 	<div className="flex flex-col justify-center items-center w-full pb-16">
 		<div className="flex items-center justify-center w-full px-8 my-12">
 			<div className="flex-grow max-w-xl mx-8 border-t border-black dark:border-white"></div>
-			<span className="px-4 text-black dark:text-background font-title">Leader Board</span>
+			<span className="px-4 text-black dark:text-background font-title">{t('leaderboard')}</span>
 			<div className="flex-grow max-w-2xl mx-8 border-t border-black dark:border-white"></div>
 		</div>
 		<div className="w-[600px] h-[250px] relative bg-pop border-4 border-black rounded-4xl shadow-md">
 			<div className="flex flex-col font-title items-center text-2xl justify-between h-full py-4">
-				<span className="py-4">Your Rank</span>
+				<span className="py-4">{t('yourRank')}</span>
 				<span className="text-darkOrange ">4000</span>
 				<div className="flex flex-row space-x-4">
 					<span className="text-darkBlue">80th</span>
-					<span>percentile</span>
+					<span>{t('percentile')}</span>
 				</div>
 			</div>
 		</div>
@@ -26,10 +28,10 @@ export function TournamentPage(): JSX.Element {
 		<table className="table-auto mx-auto border-darkOrange bg-lightOrange rounded-xl">
 			<thead>
 				<tr>
-					<th className="font-title text-darkOrange px-12 py-8 text-left ">Rank</th>
-					<th className="font-title text-darkOrange px-12 py-8 text-left ">Player</th>
-					<th className="font-title text-darkOrange px-12 py-8 text-left ">Name</th>
-					<th className="font-title text-darkOrange px-12 py-8 text-left ">Score</th>
+					<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('rank')}</th>
+					<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('player')}</th>
+					<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('name')}</th>
+					<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('score')}</th>
 				</tr>
 			</thead>
 			<tbody>

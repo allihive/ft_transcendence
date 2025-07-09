@@ -3,8 +3,10 @@ import { upload } from "~/api/media/file-upload";
 import type { JSX } from "react";
 import type { SubmitHandler } from "react-hook-form";
 import type { UserUpdateFormData, UserUpdateFormProps, UserUpdateFormValues } from "./types";
+import { useTranslation } from "react-i18next";
 
 export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
+	const {t} = useTranslation();
 	const { user, onUpdate, isProcessing } = props;
 	const { register, handleSubmit, getValues, formState: { errors } } = useForm<UserUpdateFormValues>({
 		defaultValues: {
@@ -32,13 +34,13 @@ export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 			<div className="flex flex-col items-center">
 				<img src={user.avatarUrl} alt="Avatar" className="block w-[100px] h-auto rounded-full m-auto" />
 
-				<label htmlFor="avatar" className="hover:cursor-pointer">Change avatar</label>
+				<label htmlFor="avatar" className="hover:cursor-pointer">{t('changeAvatar')}</label>
 				<input {...register("avatars")} id="avatar" type="file" accept=".jpeg, .jpg, .png, image/jpeg, image/png" className="hidden" />
 
 				{errors.avatars && <p className="text-xs font-body text-red-500">{errors.avatars.message}</p>}
 			</div>
 
-			<div className="font-title text-md dark:text-background">Name</div>
+			<div className="font-title text-md dark:text-background">{t('name')}</div>
 
 			<input
 				{...register("name")}
@@ -49,7 +51,7 @@ export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 
 			{errors.name && <p className="text-xs font-body">{errors.name.message}</p>}
 
-			<div className="font-title text-md dark:text-background">Username</div>
+			<div className="font-title text-md dark:text-background">{t('username')}</div>
 
 			<input
 				type="text"
@@ -58,23 +60,23 @@ export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 				{...register("username", {
 					pattern: {
 						value: /^[a-zA-Z0-9_-]+$/,
-						message: "Uppercase, lowercase, numbers, - , _ accepted",
+						message: t('formErrors.usernameRequirements'),
 					},
 					minLength: {
 						value: 6,
-						message: "Username must have 6 characters",
+						message: t('formErrors.usernameMin'),
 					}
 				})}
 			/>
 			{errors.username ? <p className="text-xs font-body text-red-500">{errors.username.message}</p> : null}
 
-			<div className="font-title text-md dark:text-background">Email</div>
+			<div className="font-title text-md dark:text-background">{t('email')}</div>
 
 			<input
 				{...register("email", {
 					pattern: {
 						value: /^[a-zA-Z0-9_.]+@[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+$/,
-						message: "Please enter a valid email",
+						message: t('validEmail'),
 					},
 				})}
 				type="text"
@@ -83,21 +85,21 @@ export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 			/>
 			{errors.email ? <p className="text-xs font-body text-red-500">{errors.email.message}</p> : null}
 
-			<div className="font-title text-md dark:text-background">Current Password</div>
+			<div className="font-title text-md dark:text-background">{t('currentPassword')}</div>
 
 			<input
 				{...register("currentPassword", {
 					required: {
-						message: "Current password is required",
+						message: t('formErrors.currentPassRequired'),
 						value: true,
 					},
 					pattern: {
 						value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).+$/,
-						message: "One uppercase (A-Z), one lowercase (a-z), one special character(%$ or 0-9)",
+						message: t('formErrors.passwordRequirements'),
 					},
 					minLength: {
 						value: 6,
-						message: "Password must have 6 characters",
+						message: t('formErrors.passwordLen'),
 					}
 				})}
 				type="password"
@@ -107,25 +109,25 @@ export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 
 			{errors.newPassword && <p className="text-xs font-body text-red-500">{errors.newPassword.message}</p>}
 
-			<div className="font-title text-md dark:text-background">New Password</div>
+			<div className="font-title text-md dark:text-background">{t('newPassword')}</div>
 
 			<input
 				{...register("newPassword", {
 					required: {
-						message: "New password is required",
+						message: t('formErrors.newPassRequired'),
 						value: true,
 					},
 					pattern: {
 						value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).+$/,
-						message: "One uppercase (A-Z), one lowercase (a-z), one special character(%$ or 0-9)",
+						message: t('formErrors.passwordRequirements'),
 					},
 					minLength: {
 						value: 6,
-						message: "Password must have 6 characters",
+						message: t('formErrors.passwordLen'),
 					}
 				})}
 				type="password"
-				placeholder="New password"
+				placeholder={t('newPassword')}
 				className="p-2 border-2 font-body border-black dark:border-background dark:text-background rounded-lg"
 			/>
 
@@ -135,11 +137,11 @@ export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 
 			<input
 				{...register("confirmPassword", {
-					required: "Please confirm your password",
-					validate: (value) => value === getValues("newPassword") || "Passwords do not match"
+					required: t('confirmPassword'),
+					validate: (value) => value === getValues("newPassword") || t('mismatchPassword')
 				})}
 				type="password"
-				placeholder="Confirm password"
+				placeholder={t('confirmPassword')}
 				className="p-2 border-2 font-body border-black dark:border-background dark:text-background rounded-lg"
 			/>
 
@@ -150,7 +152,7 @@ export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 				disabled={isProcessing}
 				className="border-black border-2 p-2 bg-brown rounded-lg text-md font-title"
 			>
-				Save Changes
+				{t('saveChanges')}
 			</button>
 		</form >
 

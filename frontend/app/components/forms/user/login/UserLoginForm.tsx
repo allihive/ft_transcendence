@@ -2,10 +2,12 @@ import { useForm } from "react-hook-form";
 import type { JSX } from "react";
 import type { SubmitHandler } from "react-hook-form";
 import type { UserLoginFormData, LoginFormProps } from "./types";
+import { useTranslation } from "react-i18next";
+
 
 export function UserLoginForm(props: LoginFormProps): JSX.Element {
 	const { register, handleSubmit, formState: { errors } } = useForm<UserLoginFormData>();
-
+	const {t} = useTranslation();
 	const onSubmit: SubmitHandler<UserLoginFormData> = async (data, event) => {
 		props.onLogin(data, event);
 	};
@@ -17,16 +19,16 @@ export function UserLoginForm(props: LoginFormProps): JSX.Element {
 		>
 			<input
 				type="text"
-				placeholder="email"
+				placeholder={t('email')}
 				className="p-2 border-2 border-black rounded-lg mt-4 "
 				{...register("email", {
 					required: {
 						value: true,
-						message: "Email required",
+						message: t('formErrors.emailRequired'),
 					},
 					pattern: {
 						value: /^[a-zA-Z0-9_.]+@[a-zA-Z0-9_]+\.[a-zA-Z0-9_]+$/,
-						message: "Please enter a valid email",
+						message: t('formErrors.validEmail'),
 					},
 				})}
 			/>
@@ -35,20 +37,20 @@ export function UserLoginForm(props: LoginFormProps): JSX.Element {
 
 			<input
 				type="password"
-				placeholder="Password"
+				placeholder={t('password')}
 				className="p-2 border-2 border-black rounded-lg mt-4"
 				{...register("password", {
 					required: {
-						message: "Password is required",
+						message: t('formErrors.passwordRequired'),
 						value: true,
 					},
 					pattern: {
 						value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9]).+$/,
-						message: "One uppercase (A-Z), one lowercase (a-z), one special character(%$ or 0-9)",
+						message: t('formErrors.passwordRequirements'),
 					},
 					minLength: {
 						value: 6,
-						message: "Password must have 6 characters",
+						message: t('formErrors.passwordLen')
 					}
 				})}
 			/>
@@ -57,7 +59,7 @@ export function UserLoginForm(props: LoginFormProps): JSX.Element {
 			<button
 				type="submit"
 				className="border-2 border-black bg-brown px-6 py-2 rounded-lg text-black mt-4">
-				Submit
+				{t('submit')}
 			</button>
 		</form>
 	);

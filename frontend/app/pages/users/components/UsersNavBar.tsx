@@ -1,7 +1,10 @@
 import {  type JSX } from "react"
+import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router";
 
 export function UsersNavBar(): JSX.Element {
+
+	const {t} = useTranslation();
 
 return (
 
@@ -13,7 +16,7 @@ return (
 						${isActive ? "bg-lightOrange text-black border-black"
 						: "text-black dark:text-background border-black dark:border-background"
 						}` }>
-				Friends
+				{t('friends')}
 			</NavLink>
 			<NavLink to="/users/profile" 
 				className={({ isActive }) =>
@@ -21,7 +24,7 @@ return (
 						${isActive ? "bg-lightOrange text-black border-black"
 						: "text-black dark:text-background border-black dark:border-background"
 						}` }>
-				Profile
+				{t('profile')}
 			</NavLink>
 			<NavLink to="/users/stats" 
 				className={({ isActive }) =>
@@ -29,7 +32,7 @@ return (
 						${isActive ? "bg-lightOrange text-black border-black"
 						: "text-black dark:text-background border-black dark:border-background"
 						}` }>
-				Stats
+				{t('stats')}
 			</NavLink>
 		</div>
 	</div>

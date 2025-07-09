@@ -1,5 +1,6 @@
 import { useState, useEffect, type JSX } from "react"
 import type { PlayerGameResult } from "../../../../backend/services/game/src/modules/game-history/gameHistory.service"
+import { useTranslation } from "react-i18next";
 
 // interface PlayerGameResult {
 //   matchId: string;           // Unique match identifier
@@ -16,7 +17,7 @@ const test_playerId = 1;
 export function UsersStats(): JSX.Element {
 	//have name be passed as props?
 	const [matches, setMatches] = useState<PlayerGameResult[]>([]);
-
+	const {t} = useTranslation();
 	useEffect(() => {
 		console.log(`PlayerId: ${test_playerId}`);
 	  fetch(`http://localhost:3000/api/game-history/${test_playerId}`)
@@ -31,29 +32,29 @@ export function UsersStats(): JSX.Element {
 		.catch((err) => console.error("Failed to fetch matches:", err));
 	}, []);
 	// console.log("matches:", matches)
-	matches.forEach(match => {
-    console.log("Match date:", match.date);
-	console.log("MatchId", match.matchId );
-	console.log("Match opponent", match.opponent );
-	console.log("Match result", match.result );
-  	});
+	// matches.forEach(match => {
+    // console.log("Match date:", match.date);
+	// console.log("MatchId", match.matchId );
+	// console.log("Match opponent", match.opponent );
+	// console.log("Match result", match.result );
+  	// });
 	return (
 		<>
 			<div className="flex items-center justify-center w-full px-8 my-4">
 				<div className="flex-grow max-w-xl mx-8 border-t border-black dark:border-white"></div>
-				<span className="px-4 text-black dark:text-background font-title">Hello Name</span>
+				<span className="px-4 text-black dark:text-background font-title">{t('hello')} Name</span>
 				<div className="flex-grow max-w-2xl mx-8 border-t border-black dark:border-white"></div>
 			</div>
 			<div className="flex items-center justify-center w-full px-8 my-8">
-				<span className="px-4 text-black dark:text-background font-title">Results</span>
+				<span className="px-4 text-black dark:text-background font-title">{t('results')}</span>
 			</div>
 			<table className="table-auto mx-auto text-black dark:text-background">
 				<thead>
 					<tr className="font-title text-md">
-						<th className="px-12 text-left">Date</th>
-						<th className="px-12 text-left">Opponent</th>
-						<th className="px-12 text-left">Score</th>
-						<th className="px-12 text-left">Win/Loss</th>
+						<th className="px-12 text-left">{t('date')}</th>
+						<th className="px-12 text-left">{t('opponent')}</th>
+						<th className="px-12 text-left">{t('score')}</th>
+						<th className="px-12 text-left">{t('winOrLoss')}</th>
 					</tr>
 				</thead>
 				<tbody className="font-body text-black dark:text-background">
