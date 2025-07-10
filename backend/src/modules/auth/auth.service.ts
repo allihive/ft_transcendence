@@ -1,6 +1,9 @@
 import { EntityManager } from "@mikro-orm/core";
 import { OAuth2Client } from "google-auth-library";
+import { totp } from "speakeasy";
 import { BadRequestException } from "../../common/exceptions/BadRequestException";
+import { NotFoundException } from "../../common/exceptions/NotFoundException";
+import { UnauthorizedException } from "../../common/exceptions/UnauthorizedException";
 import { AuthMethod, User } from "../user/entities/user.entity";
 import { CreateUserDto } from "../user/user.dto";
 import { UserService } from "../user/user.service";
@@ -39,8 +42,8 @@ const generateUsername = (name: string): string => {
 		base = base.slice(0, 26);
 	}
 
-    const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
-    return `${base}${randomSuffix}`;
+	const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+	return `${base}${randomSuffix}`;
 }
 
 export class AuthService {
@@ -88,6 +91,47 @@ export class AuthService {
 
 	async register(em: EntityManager, createUserDto: CreateUserDto): Promise<User> {
 		return this.userService.createUser(em, createUserDto);
+	}
+
+	async verify(em: EntityManager, userId: string, totpCode: number): Promise<User> {
+		const user = await this.userService.findUser(em, { id: userId });
+
+		if (!user)
+			throw new NotFoundException(`User with id ${userId} not found`);
+		if (user.authMethod === AuthMethod.GOOGLE)
+			throw new BadRequestException("Two-factor auth is not applicable to users authenticated via Google");
+		if (!user.isTwoFactorEnabled)
+			throw new BadRequestException("Two-factor auth is not enabled for this user");
+		if (!user.totpSecret)
+			throw new BadRequestException("TOPT code is not set for this user");
+
+		const isVerified = totp.verify({
+			secret: user.totpSecret,
+			encoding: "base32",
+			token: totpCode.toString()
+		});
+
+		if (!isVerified) {
+			throw new UnauthorizedException("Invalid two-factor auth code");
+		}
+
+		return user;
+	}
+
+	async setupTwoFactorAuth(em: EntityManager, userId: string, secret: string): Promise<void> {
+		const user = await this.userService.findUser(em, { id: userId });
+
+		if (!user)
+			throw new NotFoundException(`User with id ${userId} not found`);
+		if (user.authMethod === AuthMethod.GOOGLE)
+			throw new BadRequestException("Two-factor auth is not applicable to users authenticated via Google");
+		if (user.isTwoFactorEnabled)
+			throw new BadRequestException(`User ${user.username} has already enabled 2FA`);
+
+		await this.userService.updateUser(em, user, {
+			totpSecret: secret,
+			isTwoFactorEnabled: true
+		});
 	}
 }
 

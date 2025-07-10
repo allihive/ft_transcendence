@@ -1,5 +1,4 @@
 import { useForm } from "react-hook-form";
-import { upload } from "~/api/media/file-upload";
 import type { JSX } from "react";
 import type { SubmitHandler } from "react-hook-form";
 import type { UserUpdateFormData, UserUpdateFormProps, UserUpdateFormValues } from "./types";

@@ -1,27 +1,104 @@
 import { FastifyPluginAsync } from "fastify";
-import { CreateUserDto, CreateUserDtoSchema, getUserResponseDto } from "../user/user.dto";
-import { GoogleLoginDto, GoogleLoginDtoSchema, LoginDto, LoginDtoSchema } from "./auth.dto";
+import { CreateUserDto, CreateUserDtoSchema, getUserResponseDto, UserResponseTwoFactorAuthDto } from "../user/user.dto";
+import {
+	GoogleLoginDto,
+	GoogleLoginDtoSchema,
+	LoginDto,
+	LoginDtoSchema,
+	SetupTwoFactorAuthResponseDto,
+	VerifyTwoFactorAuthDto,
+	VerifyTwoFactorAuthDtoSchema
+} from "./auth.dto";
 import { ForbiddenException } from "../../common/exceptions/ForbiddenException";
 import { cookieConfig } from "../../config/cookie.config";
 import { BadRequestException } from "../../common/exceptions/BadRequestException";
+import { generateSecret } from "speakeasy";
+import { UnauthorizedException } from "../../common/exceptions/UnauthorizedException";
+import { toDataURL } from "qrcode";
 
 export const authController: FastifyPluginAsync = async (app) => {
-	app.post("/login", {
-		schema: { body: LoginDtoSchema },
+	app.get("/whoami", async(request, reply) => {
+		if (!request.user) {
+			throw new UnauthorizedException("You haven't logged in or access token expired");
+		}
+
+		return reply.code(200).send(request.user);
+	});
+
+	app.post("/setup-2fa", async (request, reply) => {
+		if (!request.user) {
+			throw new UnauthorizedException("Unauthorized user is not allowed");
+		}
+
+		const secret = generateSecret({
+			name: "transcendence",
+			issuer: "hoang.tran.fin@gmail.com"
+		});
+
+		await app.authService.setupTwoFactorAuth(request.entityManager, request.user.id, secret.base32);
+		const qr = await toDataURL(secret.otpauth_url!);
+
+		const payload: SetupTwoFactorAuthResponseDto = {
+			message: "Scan the QR code with your authenticator app",
+			qrCode: qr,
+			secret: secret.base32
+		};
+
+		return reply.code(200).send(payload);
+	});
+
+	app.post("/verify-2fa", {
+		schema: { body: VerifyTwoFactorAuthDtoSchema },
 		handler: async (request, reply) => {
 			if (request.user) {
-				throw new BadRequestException("You are already authenticated, please sign out first");
+				throw new BadRequestException("Missing Two-factor authentication token");
 			}
 
+			if (!request.cookies["twoFactorAuthToken"]) {
+				throw new BadRequestException("Missing Two-factor authentication token");
+			}
+
+			const { id } = app.jwt.verify<UserResponseTwoFactorAuthDto>(request.cookies["twoFactorAuthToken"]);
+			const { toptCode } = request.body as VerifyTwoFactorAuthDto;
 			const em = request.entityManager;
-			const user = await app.authService.login(em, request.body as LoginDto);
-			const userResponseDto = getUserResponseDto(user);
-			const token = app.jwt.sign(userResponseDto);
+			const user = await app.authService.verify(em, id, toptCode);
+			const payload = getUserResponseDto(user);
+			const token = app.jwt.sign(payload, { expiresIn: "1h" });
 
 			return reply
 				.setCookie("accessToken", token)
 				.code(200)
-				.send(userResponseDto);
+				.send(payload);
+		}
+	});
+
+	app.post("/login", {
+		schema: { body: LoginDtoSchema },
+		handler: async (request, reply) => {
+			if (request.user) {
+				throw new BadRequestException("Authenticated user can't login again");
+			}
+
+			const em = request.entityManager;
+			const user = await app.authService.login(em, request.body as LoginDto);
+
+			if (user.isTwoFactorEnabled) {
+				const payload: UserResponseTwoFactorAuthDto = { id: user.id };
+				const token = app.jwt.sign(payload, { expiresIn: "5m" });
+
+				return reply
+					.setCookie("twoFactorAuthToken", token, { maxAge: 1000 * 60 * 5 })
+					.code(200)
+					.send(payload);
+			}
+
+			const payload = getUserResponseDto(user);
+			const token = app.jwt.sign(payload, { expiresIn: "1h" });
+
+			return reply
+				.setCookie("accessToken", token)
+				.code(200)
+				.send(payload);
 		}
 	});
 
@@ -29,19 +106,19 @@ export const authController: FastifyPluginAsync = async (app) => {
 		schema: { body: GoogleLoginDtoSchema },
 		handler: async (request, reply) => {
 			if (request.user) {
-				throw new BadRequestException("You are already authenticated, please sign out first");
+				throw new BadRequestException("Authenticated user can't login again");
 			}
 
 			const { idToken } = request.body as GoogleLoginDto;
 			const em = request.entityManager;
 			const user = await app.authService.loginWithGoogle(em, idToken);
-			const userResponseDto = getUserResponseDto(user);
-			const token = app.jwt.sign(userResponseDto);
+			const payload = getUserResponseDto(user);
+			const token = app.jwt.sign(payload);
 
 			return reply
 				.setCookie("accessToken", token)
 				.code(200)
-				.send(userResponseDto);
+				.send(payload);
 		}
 	});
 
@@ -49,31 +126,31 @@ export const authController: FastifyPluginAsync = async (app) => {
 		schema: { body: CreateUserDtoSchema },
 		handler: async (request, reply) => {
 			if (request.user) {
-				throw new ForbiddenException("Authenticated user can not register again");
+				throw new ForbiddenException("Authenticated user can't register again");
 			}
 
 			const em = request.entityManager;
 			const user = await app.authService.register(em, request.body as CreateUserDto);
-			const userResponseDto = getUserResponseDto(user);
-			const token = app.jwt.sign(userResponseDto);
+			const payload = getUserResponseDto(user);
+			const token = app.jwt.sign(payload);
 
 			return reply
 				.setCookie("accessToken", token)
 				.code(201)
-				.send(userResponseDto);
+				.send(payload);
 		}
 	});
 
 	app.post("/logout", {
 		handler: async (request, reply) => {
-			if (request.user) {
-				return reply
-					.clearCookie("accessToken", cookieConfig)
-					.code(204)
-					.send();
+			if (!request.user) {
+				throw new BadRequestException("You haven't signed in yet");
 			}
 
-			return reply.code(204).send();
+			return reply
+				.clearCookie("accessToken", cookieConfig)
+				.code(204)
+				.send();
 		}
 	});
 };

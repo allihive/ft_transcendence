@@ -18,13 +18,19 @@ export class UserRepository {
 		return em.findAndCount(User, { isActive: true }, { offset, limit });
 	}
 
-	async updateUser(em: EntityManager, id: string, userData: EntityData<User>): Promise<User> {
+	async updateUserById(em: EntityManager, id: string, userData: EntityData<User>): Promise<User> {
 		const user = await em.findOne(User, { id });
 
 		if (!user) {
 			throw new NotFoundException(`User with ID ${id} not found`);
 		}
 
+		em.assign(user, userData);
+		await em.flush();
+		return user;
+	}
+
+	async updateUser(em: EntityManager, user: User, userData: EntityData<User>): Promise<User> {
 		em.assign(user, userData);
 		await em.flush();
 		return user;

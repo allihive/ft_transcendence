@@ -3,6 +3,7 @@ export type User = {
 	email: string;
 	name: string;
 	username: string;
+	isTwoFactorEnabled: boolean;
 	avatarUrl: string;
 	lastLogin: string;
 };
@@ -32,4 +33,10 @@ export type FetchError = {
 	statusCode: number;
 	code: string;
 	message: string;
+};
+
+export type TwoFactorAuth = {
+	message: string;
+	qrCode: string;
+	secret: string;
 };

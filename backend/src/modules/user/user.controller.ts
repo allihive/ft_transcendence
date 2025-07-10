@@ -62,7 +62,7 @@ export const userController: FastifyPluginAsync = async (app) => {
 		handler: async (request, reply) => {
 			const em = request.entityManager;
 			const { id } = request.params as UpdateUserParamsDto;
-			const user = await app.userService.updateUser(em, id, request.body as UpdateUserDto);
+			const user = await app.userService.updateUserById(em, id, request.body as UpdateUserDto);
 			return reply.code(200).send(user);
 		}
 	});

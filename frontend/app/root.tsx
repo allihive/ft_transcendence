@@ -7,10 +7,12 @@ import {
 	ScrollRestoration,
 } from "react-router";
 
-import { Toaster } from "react-hot-toast";
-import "./utils";
-import type { Route } from "./+types/root";
 import "./app.css";
+import { useEffect } from "react";
+import { Toaster } from "react-hot-toast";
+import { whoami } from "./api/auth/whoami";
+import { useAuth } from "./stores/useAuth";
+import type { Route } from "./+types/root";
 
 export const links: Route.LinksFunction = () => [
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -45,6 +47,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+	useEffect(() => {
+		const initializeStore = async (): Promise<void> => {
+			try {
+				const me = await whoami();
+				useAuth.setState({ user: me });
+			} catch (error) {
+				useAuth.setState({ user: null });
+			} finally {
+				useAuth.setState({ isLoggingIn: false });
+			}
+		};
+
+		initializeStore();
+	}, []);
+
 	return (
 		<>
 			<Toaster position="top-right" />

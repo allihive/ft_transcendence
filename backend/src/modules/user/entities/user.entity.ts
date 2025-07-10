@@ -23,11 +23,17 @@ export class User {
 	@Property({ type: "string", nullable: false, unique: true, length: 30 })
 	username!: string;
 
-	@Property({ type: "string", nullable: true, length: 255, name: "password_hash" })
-	passwordHash: string | null = null;
+	@Property({ type: "string", nullable: true, default: null, length: 255, name: "password_hash" })
+	passwordHash?: string;
+
+	@Property({ type: "string", nullable: true, default: null, name: "totp_secret" })
+  	totpSecret?: string;
 
 	@Property({ type: "string", nullable: false, default: AuthMethod.PASSWORD, name: "auth_method" })
-	authMethod!: AuthMethod;
+	authMethod?: AuthMethod;
+
+	@Property({ type: "boolean", nullable: false, default: false, name: "is_two_factor_enabled" })
+	isTwoFactorEnabled?: boolean;
 
 	@Property({ type: "text", nullable: false, name: "avatar_url" })
 	avatarUrl!: string;

@@ -61,9 +61,13 @@ export class UserService {
 		}
 	}
 
-	async updateUser(em: EntityManager, id: string, updateUserDto: UpdateUserDto): Promise<User> {
+	async updateUserById(em: EntityManager, id: string, updateUserDto: UpdateUserDto): Promise<User> {
 		const userData = updateUserDto satisfies EntityData<User>;
-		return this.userRepository.updateUser(em, id, userData);
+		return this.userRepository.updateUserById(em, id, userData);
+	}
+
+	async updateUser(em: EntityManager, user: User, updateUserDto: UpdateUserDto): Promise<User> {
+		return this.userRepository.updateUser(em, user, updateUserDto);
 	}
 
 	async deleteUser(em: EntityManager, id: string): Promise<void> {

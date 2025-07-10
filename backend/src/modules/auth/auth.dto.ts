@@ -37,8 +37,36 @@ export const CreateUserProviderDtoSchema = Type.Object(
 	{ additionalProperties: false }
 );
 
+export const SetupTwoFactorAuthResponseDtoSchema = Type.Object(
+	{
+		message: Type.String({ description: "Status message" }),
+		qrCode: Type.String({
+			format: "uri",
+			description: "Data URL for QR code image (PNG)",
+		}),
+		secret: Type.String({
+			minLength: 32,
+			description: "Base32 encoded TOTP secret for manual entry",
+		}),
+	},
+	{ additionalProperties: false }
+);
+
+export const VerifyTwoFactorAuthDtoSchema = Type.Object(
+	{
+		toptCode: Type.Number({
+			minimum: 100000,
+			maximum: 999999,
+			description: "6-digit TOTP code from authenticator app"
+		})
+	},
+	{ additionalProperties: false }
+);
+
 export type LoginDto = Static<typeof LoginDtoSchema>;
 export type GoogleLoginDto = Static<typeof GoogleLoginDtoSchema>;
 export type ForgotPasswordDto = Static<typeof ForgotPasswordDtoSchema>;
 export type ResetPasswordDto = Static<typeof ResetPasswordDtoSchema>;
 export type CreateUserProviderDto = Static<typeof CreateUserProviderDtoSchema>;
+export type VerifyTwoFactorAuthDto = Static<typeof VerifyTwoFactorAuthDtoSchema>;
+export type SetupTwoFactorAuthResponseDto = Static<typeof SetupTwoFactorAuthResponseDtoSchema>;

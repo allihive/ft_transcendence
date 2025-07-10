@@ -1,13 +1,19 @@
 import { HttpError } from "~/exceptions/HttpError";
 import type { FetchError } from "./types";
 
-export const fetchJson = async<T> (url: string, options?: RequestInit): Promise<T> => {
+export const fetchJson = async<T> (url: string, options?: RequestInit): Promise<T | null> => {
 	try {
 		const response = await fetch(url, options);
 
 		if (!response.ok) {
-			const errorJson: FetchError = await response.json();
-			throw new HttpError(errorJson.message);
+			const err: FetchError = await response.json();
+			throw new HttpError(err.message);
+		}
+
+		const length = response.headers.get("content-length");
+
+		if (!length || length === "0") {
+			return null;
 		}
 
 		const data: T = await response.json();
