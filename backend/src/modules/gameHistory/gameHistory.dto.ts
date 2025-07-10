@@ -15,15 +15,15 @@ export const GetPlayerStatsParamsSchema = Type.Object(
 // Query DTOs
 export const GetPlayerHistoryQuerySchema = Type.Object(
   {
-    limit: Type.Optional(Type.Number({ default: 5, minimum: 1, maximum: 100 }))
+    limit: Type.Number({ default: 5, minimum: 1, maximum: 25 }),
+    page: Type.Number({ default: 1, minimum: 1})
   },
   { additionalProperties: false }
 );
 
 // Body DTOs
-export const RecordMatchDtoSchema = Type.Object(
+export const CreateGameHistoryDtoSchema = Type.Object(
   {
-    matchId: Type.String({ minLength: 1 }),
     winnerId: Type.String({ format: "uuid" }),
     loserId: Type.String({ format: "uuid" }),
     winnerScore: Type.Number({ minimum: 0 }),
@@ -35,8 +35,7 @@ export const RecordMatchDtoSchema = Type.Object(
 // Response DTOs
 export const PlayerGameResultDtoSchema = Type.Object(
   {
-    matchId: Type.String(),
-    date: Type.String(),
+    // date: Type.String({ format: "date-time" }),
     opponent: Type.String({ format: "uuid" }),
     playerScore: Type.Number(),
     opponentScore: Type.Number(),
@@ -78,7 +77,7 @@ export const RecordMatchResponseDtoSchema = Type.Object(
 export type GetPlayerHistoryParamsDto = Static<typeof GetPlayerHistoryParamsSchema>;
 export type GetPlayerStatsParamsDto = Static<typeof GetPlayerStatsParamsSchema>;
 export type GetPlayerHistoryQueryDto = Static<typeof GetPlayerHistoryQuerySchema>;
-export type RecordMatchDto = Static<typeof RecordMatchDtoSchema>;
+export type CreateGameHistoryDto = Static<typeof CreateGameHistoryDtoSchema>;
 export type PlayerGameResultDto = Static<typeof PlayerGameResultDtoSchema>;
 export type GameHistoryResponseDto = Static<typeof GameHistoryResponseDtoSchema>;
 export type RecordMatchResponseDto = Static<typeof RecordMatchResponseDtoSchema>;
@@ -97,10 +96,10 @@ export const getPlayerGameResultDto = (
   const opponent = playerWon ? game.loserId : game.winnerId;
   const playerScore = playerWon ? game.winnerScore : game.loserScore;
   const opponentScore = playerWon ? game.loserScore : game.winnerScore;
+  // const date = game.createdAt!.toISOString();
 
   return {
-    matchId: game.matchId,
-    date: game.createdAt?.toISOString() || new Date().toISOString(),
+    // date,
     opponent,
     playerScore,
     opponentScore,

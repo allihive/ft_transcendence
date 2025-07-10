@@ -1,39 +1,26 @@
 // src/modules/gameHistory/entities/game-history.entity.ts
-import { Entity, PrimaryKey, Property, Index } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, Check } from "@mikro-orm/core";
+import { randomUUID } from "crypto";
 
-@Entity({ tableName: 'game_history' })
-@Index({ name: 'idx_game_history_winner', properties: ['winnerId'] })
-@Index({ name: 'idx_game_history_loser', properties: ['loserId'] })
+@Entity({ tableName: "game_history" })
+@Check({ expression: "winner_score >= 0 AND winner_score <= 5 AND loser_score >= 0 AND loser_score <= 5 AND winner_score > loser_score" })
 export class GameHistory {
-  @PrimaryKey()
-  matchId!: string;
+	@PrimaryKey({ type: "uuid" })
+	id: string = randomUUID();
 
-  @Property({ type: 'uuid' })
-  winnerId!: string;
+	@Property({ type: "uuid" })
+	winnerId!: string;
 
-  @Property({ type: 'uuid' })
-  loserId!: string;
+	@Property({ type: "uuid" })
+	loserId!: string;
 
-  @Property()
-  winnerScore!: number;
+	@Property({ type: "int", nullable: false, name: "winner_score" })
+	winnerScore!: number;
 
-  @Property()
-  loserScore!: number;
+	@Property({ type: "int", nullable: false, name: "loser_score" })
+	loserScore!: number;
 
-  @Property()
-  createdAt: Date = new Date();
-
-  constructor(data: {
-    matchId: string;
-    winnerId: string;
-    loserId: string;
-    winnerScore: number;
-    loserScore: number;
-  }) {
-    this.matchId = data.matchId;
-    this.winnerId = data.winnerId;
-    this.loserId = data.loserId;
-    this.winnerScore = data.winnerScore;
-    this.loserScore = data.loserScore;
-  }
+	@Property({ type: "timestamptz", nullable: false, defaultRaw: "CURRENT_TIMESTAMP", name: "created_at" })
+	createdAt?: Date;
 }
+

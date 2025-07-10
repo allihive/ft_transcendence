@@ -1,5 +1,6 @@
 // src/modules/remote/entities/remote.entity.ts
 import { Entity, PrimaryKey, Property, Index } from '@mikro-orm/core';
+import { randomUUID } from 'crypto';
 
 export enum Status {
   ONLINE = 'ONLINE',
@@ -8,39 +9,25 @@ export enum Status {
 }
 
 @Entity({ tableName: 'remote_games' })
-@Index({ name: 'idx_remote_game_player', properties: ['playerId'] })
-@Index({ name: 'idx_remote_game_status_score', properties: ['status', 'rating'] })
+// @Index({ name: 'idx_remote_game_player', properties: ['playerId'] })
+// @Index({ name: 'idx_remote_game_status_score', properties: ['status', 'rating'] })
 export class RemoteGame {
-  @PrimaryKey()
-  id!: number;
+  // may not need this
+	@PrimaryKey({ type: "uuid" })
+	id: string = randomUUID();
 
-  @Property({ type: 'uuid', unique: true })
+  @Property({ type: 'uuid' })
   playerId!: string;
 
-  @Property({ default: 1000 })
+  @Property({ default: 100 })
   rating!: number;
 
   @Property({ type: () => Status, default: Status.OFFLINE })
   status!: Status;
 
-  @Property()
-  updatedAt: Date = new Date();
+	@Property({ type: "timestamptz", nullable: false, defaultRaw: "CURRENT_TIMESTAMP", name: "updated_at" })
+  updatedAt?: Date;
 
-  @Property()
-  createdAt: Date = new Date();
-
-  constructor(data: {
-    playerId: string;
-    rating?: number;
-    status?: Status;
-    updatedAt: Date;
-  }) {
-    this.playerId = data.playerId;
-    if (data.rating !== undefined) this.rating = data.rating;
-    if (data.status !== undefined) this.status = data.status;
-  }
-
-    updateTimestamp() {
-      this.updatedAt = new Date();
-    }
+	@Property({ type: "timestamptz", nullable: false, defaultRaw: "CURRENT_TIMESTAMP", name: "created_at" })
+	createdAt?: Date;
 }

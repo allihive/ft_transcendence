@@ -14,6 +14,8 @@ import { userModule } from "./modules/user/user.module";
 import { UserResponseDto } from "./modules/user/user.dto";
 import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { existsSync, mkdirSync } from "fs";
+import { gameHistoryModule } from "./modules/gameHistory/gameHistory.module";
+import { remoteGameModule } from "./modules/remote/remote.module";
 
 declare module "fastify" {
 	interface FastifyInstance {
@@ -60,6 +62,8 @@ export const createApp = async (opts: FastifyServerOptions): Promise<FastifyInst
 	await app.register(databaseModule);
 	await app.register(userModule, { prefix: "/api/users" });
 	await app.register(authModule, { prefix: "/api/auth" });
+	await app.register(gameHistoryModule, { prefix: "/api/history"});
+	await app.register(remoteGameModule, { prefix: "api/remote"})
 	await app.register(mediaModule);
 
 	app.addHook("onReady", () => {
