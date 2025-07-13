@@ -1,0 +1,13 @@
+### Create new user stats
+POST http://localhost:3000/api/stats/users/ HTTP/1.1
+content-type: application/json
+
+{
+    "userId": "116a7802-81ae-4c71-acf3-941bfc734f69",
+    "matchesPlayed": 1,
+    "matchesWon": 1,
+    "matchesLost": 0
+}
+
+### Get user stats
+GET http://localhost:3000/api/stats/users/116a7802-81ae-4c71-acf3-941bfc734f69 HTTP/1.1

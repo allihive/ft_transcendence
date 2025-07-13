@@ -28,9 +28,5 @@ export const authModule = fp(authPlugin, {
 		"@fastify/jwt",
 		"@transcendence/database",
 		"@transcendence/user",
-	],
-	decorators: {
-		fastify: ["userService"],
-		request: ["entityManager"]
-	}
+	]
 });

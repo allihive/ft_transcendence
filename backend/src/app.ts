@@ -16,6 +16,8 @@ import { existsSync, mkdirSync } from "fs";
 import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { gameHistoryModule } from "./modules/gameHistory/gameHistory.module";
 import { remoteGameModule } from "./modules/remote/remote.module";
+import { statsModule } from "./modules/stats/stats.module";
+import { getErrorResponseDto } from "./common/utils/getErrorResponseDto";
 
 declare module "fastify" {
 	interface FastifyInstance {
@@ -58,6 +60,7 @@ const installPlugins = async (app: FastifyInstance): Promise<void> => {
 	await app.register(databaseModule);
 	await app.register(userModule, { prefix: "/api/users" });
 	await app.register(authModule, { prefix: "/api/auth" });
+	await app.register(statsModule, { prefix: "/api/stats"});
 	await app.register(gameHistoryModule, { prefix: "/api/history"});
 	await app.register(remoteGameModule, { prefix: "api/remote"})
 	await app.register(mediaModule);
@@ -86,21 +89,17 @@ export const createApp = async (opts: FastifyServerOptions): Promise<FastifyInst
 
 	app.setErrorHandler((error, request, reply) => {
 		request.log.error(error);
+		const errorResponse = getErrorResponseDto(error);
 
-		const errorResponse: ErrorResponseDto = {
-			statusCode: error.statusCode ?? 500,
-			code: error.code ?? "INTERNAL_SERVER_ERROR",
-			message: error.message ?? "Something went wrong on our end. Please try again later."
-		};
-
-		console.log("setErrorHandler():", errorResponse);
-		return reply.code(errorResponse.statusCode).send(errorResponse);
+		return reply
+			.code(errorResponse.statusCode)
+			.send(errorResponse);
 	});
 
 	await installFastifyPlugins(app);
 	await decorateGlobal(app);
 	await installPlugins(app);
 	await registerHooks(app);
-	
+
 	return app;
 }

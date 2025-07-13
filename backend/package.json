@@ -13,6 +13,7 @@
 		"migration:create": "mikro-orm migration:create",
 		"migration:up": "mikro-orm migration:up",
 		"migration:down": "mikro-orm migration:down",
+		"migration:reset": "rm -rf database && mikro-orm migration:create && mikro-orm migration:up",
 		"schema:dump": "mikro-orm schema:update --dump",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},

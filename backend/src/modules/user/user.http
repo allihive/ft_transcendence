@@ -1,0 +1,16 @@
+### Create an user
+POST http://localhost:3000/api/users HTTP/1.1
+Content-Type: application/json
+
+{
+	"email": "dev@hive.fi",
+	"name": "dev",
+	"username": "dev",
+	"password": "Abcd123!"
+}
+
+### Get an user by username
+GET http://localhost:3000/api/users/dev HTTP/1.1
+
+### Get all users
+GET http://localhost:3000/api/users/ HTTP/1.1

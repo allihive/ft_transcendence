@@ -51,14 +51,7 @@ export class UserService {
 			avatarUrl: createUserDto.avatarUrl
 		};
 
-		try {
-			return this.userRepository.createUser(em, userData);
-		} catch (error) {
-			if (error instanceof UniqueConstraintViolationException) {
-				throw new ConflictException(error.message);
-			}
-			throw error;
-		}
+		return this.userRepository.createUser(em, userData);
 	}
 
 	async updateUserById(em: EntityManager, id: string, updateUserDto: UpdateUserDto): Promise<User> {
