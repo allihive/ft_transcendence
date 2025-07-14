@@ -44,6 +44,7 @@ export function score(
     const scoreUpdateTimeout = setTimeout(() => {
       setPlayers(prev => {
         console.log('scoreUpdateTimeout called');
+        
         const updatedPlayers = [...prev];
         let winner: string | null = null;
 
@@ -54,17 +55,17 @@ export function score(
 
         // Update scores
         if (player1Score) {
-          updatedPlayers[0].score++;
+          updatedPlayers[0].score += 0.5;
           console.log('player 1 scored');
         } else if (player2Score) {
-          updatedPlayers[1].score++;
+          updatedPlayers[1].score += 0.5;
           console.log('player 2 scored');
         }
 
         // Check for win condition
-        if (updatedPlayers[0].score >= 10) {
+        if (updatedPlayers[0].score >= 5) {
           winner = updatedPlayers[0].username;
-        } else if (updatedPlayers[1].score >= 10) {
+        } else if (updatedPlayers[1].score >= 5) {
           winner = updatedPlayers[1].username;
         }
 
@@ -102,7 +103,6 @@ export function score(
               }, 1000); // Wait 1 second after showing "1"
             }
           }, 1000);
-          
           timeoutIds.push(countdownInterval);
         }
 
