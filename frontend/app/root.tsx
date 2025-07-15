@@ -7,7 +7,9 @@ import {
 	ScrollRestoration,
 } from "react-router";
 
+
 import "./app.css";
+import "./utils";
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { whoami } from "./api/auth/whoami";
