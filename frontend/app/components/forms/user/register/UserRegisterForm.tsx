@@ -30,13 +30,16 @@ export function UserRegisterForm(props: RegisterFormProps): JSX.Element {
 
 			</div>
 			<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col justify-center items-center mt-10 font-title">
-				<input
-					{...register("avatars")}
-					type="file"
-					accept=".jpeg, .jpg, .png, image/jpeg, image/png"
-					placeholder={t('image')}
-					className="p-2 border-2 font-body max-w-xl border-black dark:border-background dark:text-background rounded-lg mt-4"
-				/>
+				<label className="p-2 border-2 text-s font-body border-black dark:border-background dark:text-background rounded-lg mt-4">
+					{t('uploadImage')}
+					<input
+						{...register("avatars")}
+						type="file"
+						accept=".jpeg, .jpg, .png, image/jpeg, image/png"
+						placeholder={t('image')}
+						className="hidden"
+					/>
+				</label>
 				{errors.avatars ? <p className="text-xs font-body text-red-500">{errors.avatars.message}</p> : null}
 				<input
 					{...register("name", {

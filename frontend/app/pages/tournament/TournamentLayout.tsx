@@ -29,12 +29,12 @@ export function TournamentPage(): JSX.Element {
 
 	const handleCreateTournament = () => {
 		if (!newTournamentName.trim()) {
-			toast.error(t('pleaseEnterTournamentName'));
+			toast.error(t('tournamentError.tournamentName'));
 			return;
 		}
 		
 		if (!user) {
-			toast.error(t('mustBeLoggedInToCreate'));
+			toast.error(t('tournamentError.logIn'));
 			return;
 		}
 
@@ -57,18 +57,18 @@ export function TournamentPage(): JSX.Element {
 
 	const handleJoinTournament = () => {
 		if (!selectedTournament) {
-			toast.error(t('pleaseSelectTournament'));
+			toast.error(t('tournameError.selectTournament'));
 			return;
 		}
 
 		if (!user) {
-			toast.error(t('mustBeLoggedInToJoin'));
+			toast.error(t('tournamentError.logIn'));
 			return;
 		}
 
 		const tournament = availableTournaments.find(t => t.id === selectedTournament);
 		if (tournament) {
-			toast.success(`${t('joinedTournament')} "${tournament.name}"!`);
+			toast.success(`${t('tournamentJoined')} "${tournament.name}"!`);
 			console.log('Joined tournament:', tournament);
 		}
 	};
@@ -122,8 +122,8 @@ export function TournamentPage(): JSX.Element {
 					
 					{availableTournaments.length === 0 ? (
 						<div className="text-center py-8">
-							<p className="text-gray-600">{t('noTournamentsAvailable')}</p>
-							<p className="text-sm text-gray-500 mt-2">{t('createNewTournamentToStart')}</p>
+							<p className="text-gray-600">{t('tournamentError.noTournaments')}</p>
+							<p className="text-sm text-gray-500 mt-2">{t('createToStart')}</p>
 						</div>
 					) : (
 						<div className="space-y-4">
@@ -224,7 +224,7 @@ export function TournamentPage(): JSX.Element {
 								<li>• {t('maximum')} {maxParticipants} {t('participants')}</li>
 								<li>• {t('singleEliminationBracket')}</li>
 								<li>• {t('bestOf')} {bestOf} {t('matches')}</li>
-								<li>• {t('automaticMatchmaking')}</li>
+								<li>• {t('autoMatchmaking')}</li>
 							</ul>
 						</div>
 

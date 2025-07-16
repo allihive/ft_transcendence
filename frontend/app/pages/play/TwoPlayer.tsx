@@ -10,7 +10,7 @@ export function TwoPlayer(): JSX.Element {
 	return (
 		<>
 			<h1 className="flex flex-col font-title justify-center items-center mt-10">2 {t('playerMode')}</h1>
-			<div className="flex flex-col font-title justify-center items-center mt-10 text-background text-sm">
+			<div className="flex flex-col font-title justify-center items-center mt-10 text-black dark:text-background text-sm">
 				{t('playInstructions')}</div>
 			<BabylonScene player1={player1} player2={player2}/>
 		</>

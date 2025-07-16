@@ -4,8 +4,8 @@ import { UsersNavBar } from "~/pages/users/components/UsersNavBar";
 
 export default function UsersLayout(): JSX.Element {
 	return (
-		<div className="w-screen">
-			<div className="flex flex-col items-center w-full max-w-6xl px-4">
+		<div className="w-full">
+			<div className="mx-auto flex flex-col container justify-center w-full px-8 sm:px-6 md:px-8">
 				<UsersNavBar />
 				<div className="w-full mt-4">
 					<Outlet />

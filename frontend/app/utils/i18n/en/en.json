@@ -28,6 +28,7 @@
 	"onlineFriends_other": "{{count}} Friends online",
 	"register": "Register",
 	"image": "Image",
+	"uploadImage": "Upload Image",
 	"email": "Email",
 	"submit": "Submit",
 	"changeAvatar": "Change Avatar",
@@ -39,7 +40,32 @@
 	"playerModes": "Player Modes",
 	"playInstructions": "Player 1: use a & q to move Player 2: use p & l to move",
 	"remotePlayer": "Remote Player",
+	"tournaments": "Tournaments",
 	"joinTournament": "Join Tournament",
+	"tournamentError": {
+		"tournamentName": "Por favor ingresa el nombre del torneo",
+		"logIn":"Must be logged in to create tournament",
+		"selectTournament": "Please select tournament",
+		"noTournaments": "No tournaments available"
+	},
+	"createdBy": "Created by",
+	"createTournament": "Create Tournament",
+	"createNewTournament": "Create New Tournament",
+	"createToStart": "Create new tournament to start",
+	"enterTournamentName": "Enter Tournament Name",
+	"tournamentCreated": "Tournament created",
+	"tournamentJoined": "Tournament joined",
+	"tournamentName": "Tournament Name",
+	"tournamentSettings": "Tournament Settings",
+	"joinSelectedTournament": "Join selected tournament",
+	"availableTournaments": "Available tournaments",
+	"participants": "Participants",
+	"singleEliminationBracket": "Single Elimination Bracket",
+	"matches": "Matches",
+	"maxParticipants": "Maximum Participants",
+	"maximum": "Maximum",
+	"autoMatchmaking": "Automatic Matchmaking",
+	"bestOf": "Best of",
 	"yourRank": "Your Rank",
 	"leaderboard": "Leaderboard",
 	"percentile":"percentile",
@@ -56,5 +82,9 @@
 	"date": "Date",
 	"opponent": "Opponent",
 	"winOrLoss": "Win/Loss",
-	"chats": "Chats"
+	"chats": "Chats",
+	"chart": {
+		"score": "Your Score",
+		"opponentScore": "Opponent's Score"
+	}
 }

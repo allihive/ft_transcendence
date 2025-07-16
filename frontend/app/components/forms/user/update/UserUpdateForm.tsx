@@ -29,11 +29,11 @@ export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 	}
 
 	return (
-		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-y-4 items-stretch max-w-sm">
+		<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-y-4 items-stretch">
 			<div className="flex flex-col items-center">
 				<img src={user.avatarUrl} alt="Avatar" className="block w-[100px] h-auto rounded-full m-auto" />
 
-				<label htmlFor="avatar" className="hover:cursor-pointer">{t('changeAvatar')}</label>
+				<label htmlFor="avatar" className="hover:cursor-pointer font-body">{t('changeAvatar')}</label>
 				<input {...register("avatars")} id="avatar" type="file" accept=".jpeg, .jpg, .png, image/jpeg, image/png" className="hidden" />
 
 				{errors.avatars && <p className="text-xs font-body text-red-500">{errors.avatars.message}</p>}
@@ -102,7 +102,7 @@ export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 					}
 				})}
 				type="password"
-				placeholder="Current password"
+				placeholder={t('currentPassword')}
 				className="p-2 border-2 font-body border-black dark:border-background dark:text-background rounded-lg"
 			/>
 
