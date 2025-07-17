@@ -18,11 +18,11 @@ export class UserService {
 		return this.userRepository.findUser(em, where);
 	}
 
-	async findUserByCredentials(em: EntityManager, email: string, password: string): Promise<User> {
+	async findUserByCredentials(em: EntityManager, email: string, password: string): Promise<User | null> {
 		const user = await this.userRepository.findUser(em, { email });
 
-		if (!user) {
-			throw new NotFoundException(`No user found with email address ${email}`);
+		if (!user ) {
+			return null;
 		}
 
 		if (user.authMethod !== AuthMethod.PASSWORD) {
@@ -30,7 +30,7 @@ export class UserService {
 		}
 
 		if (!user.passwordHash || !this.cryptoService.compare(password, user.passwordHash)) {
-			throw new UnauthorizedException("Invalid password");
+			return null;
 		}
 
 		return user;

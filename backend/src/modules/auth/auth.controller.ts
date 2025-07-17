@@ -17,12 +17,44 @@ import { UnauthorizedException } from "../../common/exceptions/UnauthorizedExcep
 import { toDataURL } from "qrcode";
 
 export const authController: FastifyPluginAsync = async (app) => {
-	app.get("/whoami", async(request, reply) => {
+	app.get("/whoami", async (request, reply) => {
 		if (!request.user) {
-			throw new UnauthorizedException("You haven't logged in or access token expired");
+			return reply.code(204).send();
 		}
 
 		return reply.code(200).send(request.user);
+	});
+
+	app.post("/verify/password", {
+		schema: { body: LoginDtoSchema },
+		handler: async (request, reply) => {
+			const { email, password } = request.body as LoginDto;
+			const em = request.entityManager;
+			const user = await app.userService.findUserByCredentials(em, email, password);
+
+			if (!user) {
+				return reply.code(204).send();
+			}
+
+			const payload = getUserResponseDto(user);
+			return reply.code(200).send(payload);
+		}
+	});
+
+	app.post("/verify/google", {
+		schema: { body: GoogleLoginDtoSchema },
+		handler: async (request, reply) => {
+			if (request.user) {
+				throw new BadRequestException("Authenticated user can't login again");
+			}
+
+			const { idToken } = request.body as GoogleLoginDto;
+			const em = request.entityManager;
+			const user = await app.authService.loginWithGoogle(em, idToken);
+			const payload = getUserResponseDto(user);
+
+			return reply.code(200).send(payload);
+		}
 	});
 
 	app.post("/setup-2fa", async (request, reply) => {
@@ -47,7 +79,7 @@ export const authController: FastifyPluginAsync = async (app) => {
 		return reply.code(200).send(payload);
 	});
 
-	app.post("/verify-2fa", {
+	app.post("/verify/2fa", {
 		schema: { body: VerifyTwoFactorAuthDtoSchema },
 		handler: async (request, reply) => {
 			if (request.user) {
@@ -62,6 +94,11 @@ export const authController: FastifyPluginAsync = async (app) => {
 			const { toptCode } = request.body as VerifyTwoFactorAuthDto;
 			const em = request.entityManager;
 			const user = await app.authService.verify(em, id, toptCode);
+
+			if (!user) {
+				return null;
+			}
+
 			const payload = getUserResponseDto(user);
 			const token = app.jwt.sign(payload, { expiresIn: "1h" });
 
@@ -72,7 +109,7 @@ export const authController: FastifyPluginAsync = async (app) => {
 		}
 	});
 
-	app.post("/login", {
+	app.post("/login/password", {
 		schema: { body: LoginDtoSchema },
 		handler: async (request, reply) => {
 			if (request.user) {
@@ -81,6 +118,10 @@ export const authController: FastifyPluginAsync = async (app) => {
 
 			const em = request.entityManager;
 			const user = await app.authService.login(em, request.body as LoginDto);
+
+			if (!user) {
+				return reply.code(200).send();
+			}
 
 			if (user.isTwoFactorEnabled) {
 				const payload: UserResponseTwoFactorAuthDto = { id: user.id };
@@ -102,7 +143,7 @@ export const authController: FastifyPluginAsync = async (app) => {
 		}
 	});
 
-	app.post("/google", {
+	app.post("/login/google", {
 		schema: { body: GoogleLoginDtoSchema },
 		handler: async (request, reply) => {
 			if (request.user) {

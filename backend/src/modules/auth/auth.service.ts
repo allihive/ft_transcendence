@@ -53,9 +53,14 @@ export class AuthService {
 		private readonly authClient: OAuth2Client
 	) { }
 
-	async login(em: EntityManager, loginDto: LoginDto): Promise<User> {
+	async login(em: EntityManager, loginDto: LoginDto): Promise<User | null> {
 		const { email, password } = loginDto;
 		const user = await this.userService.findUserByCredentials(em, email, password);
+
+		if (!user) {
+			return null;
+		}
+
 		return user;
 	}
 
@@ -93,11 +98,11 @@ export class AuthService {
 		return this.userService.createUser(em, createUserDto);
 	}
 
-	async verify(em: EntityManager, userId: string, totpCode: number): Promise<User> {
+	async verify(em: EntityManager, userId: string, totpCode: number): Promise<User | null> {
 		const user = await this.userService.findUser(em, { id: userId });
 
 		if (!user)
-			throw new NotFoundException(`User with id ${userId} not found`);
+			return null;
 		if (user.authMethod === AuthMethod.GOOGLE)
 			throw new BadRequestException("Two-factor auth is not applicable to users authenticated via Google");
 		if (!user.isTwoFactorEnabled)
@@ -112,7 +117,7 @@ export class AuthService {
 		});
 
 		if (!isVerified) {
-			throw new UnauthorizedException("Invalid two-factor auth code");
+			return null;
 		}
 
 		return user;

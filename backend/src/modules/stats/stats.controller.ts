@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from "fastify";
 import { UnauthorizedException } from "../../common/exceptions/UnauthorizedException";
-import { CreateUserStatsDto, CreateUserStatsDtoSchema, GetUserStatsParamsDto, GetUserStatsParamsDtoSchema, getUserStatsResponseDto } from "./dtos/user-stats.dto";
+import { UpsertUserStatsDto, UpsertUserStatsDtoSchema, GetUserStatsParamsDto, GetUserStatsParamsDtoSchema, getUserStatsResponseDto } from "./dtos/user-stats.dto";
 
 export const statsController: FastifyPluginAsync = async (app) => {
 	const userStatsService = app.statsService.getUserStatsService();
@@ -24,14 +24,14 @@ export const statsController: FastifyPluginAsync = async (app) => {
 	});
 
 	app.post("/users/", {
-		schema: { body: CreateUserStatsDtoSchema },
+		schema: { body: UpsertUserStatsDtoSchema },
 		handler: async (request, reply) => {
 			if (!request.user) {
 				throw new UnauthorizedException("Authentication required to process your request.");
 			}
 
 			const em = request.entityManager;
-			const userStats = await userStatsService.create(em, request.body as CreateUserStatsDto);
+			const userStats = await userStatsService.upsert(em, request.body as UpsertUserStatsDto);
 			const payload = getUserStatsResponseDto(userStats);
 
 			return reply

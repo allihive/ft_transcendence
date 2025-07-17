@@ -4,9 +4,14 @@ export default [
 	route(".well-known/*", "./wellKnownStub.tsx"),
 
 	layout("./routes/RootLayout.tsx", [
-		index("routes/home.tsx"),
-		route("play", "./routes/play/Play.tsx"),
-		route("twoPlayers", "./routes/play/TwoPlayers.tsx"),
+		index("./routes/home.tsx"),
+
+		...prefix("play", [
+			index("./routes/play/home-play.tsx"),
+			route("two-players", "./routes/play/two-players/index.tsx"),
+			route("tournament", "./routes/play/tournament.tsx"),
+		]),
+
 		route("login", "./routes/login.tsx"),
 		route("register", "./routes/register.tsx"),
 		route("chat", "./routes/Chat.tsx"),

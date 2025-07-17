@@ -6,12 +6,10 @@ export const GetUserStatsParamsDtoSchema = Type.Object(
 	{ additionalProperties: false }
 );
 
-export const CreateUserStatsDtoSchema = Type.Object(
+export const UpsertUserStatsDtoSchema = Type.Object(
 	{
 		userId: Type.String({ format: "uuid" }),
-		matchesPlayed: Type.Number({ minimum: 0 }),
-		matchesWon: Type.Number({ minimum: 0 }),
-		matchesLost: Type.Number({ minimum: 0 })
+		won: Type.Boolean({ default: false })
 	},
 	{ additionalProperties: false }
 );
@@ -40,7 +38,7 @@ export const UserStatsResponseDtoSchema = Type.Object(
 export type UpdateUserStatsDto = Static<typeof UpdateUserStatsDtoSchema>;
 export type UserStatsResponseDto = Static<typeof UserStatsResponseDtoSchema>;
 export type GetUserStatsParamsDto = Static<typeof GetUserStatsParamsDtoSchema>;
-export type CreateUserStatsDto = Static<typeof CreateUserStatsDtoSchema>;
+export type UpsertUserStatsDto = Static<typeof UpsertUserStatsDtoSchema>;
 
 export const getUserStatsResponseDto = (userStats: UserStats): UserStatsResponseDto => ({
 	userId: userStats.userId,

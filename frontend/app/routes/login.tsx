@@ -22,8 +22,13 @@ export default function Login() {
 
 	const loginHandler: LoginHandler = async (data) => {
 		try {
-			await login(data.email, data.password);
-			navigate("/");
+			const user = await login(data.email, data.password);
+			
+			if (user) {
+				navigate("/");
+			} else {
+				toast.error("Invalid email or password");
+			}
 		} catch (error) {
 			toast.error((error as Error).message);
 		}

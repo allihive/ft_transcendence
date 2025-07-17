@@ -7,7 +7,7 @@ import type { User, UserRegisterData } from "~/api/types";
 type AuthState = {
 	user: User | null;
 	setUser: (user: User | null) => void;
-	login: (email: string, password: string) => Promise<User>;
+	login: (email: string, password: string) => Promise<User | null>;
 	loginWithGoogle: (credential: string) => Promise<User>;
 	register: (userRegisterData: UserRegisterData) => Promise<User>;
 	logout: () => Promise<void>;

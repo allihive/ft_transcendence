@@ -8,6 +8,12 @@ export type User = {
 	lastLogin: string;
 };
 
+export type Player = {
+	id: string;
+	username: string;
+	avatarUrl: string;
+};
+
 export type UserRegisterData = {
 	email: string;
 	name: string;
@@ -23,6 +29,14 @@ export type UserUpdateData = {
 	username?: string;
 	avatarUrl?: string;
 	newPassword?: string;
+};
+
+export type UserStats = {
+	userId: string,
+	matchesPlayed: number,
+	matchesWon: number,
+	matchesLost: number,
+	winRate: number
 };
 
 export type FileUpload = {

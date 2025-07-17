@@ -1,6 +1,6 @@
 import { EntityData, EntityManager, RequiredEntityData } from "@mikro-orm/core";
 import { UserStatsRepository } from "../repositories/user-stats.repository";
-import { CreateUserStatsDto, UpdateUserStatsDto } from "../dtos/user-stats.dto";
+import { UpsertUserStatsDto, UpdateUserStatsDto } from "../dtos/user-stats.dto";
 import { UserStats } from "../entities/user-stats.entity";
 import { NotFoundException } from "../../../common/exceptions/NotFoundException";
 
@@ -17,21 +17,33 @@ export class UserStatsService {
 		return userStats;
 	}
 
-	async create(em: EntityManager, createUserStatsDto: CreateUserStatsDto): Promise<UserStats> {
-		const { userId, matchesPlayed, matchesWon, matchesLost } = createUserStatsDto;
+	async upsert(em: EntityManager, upsertUserStatsDto: UpsertUserStatsDto): Promise<UserStats> {
+		const { userId, won } = upsertUserStatsDto;
+		const userStats = await this.userStatsRepository.findOne(em, { userId });
 
-		const userStatsData: RequiredEntityData<UserStats> = {
-			userId,
+		if (!userStats) {
+			const userStatsData: RequiredEntityData<UserStats> = {
+				userId,
+				matchesPlayed: 1,
+				matchesWon: won ? 1 : 0,
+				matchesLost: won ? 0 : 1,
+				winRate: won ? 100.00 : 0.00
+			};
+
+			return this.userStatsRepository.create(em, userStatsData);
+		}
+
+		const matchesPlayed = userStats.matchesPlayed + 1;
+		const matchesWon = won ? (userStats.matchesWon + 1) : userStats.matchesWon;
+		const matchesLost = won ? userStats.matchesLost : (userStats.matchesLost + 1);
+		const winRate = won ? Math.round((matchesWon / matchesPlayed) * 100 * 100) / 100 : userStats.winRate;
+
+		return this.userStatsRepository.update(em, userStats, {
 			matchesPlayed,
 			matchesWon,
 			matchesLost,
-			winRate: (matchesPlayed > 0
-				? Math.round((matchesWon / matchesPlayed) * 100 * 100) / 100
-				: 0
-			)
-		};
-
-		return this.userStatsRepository.create(em, userStatsData);
+			winRate
+		});
 	}
 
 	async updateById(em: EntityManager, userId: string, updateUserStatsDto: UpdateUserStatsDto): Promise<UserStats> {
