@@ -3,6 +3,9 @@ import type { JSX } from "react";
 import type { SubmitHandler } from "react-hook-form";
 import type { UserUpdateFormData, UserUpdateFormProps, UserUpdateFormValues } from "./types";
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
+import TwoFactorModal from "~/components/buttons/2FAToggle"
+
 
 export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 	const {t} = useTranslation();
@@ -26,6 +29,16 @@ export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 		};
 
 		onUpdate(userUpdateFormData, event);
+	}
+
+	const[is2FAenabled, setIs2FAEnabled] = useState(false);
+
+	const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setIs2FAEnabled(e.target.checked);
+	}
+
+	const closePopup = () => {
+		setIs2FAEnabled(false);
 	}
 
 	return (
@@ -132,7 +145,7 @@ export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 
 			{errors.newPassword ? <p className="text-xs font-body text-red-500">{errors.newPassword.message}</p> : null}
 
-			<div className="font-title text-md dark:text-background">Confirm Password</div>
+			<div className="font-title text-md dark:text-background">{t('confirmPassword')}</div>
 
 			<input
 				{...register("confirmPassword", {
@@ -145,6 +158,18 @@ export function UserUpdateForm(props: UserUpdateFormProps): JSX.Element {
 			/>
 
 			{errors.confirmPassword ? <p className="text-xs font-body text-red-500">{errors.confirmPassword.message}</p> : null}
+			<label className="inline-flex items-center cursor-pointer">
+				<input type="checkbox"
+					onChange={handleToggle}
+					className="sr-only peer"
+					checked={is2FAenabled}/>
+				<div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus: dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
+				<span className="ms-3 text-sm font-medium font-title text-gray-900 dark:text-background">{t('enable2factorAuth')}</span>
+			</label>
+			<TwoFactorModal 
+				isOpen={is2FAenabled}
+				onClose={closePopup}
+			/>
 
 			<button
 				type="submit"

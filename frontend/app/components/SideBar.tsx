@@ -15,7 +15,6 @@ const getClassName = (isActive: boolean): string => {
 
 export function SideBar(): JSX.Element {
 
-
 	return (
 		<div className=" flex flex-col items-center mt-8 ">
 			<NavLink to="/" className={({ isActive }) => getClassName(isActive)}>

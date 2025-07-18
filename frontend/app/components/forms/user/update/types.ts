@@ -27,3 +27,8 @@ export type UserUpdateFormProps = {
 	onUpdate: UpdateHandler;
 	isProcessing?: boolean;
 };
+
+export type TwoFactorModal = {
+	isOpen: boolean,
+	onClose: () => void
+};

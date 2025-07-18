@@ -39,14 +39,18 @@
 	"playerMode": "Modo de jugar",
 	"playModes": "Modos de jugardoes",
 	"playInstructions": "Jugador/a 1: usa A & Q para moverte Jugador/a 2: usa P & L para moverte",
+	"totalGames": "Juegos Totales",
+	"gameHistory": "Historia del Juego",
+	"latestMatches": "Últimos Partidos",
 	"remotePlayer": "Jugadora remota",
 	"tournaments": "Torneos",
 	"joinTournament": "Unirse al torneo",
 	"tournamentError": {
-		"tournamentName": "Please enter tournament name",
+		"tournamentName": "Por favor ingresa el nombre del torneo",
 		"logIn": "Debe iniciar sesión para crear un torneo",
 		"selectTournament": "Por favor seleccione torneo",
-		"noTournaments": "No hay torneos disponibles"
+		"noTournaments": "No hay torneos disponibles",
+		"creationFailure": "No se pudo crear el torneo"
 	},
 	"createdBy": "Creado por",
 	"createTournament": "Crear Torneo",
@@ -73,6 +77,9 @@
 	"score": "Puntuación",
 	"friends":"Amigos",
 	"profile": "Perfil",
+	"enable2factorAuth": "Habilitar Autenticación de 2 factores",
+	"2factorAuth": "Autenticación de 2 factores",
+	"2factorScan": "Escanee el código QR con su aplicación de autenticación para habilitar 2FA.",
 	"stats": "Estadísticas",
 	"hello": "Hola",
 	"requests": "Solicitudes de amistad",
@@ -86,6 +93,6 @@
 	"chart": {
 		"score": "Tu Puntuación",
 		"opponentScore": "Puntuación del Oponente"
-	}
-
+	},
+	"close": "Cerca"
 }

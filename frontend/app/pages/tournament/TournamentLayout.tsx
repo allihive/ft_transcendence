@@ -20,12 +20,12 @@ export function TournamentPage(): JSX.Element {
 
 	const handleCreateTournament = async () => {
 		if (!newTournamentName.trim()) {
-			toast.error(t('pleaseEnterTournamentName'));
+			toast.error(t('tournamentError.tournamentName'));
 			return;
 		}
 		
 		if (!user) {
-			toast.error(t('mustBeLoggedInToCreate'));
+			toast.error(t('tournamentError.logIn'));
 			return;
 		}
 
@@ -43,7 +43,7 @@ export function TournamentPage(): JSX.Element {
 			setNewTournamentName('');
 		} catch (error) {
 			console.error('Failed to create tournament:', error);
-			toast.error('Failed to create tournament.');
+			toast.error(`${t('tournamentError.creationFailure')}`);
 		}
 	};
 
@@ -139,7 +139,7 @@ export function TournamentPage(): JSX.Element {
 								<li>• {t('maximum')} {maxParticipants} {t('participants')}</li>
 								<li>• {t('singleEliminationBracket')}</li>
 								<li>• {t('bestOf')} {bestOf} {t('matches')}</li>
-								<li>• {t('automaticMatchmaking')}</li>
+								<li>• {t('autoMatchmaking')}</li>
 							</ul>
 						</div>
 

@@ -1,27 +1,27 @@
 import { useState, useEffect, type JSX } from "react"
-import type { PlayerGameResult } from "../../../../backend/services/game/src/modules/game-history/gameHistory.service"
 import { useTranslation } from "react-i18next";
 import { MyChart } from "./components/UserStatsGraph";
 
-// interface PlayerGameResult {
-//   matchId: string;           // Unique match identifier
-//   date: string;             // When the game was played (formatted date)
-//   opponent: number;         // The opponent's player ID
-//   playerScore: number;      // This player's score
-//   opponentScore: number;    // Opponent's score
-//   result: 'WIN' | 'LOSS';   // Did this player win or lose?
-// }
+interface PlayerGameResult {
+  matchId: string;           // Unique match identifier
+  date: string;             // When the game was played (formatted date)
+  opponent: number;         // The opponent's player ID
+  playerScore: number;      // This player's score
+  opponentScore: number;    // Opponent's score
+  result: 'WIN' | 'LOSS';   // Did this player win or lose?
+}
 // 11.6 we need to find a way to playerId to it fetches the correct gameHistory
 
 const test_playerId = 1;
 
 export function UsersStats(): JSX.Element {
 	//have name be passed as props?
-	const [matches, setMatches] = useState<PlayerGameResult[]>([]);
 	const { t } = useTranslation();
+
+	const [matches, setMatches] = useState<PlayerGameResult[]>([]);
 	useEffect(() => {
 		console.log(`PlayerId: ${test_playerId}`);
-		fetch(`http://localhost:3000/api/game-history/${test_playerId}`)
+		fetch(`http://localhost:3000/api/history/${test_playerId}`)
 			.then((res) => res.json())
 			.then((data) => {
 				if (data.success && data.data && Array.isArray(data.data.games)) {
