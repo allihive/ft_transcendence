@@ -1,5 +1,5 @@
-import { Static, Type } from "@sinclair/typebox";
-import { GameHistory } from "./entities/gameHistory.entity";
+import { Type, Static } from '@sinclair/typebox';
+import { GameHistory } from './entities/gameHistory.entity';
 
 // Params DTOs - updated to match UUID format
 export const GetPlayerHistoryParamsSchema = Type.Object(
@@ -24,10 +24,13 @@ export const GetPlayerHistoryQuerySchema = Type.Object(
 // Body DTOs
 export const CreateGameHistoryDtoSchema = Type.Object(
   {
-    winnerId: Type.String({ format: "uuid" }),
-    loserId: Type.String({ format: "uuid" }),
+    winnerId: Type.Optional(Type.String({ format: "uuid" })), // Optional for local games
+    loserId: Type.Optional(Type.String({ format: "uuid" })),  // Optional for local games
+    winnerName: Type.Optional(Type.String({ minLength: 1, maxLength: 100 })), // For local players
+    loserName: Type.Optional(Type.String({ minLength: 1, maxLength: 100 })),  // For local players
     winnerScore: Type.Number({ minimum: 0 }),
-    loserScore: Type.Number({ minimum: 0 })
+    loserScore: Type.Number({ minimum: 0 }),
+    local: Type.Boolean() // Required to distinguish game type
   },
   { additionalProperties: false }
 );
@@ -36,10 +39,12 @@ export const CreateGameHistoryDtoSchema = Type.Object(
 export const PlayerGameResultDtoSchema = Type.Object(
   {
     // date: Type.String({ format: "date-time" }),
-    opponent: Type.String({ format: "uuid" }),
+    opponent: Type.Optional(Type.String({ format: "uuid" })), // Optional for local games
+    opponentName: Type.Optional(Type.String()), // Display name for local opponents
     playerScore: Type.Number(),
     opponentScore: Type.Number(),
-    result: Type.Union([Type.Literal('WIN'), Type.Literal('LOSS')])
+    result: Type.Union([Type.Literal('WIN'), Type.Literal('LOSS')]),
+    isLocal: Type.Boolean() // Indicate if this was a local game
   },
   { additionalProperties: false }
 );
@@ -88,21 +93,21 @@ export const GetPlayerStatsParamsDtoSchema = GetPlayerStatsParamsSchema;
 export const GetPlayerHistoryQueryDtoSchema = GetPlayerHistoryQuerySchema;
 
 // Helper function to convert entity to response DTO
-export const getPlayerGameResultDto = (
-  game: GameHistory, 
+// Helper function to determine game result from a player's perspective
+function getPlayerGameResultDto(
+  gameHistory: GameHistory, 
   playerId: string
-): PlayerGameResultDto => {
-  const playerWon = game.winnerId === playerId;
-  const opponent = playerWon ? game.loserId : game.winnerId;
-  const playerScore = playerWon ? game.winnerScore : game.loserScore;
-  const opponentScore = playerWon ? game.loserScore : game.winnerScore;
-  // const date = game.createdAt!.toISOString();
+): PlayerGameResultDto {
+  const isWinner = gameHistory.winnerId === playerId;
+  const opponentId = isWinner ? gameHistory.loserId : gameHistory.winnerId;
+  const opponentName = isWinner ? gameHistory.loserName : gameHistory.winnerName;
 
   return {
-    // date,
-    opponent,
-    playerScore,
-    opponentScore,
-    result: playerWon ? 'WIN' : 'LOSS'
+    opponent: opponentId || undefined, // Handle null values for local games
+    opponentName: opponentName || undefined, // Use display name for local opponents
+    playerScore: isWinner ? gameHistory.winnerScore : gameHistory.loserScore,
+    opponentScore: isWinner ? gameHistory.loserScore : gameHistory.winnerScore,
+    result: isWinner ? 'WIN' : 'LOSS',
+    isLocal: gameHistory.local // Indicate if this was a local game
   };
-};
+}

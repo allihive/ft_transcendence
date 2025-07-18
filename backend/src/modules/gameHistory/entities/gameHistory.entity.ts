@@ -8,17 +8,28 @@ export class GameHistory {
 	@PrimaryKey({ type: "uuid" })
 	id: string = randomUUID();
 
-	@Property({ type: "uuid" })
-	winnerId!: string;
+	// For online games - user UUIDs, for local games - one UUID (real player) and one null (local opponent)
+	@Property({ type: "uuid", nullable: true })
+	winnerId?: string;
 
-	@Property({ type: "uuid" })
-	loserId!: string;
+	@Property({ type: "uuid", nullable: true })
+	loserId?: string;
+
+	// For local games - display names (only used when corresponding ID is null)
+	@Property({ type: "varchar", length: 100, nullable: true, name: "winner_name" })
+	winnerName?: string;
+
+	@Property({ type: "varchar", length: 100, nullable: true, name: "loser_name" })
+	loserName?: string;
 
 	@Property({ type: "int", nullable: false, name: "winner_score" })
 	winnerScore!: number;
 
 	@Property({ type: "int", nullable: false, name: "loser_score" })
 	loserScore!: number;
+
+	@Property({ type: "boolean", nullable: false, name: "local_game"})
+	local!: boolean;
 
 	@Property({ type: "timestamptz", nullable: false, defaultRaw: "CURRENT_TIMESTAMP", name: "created_at" })
 	createdAt?: Date;

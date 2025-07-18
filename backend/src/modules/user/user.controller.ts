@@ -1,5 +1,4 @@
 import { FastifyPluginAsync } from "fastify";
-
 import { NotFoundException } from "../../common/exceptions/NotFoundException";
 import {
 	CreateUserDto,

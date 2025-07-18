@@ -29,13 +29,17 @@ export class GameHistoryService {
 			// Format the results based on your GameHistory entity structure
 			const formattedResults: PlayerGameResultDto[] = gameHistory.map(game => {
 				const playerWon = game.winnerId === playerId;
+				const opponentId = playerWon ? game.loserId : game.winnerId;
+				const opponentName = playerWon ? game.loserName : game.winnerName;
 
 				return {
 					// date: game.createdAt!.toISOString(),
-					opponent: playerWon ? game.loserId : game.winnerId,
+					opponent: opponentId || undefined, // Handle null for local games
+					opponentName: opponentName || undefined, // Display name for local opponents
 					playerScore: playerWon ? game.winnerScore : game.loserScore,
 					opponentScore: playerWon ? game.loserScore : game.winnerScore,
 					result: playerWon ? 'WIN' : 'LOSS',
+					isLocal: game.local // Indicate if this was a local game
 				};
 			});
 			// Calculate pagination info
@@ -57,7 +61,13 @@ export class GameHistoryService {
 			winnerId: createGameHistoryDto.winnerId,
 			loserId: createGameHistoryDto.loserId,
 			winnerScore: createGameHistoryDto.winnerScore,
-			loserScore: createGameHistoryDto.loserScore
+			loserScore: createGameHistoryDto.loserScore,
+			local: createGameHistoryDto.local,
+			// Add winner/loser names for local games
+			...(createGameHistoryDto.local && {
+				winnerName: createGameHistoryDto.winnerName,
+				loserName: createGameHistoryDto.loserName
+			})
 		};
 
 		try {
