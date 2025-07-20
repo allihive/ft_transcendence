@@ -77,7 +77,7 @@
 	"score": "Puntuación",
 	"friends":"Amigos",
 	"profile": "Perfil",
-	"enable2factorAuth": "Habilitar Autenticación de 2 factores",
+	"enable2FA": "Habilitar Autenticación de 2 factores",
 	"2factorAuth": "Autenticación de 2 factores",
 	"2factorScan": "Escanee el código QR con su aplicación de autenticación para habilitar 2FA.",
 	"stats": "Estadísticas",

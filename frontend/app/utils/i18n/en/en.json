@@ -77,7 +77,7 @@
 	"score": "Score",
 	"friends": "Friends",
 	"profile": "Profile",
-	"enable2factorAuth": "Enable 2 Factor Authentication",
+	"enable2FA": "Enable 2 Factor Authentication",
 	"2factorAuth":"2 Factor Authentication",
 	"2factorScan": "Scan the QR code with your authenticator app to enable 2FA.",
 	"stats": "Stats",

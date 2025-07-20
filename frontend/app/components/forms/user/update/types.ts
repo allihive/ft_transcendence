@@ -6,18 +6,14 @@ export type UserUpdateFormValues = {
 	name?: string;
 	username?: string;
 	avatars: FileList | null;
-	currentPassword: string;
+	password?: string;
+	isTwoFactorEnabled?: boolean;
 	newPassword?: string;
-	confirmPassword: string;
+	confirmPassword?: string;
 };
 
-export type UserUpdateFormData = {
-	id: string;
-	email?: string;
-	name?: string;
-	username?: string;
+export type UserUpdateFormData = Omit<UserUpdateFormValues, "avatars" | "password" | "confirmPassword"> & {
 	avatar?: File;
-	newPassword?: string;
 };
 
 export type UpdateHandler = (data: UserUpdateFormData, event?: React.BaseSyntheticEvent) => void;

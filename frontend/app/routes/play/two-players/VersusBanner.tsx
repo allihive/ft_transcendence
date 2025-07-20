@@ -6,6 +6,7 @@ import { PopoverPlayer } from "./PopoverPlayer";
 import type { GoogleLoginHandler } from "~/components/buttons/google-login/types";
 import type { LoginHandler } from "~/components/forms/user/login/types";
 import type { User } from "~/api/types";
+import { LoginPopover } from "~/components/popover/login-popover/LoginPopover";
 
 export function VersusBanner(): JSX.Element {
 	const players = usePlayers((state) => state.players);
@@ -54,14 +55,25 @@ export function VersusBanner(): JSX.Element {
 
 	return (
 		<div className="flex flex-row justify-center items-center gap-x-10">
-			<PopoverPlayer
+			{/* <PopoverPlayer
 				isOpen={popoverId === players[0].id}
 				player={players[0]}
 				onLogin={loginHandler}
 				onGoogleLogin={googleLoginHandler}
 				onClick={() => setPopoverId(players[0].id)}
 				onClickOutside={() => setPopoverId(null)}
-			/>
+			/> */}
+			<LoginPopover
+				isOpen={popoverId === players[0].id}
+				onLogin={loginHandler}
+				onGoogleLogin={googleLoginHandler}
+				onClickOutside={() => setPopoverId(null)}
+			>
+				<div onClick={() => setPopoverId(players[0].id)} className="flex flex-col items-center hover:cursor-pointer">
+					<img src={players[0].avatarUrl} alt="Player 1" className="block w-[100px] h-auto rounded-full" />
+					<span>{players[0].username}</span>
+				</div>
+			</LoginPopover>
 
 			<img src="/icons/vs.svg" alt="VS icon" className="w-[200px] h-auto" />
 

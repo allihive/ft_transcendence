@@ -9,7 +9,7 @@ import {
 
 
 import "./app.css";
-import "./utils";
+import "./utils/i18n";
 import { useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import { whoami } from "./api/auth/whoami";
@@ -53,6 +53,7 @@ export default function App() {
 		const initializeStore = async (): Promise<void> => {
 			try {
 				const me = await whoami();
+				console.log("me = ", me);
 				useAuth.setState({ user: me });
 			} catch (error) {
 				useAuth.setState({ user: null });

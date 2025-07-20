@@ -128,10 +128,6 @@ export class AuthService {
 
 		if (!user)
 			throw new NotFoundException(`User with id ${userId} not found`);
-		if (user.authMethod === AuthMethod.GOOGLE)
-			throw new BadRequestException("Two-factor auth is not applicable to users authenticated via Google");
-		if (user.isTwoFactorEnabled)
-			throw new BadRequestException(`User ${user.username} has already enabled 2FA`);
 
 		await this.userService.updateUser(em, user, {
 			totpSecret: secret,

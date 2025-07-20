@@ -4,6 +4,7 @@ export type User = {
 	name: string;
 	username: string;
 	isTwoFactorEnabled: boolean;
+	authMethod: "password" | "google";
 	avatarUrl: string;
 	lastLogin: string;
 };
@@ -28,6 +29,8 @@ export type UserUpdateData = {
 	name?: string;
 	username?: string;
 	avatarUrl?: string;
+	totpSecret?: number;
+	isTwoFactorEnabled?: boolean;
 	newPassword?: string;
 };
 

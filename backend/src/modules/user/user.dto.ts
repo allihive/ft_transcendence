@@ -34,7 +34,9 @@ export const CreateUserDtoSchema = Type.Object(
 			description: "Username can only contain letters, numbers, and underscores."
 		}),
 		password: Type.Optional(Type.String({ minLength: 8 })),
-		authMethod: Type.Enum(AuthMethod, { default: AuthMethod.PASSWORD }),
+		authMethod: Type.Optional(
+			Type.Enum(AuthMethod, { default: AuthMethod.PASSWORD })
+		),
 		avatarUrl: Type.String({ format: "uri-reference", default: "/files/2ca09462-3930-4dbc-b3cc-5e9b4b09d525.png" })
 	},
 	{ additionalProperties: false }
@@ -56,15 +58,10 @@ export const UpdateUserDtoSchema = Type.Object(
 			pattern: "^[a-zA-Z0-9_]+$",
 			description: "Username can only contain letters, numbers, and underscores."
 		})),
-		newPassword: Type.Optional(Type.String({ minLength: 8 })),
 		totpSecret: Type.Optional(Type.String({ minLength: 32 })),
-		authMethod: Type.Optional(Type.Enum(AuthMethod)),
 		isTwoFactorEnabled: Type.Optional(Type.Boolean()),
-		avatarUrl: Type.Optional(Type.String({
-			format: "uri",
-			pattern: "^https?:\\/\\/(?:www\\.)?[a-zA-Z0-9-]+(?:\\.[a-zA-Z]{2,})+(?:[/?#].*)?$",
-		})),
-		lastLogin: Type.Optional(Type.String({ format: "date-time" }))
+		avatarUrl: Type.Optional(Type.String({ format: "uri-reference" })),
+		newPassword: Type.Optional(Type.String({ minLength: 8 }))
 	},
 	{ additionalProperties: false }
 );
@@ -87,6 +84,7 @@ export const UserResponseDtoSchema = Type.Object(
 		}),
 		isTwoFactorEnabled: Type.Boolean(),
 		avatarUrl: Type.Optional(Type.String({ format: "uri" })),
+		authMethod: Type.Enum(AuthMethod, { default: AuthMethod.PASSWORD }),
 		lastLogin: Type.Optional(Type.String({ format: "date-time" })),
 	},
 	{ additionalProperties: false }
@@ -122,5 +120,6 @@ export const getUserResponseDto = (user: User): UserResponseDto => ({
 	username: user.username,
 	isTwoFactorEnabled: Boolean(user.isTwoFactorEnabled),
 	avatarUrl: user.avatarUrl,
+	authMethod: user.authMethod ?? AuthMethod.PASSWORD,
 	lastLogin: user.lastLogin?.toString()
 });

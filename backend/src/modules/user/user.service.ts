@@ -21,7 +21,7 @@ export class UserService {
 	async findUserByCredentials(em: EntityManager, email: string, password: string): Promise<User | null> {
 		const user = await this.userRepository.findUser(em, { email });
 
-		if (!user ) {
+		if (!user) {
 			return null;
 		}
 
@@ -54,13 +54,38 @@ export class UserService {
 		return this.userRepository.createUser(em, userData);
 	}
 
-	async updateUserById(em: EntityManager, id: string, updateUserDto: UpdateUserDto): Promise<User> {
-		const userData = updateUserDto satisfies EntityData<User>;
-		return this.userRepository.updateUserById(em, id, userData);
+	async updateUser(em: EntityManager, user: User, updateUserDto: UpdateUserDto): Promise<User> {
+		const { email, name, username, avatarUrl, emailVerified, totpSecret, isTwoFactorEnabled, newPassword } = updateUserDto;
+
+		if (email && user.authMethod !== AuthMethod.PASSWORD)
+			throw new BadRequestException(`'${email}' couldn't be updated because this account isn't using password-based authentication`);
+		if (isTwoFactorEnabled && user.isTwoFactorEnabled)
+			throw new BadRequestException(`User ${user.username} has already enabled 2FA`);
+		if (newPassword && user.authMethod !== AuthMethod.PASSWORD)
+			throw new BadRequestException(`'${newPassword}' couldn't be updated because this account isn't using password-based authentication`);
+
+		const userData: EntityData<User> = {};
+
+		if (email) userData.email = email;
+		if (name) userData.name = name;
+		if (username) userData.username = username;
+		if (avatarUrl) userData.avatarUrl = avatarUrl;
+		if (emailVerified !== undefined) userData.emailVerified = emailVerified;
+		if (totpSecret) userData.totpSecret = totpSecret;
+		if (isTwoFactorEnabled !== undefined) userData.isTwoFactorEnabled = isTwoFactorEnabled;
+		if (newPassword) userData.passwordHash = this.cryptoService.hash(newPassword);
+
+		return this.userRepository.updateUser(em, user, userData);
 	}
 
-	async updateUser(em: EntityManager, user: User, updateUserDto: UpdateUserDto): Promise<User> {
-		return this.userRepository.updateUser(em, user, updateUserDto);
+	async updateUserById(em: EntityManager, id: string, updateUserDto: UpdateUserDto): Promise<User> {
+		const user = await this.userRepository.findUser(em, { id });
+
+		if (!user) {
+			throw new NotFoundException(`User with ID ${id} not found`);
+		}
+
+		return this.updateUser(em, user, updateUserDto);
 	}
 
 	async deleteUser(em: EntityManager, id: string): Promise<void> {

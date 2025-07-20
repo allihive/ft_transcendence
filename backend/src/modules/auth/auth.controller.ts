@@ -17,12 +17,28 @@ import { UnauthorizedException } from "../../common/exceptions/UnauthorizedExcep
 import { toDataURL } from "qrcode";
 
 export const authController: FastifyPluginAsync = async (app) => {
-	app.get("/whoami", async (request, reply) => {
-		if (!request.user) {
-			return reply.code(204).send();
-		}
+	app.get("/whoami", {
+		onRequest: async (request, reply) => {
+			if (!request.user) {
+				return reply.code(204).send();
+			}
+		},
+		handler: async (request, reply) => {
+			const em = request.entityManager;
+			const user = await app.userService.findUser(em, { id: request.user.id });
 
-		return reply.code(200).send(request.user);
+			if (!user) {
+				return reply.code(204).send();
+			}
+
+			const payload = getUserResponseDto(user);
+			const token = app.jwt.sign(payload);
+
+			return reply
+				.setCookie("accessToken", token)
+				.code(200)
+				.send(payload);
+		}
 	});
 
 	app.post("/verify/password", {
@@ -44,10 +60,6 @@ export const authController: FastifyPluginAsync = async (app) => {
 	app.post("/verify/google", {
 		schema: { body: GoogleLoginDtoSchema },
 		handler: async (request, reply) => {
-			if (request.user) {
-				throw new BadRequestException("Authenticated user can't login again");
-			}
-
 			const { idToken } = request.body as GoogleLoginDto;
 			const em = request.entityManager;
 			const user = await app.authService.loginWithGoogle(em, idToken);
@@ -60,6 +72,10 @@ export const authController: FastifyPluginAsync = async (app) => {
 	app.post("/setup-2fa", async (request, reply) => {
 		if (!request.user) {
 			throw new UnauthorizedException("Unauthorized user is not allowed");
+		}
+
+		if (request.user.isTwoFactorEnabled) {
+			throw new BadRequestException(`${request.user.username} has already enabled Two-factor authentication`);
 		}
 
 		const secret = generateSecret({

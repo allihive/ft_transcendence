@@ -14,6 +14,7 @@ import {
 	UsernameParamsDto,
 	UsernameParamsDtoSchema
 } from "./user.dto";
+import { UnauthorizedException } from "../../common/exceptions/UnauthorizedException";
 
 export const userController: FastifyPluginAsync = async (app) => {
 	// Get paginated users and total number of users
@@ -41,10 +42,8 @@ export const userController: FastifyPluginAsync = async (app) => {
 		}
 	});
 
-	// Create a new user
 	app.post("/", {
 		schema: { body: CreateUserDtoSchema },
-
 		handler: async (request, reply) => {
 			const em = request.entityManager;
 			const response = await app.userService.createUser(em, request.body as CreateUserDto);
@@ -52,13 +51,18 @@ export const userController: FastifyPluginAsync = async (app) => {
 		}
 	});
 
-	// Update user profile
 	app.put("/:id", {
+		onRequest: async (request) => {
+			if (!request.user) {
+				throw new UnauthorizedException("Unauthorized user is not allowed");
+			}
+		},
 		schema: {
 			params: UpdateUserParamsDtoSchema,
 			body: UpdateUserDtoSchema
 		},
 		handler: async (request, reply) => {
+			console.log("request.body = ", request.body)
 			const em = request.entityManager;
 			const { id } = request.params as UpdateUserParamsDto;
 			const user = await app.userService.updateUserById(em, id, request.body as UpdateUserDto);
@@ -66,8 +70,12 @@ export const userController: FastifyPluginAsync = async (app) => {
 		}
 	});
 
-	// Delete a user account
 	app.delete("/:id", {
+		onRequest: (request) => {
+			if (!request.user) {
+				throw new UnauthorizedException("Unauthorized user is not allowed");
+			}
+		},
 		schema: { params: DeleteUserParamsDtoSchema },
 		handler: async (request, reply) => {
 			const em = request.entityManager;

@@ -50,7 +50,7 @@ export function NavBar(): JSX.Element {
 			}
 			<select
 				value={language}
-				onChange={(e) => setLanguage(e.target.value)}
+				onChange={async (e) => await setLanguage(e.target.value)}
 				className="p-1 border border-black font-body rounded-md bg-white dark:bg-gray-800 text-black dark:text-white"
 			>
 				<option value="en">English</option>

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import i18n from "~/utils/index";
+import i18n from "~/utils/i18n/index";
 import { persist } from "zustand/middleware"
 
 
