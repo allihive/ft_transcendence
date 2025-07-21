@@ -3,29 +3,36 @@ import { useState, type JSX } from "react"
 import { useAuth } from "~/stores/useAuth";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useTournament } from "~/stores/useTournament";
+import { JoinTournamentPopover } from "~/components/popups/JoinTournamentPopover";
 import type { Tournament, CreateTournamentDto } from "~/api/tournament/types";
+import type { User } from "~/api/types";
+import { getUserStats } from "~/api/stats/getUserStats";
+
 
 export function TournamentPage(): JSX.Element {
 	const { t } = useTranslation();
+	const navigate = useNavigate();
 	const [activeTab, setActiveTab] = useState<'create' | 'join' | 'leaderboard'>('create');
 	const [newTournamentName, setNewTournamentName] = useState('');
 	const [maxParticipants, setMaxParticipants] = useState<number>(8);
 	const [bestOf, setBestOf] = useState<number>(3);
 	const [showPlayersPopup, setShowPlayersPopup] = useState(false);
 	const [selectedTournamentForPlayers, setSelectedTournamentForPlayers] = useState<any>(null);
+	const [joinPopupTournamentId, setJoinPopupTournamentId] = useState<string | null>(null);
 	
-	const { tournaments: availableTournaments, loading, createTournament } = useTournament();
+	const { tournaments: availableTournaments, loading, createTournament, joinTournament, startTournament } = useTournament();
 	const { user } = useAuth();
 
 	const handleCreateTournament = async () => {
 		if (!newTournamentName.trim()) {
-			toast.error(t('tournamentError.tournamentName'));
+			toast.error(t('pleaseEnterTournamentName'));
 			return;
 		}
 		
 		if (!user) {
-			toast.error(t('tournamentError.logIn'));
+			toast.error(t('mustBeLoggedInToCreate'));
 			return;
 		}
 
@@ -43,6 +50,67 @@ export function TournamentPage(): JSX.Element {
 			setNewTournamentName('');
 		} catch (error) {
 			console.error('Failed to create tournament:', error);
+			toast.error('Failed to create tournament.');
+		}
+	};
+
+	const handleRealUserJoin = async (tournamentId: string, user: User) => {
+		try {
+			// Tries to fetch user's actual stats from the database
+			let userStats = null;
+			try {
+				userStats = await getUserStats(user.id);
+			} catch (error) {
+				// User has no stats yet (new user), that's okay
+			}
+			
+			// Convert User to TournamentPlayer format
+			const player = {
+				id: user.id,
+				email: user.email || `${user.username}@example.com`,
+				name: user.name || user.username,
+				username: user.username,
+				avatarUrl: user.avatarUrl || '/files/default-avatar.png',
+				joinedAt: new Date().toISOString(),
+				// Use actual user stats if available, otherwise use defaults for new users
+				stats: {
+					matchesPlayed: userStats?.matchesPlayed || 0,
+					matchesWon: userStats?.matchesWon || 0,
+					matchesLost: userStats?.matchesLost || 0,
+					winRate: userStats?.winRate || 0,
+					rating: userStats?.winRate || 50 // Use winRate as rating (0-100%), default 50% for new users
+				}
+			};
+			
+			// Try to join the tournament with the real user
+			const updatedTournament = await joinTournament(tournamentId, player);
+			
+			if (updatedTournament) {
+				toast.success(`${user.username} joined "${updatedTournament.name}"!`);
+			} else {
+				toast.error('Failed to join tournament. It might be full or no longer available.');
+			}
+		} catch (error) {
+			console.error('Failed to join tournament:', error);
+			toast.error('Failed to join tournament.');
+		}
+	};
+
+	const handleStartTournament = async (tournamentId: string) => {
+		try {
+			// csll starttournamentgenerate bracket
+			const updatedTournament = await startTournament(tournamentId);
+			
+			if (updatedTournament) {
+				toast.success(`Tournament "${updatedTournament.name}" started! Bracket generated.`);
+				// Navigate to the bracket page
+				navigate(`/tournament/${tournamentId}/bracket`);
+			} else {
+				toast.error('Failed to start tournament. Make sure it is full and ready to start.');
+			}
+		} catch (error) {
+			console.error('Failed to start tournament:', error);
+			toast.error('Failed to start tournament.');
 			toast.error(`${t('tournamentError.creationFailure')}`);
 		}
 	};
@@ -55,7 +123,7 @@ export function TournamentPage(): JSX.Element {
 				<div className="flex-grow max-w-2xl mx-8 border-t border-black dark:border-white"></div>
 			</div>
 
-			{/* Tab Navigation */}
+			{/* Tab Navigation. Create, Join and Leaderboard buttons*/}
 			<div className="flex space-x-4 mb-8">
 				<button
 					onClick={() => setActiveTab('create')}
@@ -139,7 +207,7 @@ export function TournamentPage(): JSX.Element {
 								<li>• {t('maximum')} {maxParticipants} {t('participants')}</li>
 								<li>• {t('singleEliminationBracket')}</li>
 								<li>• {t('bestOf')} {bestOf} {t('matches')}</li>
-								<li>• {t('autoMatchmaking')}</li>
+								<li>• {t('automaticMatchmaking')}</li>
 							</ul>
 						</div>
 
@@ -198,18 +266,48 @@ export function TournamentPage(): JSX.Element {
 											View Players
 										</button>
 										
-										<button
-											disabled={true}
-											className="px-6 py-2 bg-gray-300 cursor-not-allowed text-black font-title rounded border-2 border-black"
-										>
-											Join
-										</button>
+										<div className="flex space-x-2">
+											{tournament.status === 'in-progress' && (
+												<button
+													onClick={() => navigate(`/tournament/${tournament.id}/bracket`)}
+													className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-title rounded border-2 border-black transition-colors"
+												>
+													View Bracket
+												</button>
+											)}
+											
+											{tournament.status === 'waiting' && tournament.participants >= tournament.maxParticipants && (
+												<button
+													onClick={() => handleStartTournament(tournament.id)}
+													className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-title rounded border-2 border-black transition-colors"
+												>
+													START TOURNAMENT
+												</button>
+											)}
+										</div>
+										{/* Shows Join tournament button and popower only if tournament is not full*/}
+										{tournament.participants < tournament.maxParticipants && (
+											<JoinTournamentPopover
+												isOpen={joinPopupTournamentId === tournament.id}
+												onClickOutside={() => setJoinPopupTournamentId(null)}
+												onUserJoin={(user) => handleRealUserJoin(tournament.id, user)}
+											>
+												<button
+												onClick={() => setJoinPopupTournamentId(tournament.id)}
+												disabled={tournament.status !== 'waiting'}
+												className="..."
+												>
+												Join Tournament
+												</button>
+											</JoinTournamentPopover>
+											)}
 									</div>
 								</div>
 							))
 						) : (
 							<div className="text-center py-8">
 								<p className="text-gray-600">No tournaments available to join</p>
+								<p className="text-sm text-gray-500 mt-2">Create a tournament to start playing!</p>
 							</div>
 						)}
 					</div>
@@ -313,6 +411,11 @@ export function TournamentPage(): JSX.Element {
 										<div className="flex-1">
 											<div className="font-title font-bold">{player.name}</div>
 											<div className="text-sm text-gray-600">@{player.username}</div>
+											{player.stats && (
+												<div className="text-xs text-blue-600 font-semibold">
+													Rating: {player.stats.rating} | W/L: {player.stats.matchesWon}/{player.stats.matchesLost}
+												</div>
+											)}
 											<div className="text-xs text-gray-500">
 												Joined: {new Date(player.joinedAt).toLocaleDateString()}
 											</div>

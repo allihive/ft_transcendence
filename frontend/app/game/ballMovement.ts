@@ -145,6 +145,7 @@ export function startBallMovement(
 const timeoutCleanups: (() => void)[] = [];
 
 let gameStarted = false;
+let gameEnded = false;
 
 const startInitialCountdown = () => {
   let countdown = 3;
@@ -176,11 +177,21 @@ const startInitialCountdown = () => {
   timeoutCleanups.push(() => clearInterval(countdownInterval));
 };
 
+// Set up global callback for game over
+(window as any).endGame = () => {
+  gameEnded = true;
+};
+
 startInitialCountdown();
 
 const observer = scene.onBeforeRenderObservable.add(() => {
   const currentTime = performance.now();
   const deltaTime = (currentTime - lastFrameTime) / 1000;
+
+  // Stop all game logic if game has ended
+  if (gameEnded) {
+    return;
+  }
 
   if (paddleMovementUpdate) {
     paddleMovementUpdate(deltaTime);
@@ -262,6 +273,9 @@ return () => {
   if (observer) {
     scene.onBeforeRenderObservable.remove(observer);
   }
+  
+  // Clean up global callback
+  delete (window as any).endGame;
   
   // Clean up all timeout cleanups safely
   timeoutCleanups.forEach(cleanup => {

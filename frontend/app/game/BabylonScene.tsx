@@ -4,15 +4,16 @@ import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { createScene } from "./createScene";
 import { paddleMovement } from "./paddleMovement";
 import { startBallMovement } from "./ballMovement";
-import "./Scene.css";
 import type { Player } from "~/api/types";
+import { upsertUserStats } from "~/api/stats/upsertUserStats";
 
 type BabylonSceneProps = {
 	player1: Player;
 	player2: Player;
-}
+	updateStats?: boolean;
+};
 
-export function BabylonScene({ player1, player2 }: BabylonSceneProps): JSX.Element {
+export function BabylonScene({ player1, player2, updateStats = true }: BabylonSceneProps): JSX.Element {
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const paddle1Ref = useRef<Mesh | null>(null);
 	const paddle2Ref = useRef<Mesh | null>(null);
@@ -46,13 +47,29 @@ export function BabylonScene({ player1, player2 }: BabylonSceneProps): JSX.Eleme
 		}
 	}, [players]);
 
-	// Global game over trigger
+	// Global game over trigger (tournament-aware)
 	useEffect(() => {
-		(window as any).setGameOverState = (winner: string) => {
-			setGameEnded(true);
-			setWinnerName(winner);
-		};
-	}, []);
+		// Only set the default handler if one doesn't already exist (tournament mode)
+		if (!(window as any).setGameOverState) {
+			console.log('Setting default BabylonScene game over handler');
+			(window as any).setGameOverState = async (winner: string, scores?: { player1Score: number; player2Score: number }) => {
+				setGameEnded(true);
+				setWinnerName(winner);
+
+				if (updateStats) {
+					// Find winner and loser IDs and updates stats
+					const winnerPlayer = [player1, player2].find(p => p.username === winner);
+					const loserPlayer = [player1, player2].find(p => p.username !== winner);
+					if (winnerPlayer && loserPlayer) {
+						await upsertUserStats(winnerPlayer.id, true);
+						await upsertUserStats(loserPlayer.id, false);
+					}
+				}
+			};
+		} else {
+			console.log('Tournament game over handler already exists, not overriding');
+		}
+	}, [player1, player2, updateStats]);
 
 	// Global countdown functions
 	useEffect(() => {
@@ -136,30 +153,26 @@ export function BabylonScene({ player1, player2 }: BabylonSceneProps): JSX.Eleme
 	}, []);
 
 	return (
-		<div className="scene-container">
+		<div className="w-[calc(100vw-120px)] h-[80vh] max-w-[calc(100vw-120px)] mx-auto overflow-hidden relative border-2 border-white">
 			<canvas
 				ref={canvasRef}
-				style={{
-					width: "100%",
-					height: "100%",
-					maxWidth: "100%",
-					maxHeight: "100vh",
-					display: "block"
-				}}
+				className="w-full h-full block bg-black"
 			/>
 
 			{/* Countdown overlay */}
 			{countdown !== null && (
-				<div className="countdown-overlay">
-					<div className="countdown-number">{countdown}</div>
+				<div className="absolute z-50 w-full h-full top-0 flex items-center justify-center pointer-events-none">
+					<div className="text-[8rem] font-bold text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] animate-pulse">
+						{countdown}
+					</div>
 				</div>
 			)}
 
 			{/* Game over overlay */}
 			{gameEnded && (
-				<div className="game-over">
+				<div className="absolute z-50 w-full h-full top-0 bg-black/80 text-white text-5xl flex flex-col items-center justify-center">
 					<h1>GAME OVER</h1>
-					<h2>Winner is {winnerName}</h2>
+					<h2 className="text-3xl mt-4">Winner is {winnerName}</h2>
 				</div>
 			)}
 		</div>

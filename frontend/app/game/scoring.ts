@@ -63,16 +63,34 @@ export function score(
         }
 
         // Check for win condition
+        console.log('Current scores:', updatedPlayers[0].username, updatedPlayers[0].score, updatedPlayers[1].username, updatedPlayers[1].score);
+        
         if (updatedPlayers[0].score >= 5) {
           winner = updatedPlayers[0].username;
+          console.log('Player 1 wins!', winner);
         } else if (updatedPlayers[1].score >= 5) {
           winner = updatedPlayers[1].username;
+          console.log('Player 2 wins!', winner);
         }
 
         if (winner) {
+          console.log('Winner detected, ending game:', winner);
           speed.value = 0;
+          // Stop all game logic immediately
+          if ((window as any).endGame) {
+            console.log('Calling endGame()');
+            (window as any).endGame();
+          } else {
+            console.error('endGame function not available');
+          }
           const gameOverTimeout = setTimeout(() => {
-            (window as any).setGameOverState?.(winner);
+            console.log('Calling setGameOverState with winner:', winner);
+            const finalScores = {
+              player1Score: Math.floor(updatedPlayers[0].score),
+              player2Score: Math.floor(updatedPlayers[1].score)
+            };
+            console.log('Final scores:', finalScores);
+            (window as any).setGameOverState?.(winner, finalScores);
           }, 500);
           timeoutIds.push(gameOverTimeout);
         } else {

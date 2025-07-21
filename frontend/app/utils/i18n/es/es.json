@@ -94,5 +94,6 @@
 		"score": "Tu Puntuación",
 		"opponentScore": "Puntuación del Oponente"
 	},
-	"close": "Cerca"
+	"close": "Cerca",
+	"firstTo5": "¡El primero en llegar a 5 puntos gana la partida!"
 }

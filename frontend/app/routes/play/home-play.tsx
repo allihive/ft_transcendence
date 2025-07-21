@@ -17,7 +17,7 @@ export default function Play() {
 				<NavLink to="/play/two-players" className={linkStyles}>
 					2 {t("players")}
 				</NavLink>
-				<NavLink to="/play/tournament" className={linkStyles}>
+				<NavLink to="/tournament" className={linkStyles}>
 					{t("joinTournament")}
 				</NavLink>
 			</div>

@@ -64,7 +64,7 @@ export function paddleMovement(
   const onKeyDown = (e: KeyboardEvent) => {
     const key = e.key.toLowerCase();
 
-    if (['a', 'q', 'l', 'p'].includes(key)) {
+    if (['a', 'd', 'arrowleft', 'arrowright'].includes(key)) {
       e.preventDefault();
     }
     
@@ -72,13 +72,13 @@ export function paddleMovement(
       case 'a':
         keys.paddle1Left = true;
         break;
-      case 'q':
+      case 'd':
         keys.paddle1Right = true;
         break;
-      case 'l':
+      case 'arrowleft':
         keys.paddle2Left = true;
         break;
-      case 'p':
+      case 'arrowright':
         keys.paddle2Right = true;
         break;
     }
@@ -91,13 +91,13 @@ export function paddleMovement(
       case 'a':
         keys.paddle1Left = false;
         break;
-      case 'q':
+      case 'd':
         keys.paddle1Right = false;
         break;
-      case 'l':
+      case 'arrowleft':
         keys.paddle2Left = false;
         break;
-      case 'p':
+      case 'arrowright':
         keys.paddle2Right = false;
         break;
     }

@@ -94,5 +94,6 @@
 		"score": "Your Score",
 		"opponentScore": "Opponent's Score"
 	},
-	"close": "Close"
+	"close": "Close",
+	"firstTo5": "First to 5 points wins the match!"
 }
