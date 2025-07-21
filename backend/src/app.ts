@@ -18,7 +18,6 @@ import { gameHistoryModule } from "./modules/gameHistory/gameHistory.module";
 import { remoteGameModule } from "./modules/remote/remote.module";
 import { statsModule } from "./modules/stats/stats.module";
 import { getErrorResponseDto } from "./common/utils/getErrorResponseDto";
-import { UnauthorizedException } from "./common/exceptions/UnauthorizedException";
 
 declare module "fastify" {
 	interface FastifyInstance {
@@ -82,17 +81,10 @@ const registerHooks = async (app: FastifyInstance): Promise<void> => {
 			return;
 		}
 
-		const publicPaths = ['/api/auth/login', '/api/auth/register', '/api/auth/google'];
-		if (publicPaths.some(path => request.url.startsWith(path))) {
-			return;
-		}
-
 		try {
 			await request.jwtVerify();
 		} catch (error) {
 			console.log((error as Record<string, any>)?.message ?? "Unauthorized");
-			// JWT 검증 실패 시 에러를 throw하여 전역 에러 핸들러가 처리하도록 함
-			throw new UnauthorizedException("Unauthorized");
 		}
 	});
 }
