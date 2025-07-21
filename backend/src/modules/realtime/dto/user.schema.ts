@@ -1,0 +1,1 @@
+// user.schema.ts - 현재 사용되지 않음 (isOnline은 실시간 connection 체크로 처리) 

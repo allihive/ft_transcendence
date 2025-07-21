@@ -14,8 +14,8 @@ export default [
 
 		route("login", "./routes/login.tsx"),
 		route("register", "./routes/register.tsx"),
-		route("chat", "./routes/Chat.tsx"),
 		route("tournament", "./routes/Tournament.tsx"),
+		route("chat", "./pages/chat/ChatPage.tsx"),
 
 		...prefix("users", [
 			layout("./routes/users/UsersLayout.tsx", [

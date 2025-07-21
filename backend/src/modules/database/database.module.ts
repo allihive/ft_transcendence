@@ -7,15 +7,17 @@ declare module "fastify" {
 	interface FastifyRequest {
 		entityManager: EntityManager
 	}
+	interface FastifyInstance {
+		orm: MikroORM
+	}
 }
 
 const databasePlugin: FastifyPluginAsync = async (app) => {
 	const orm = await MikroORM.init(mikroConfig);
 
-	// Create request-scoped EntityManager instance with following benefits:
-	// - Isolation: Ensures each request has its own identity map and won't interfere with other requests
-	// - Safety: Prevents entities from being shared between requests
-	// - Clean State: Each request starts with a fresh unit-of-work
+	// Register MikroORM instance for WebSocket connections
+	app.decorate("orm", orm);
+
 	app.decorateRequest("entityManager", {
 		getter() {
 			return orm.em.fork();

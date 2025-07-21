@@ -86,7 +86,7 @@ export function UsersFriends(): JSX.Element {
 			<table className="table-auto mx-auto border-darkOrange bg-lightOrange rounded-xl mt-4">
 				<thead>
 					<tr>
-						<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('name')}/th>
+						<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('name')}</th>
 						<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('rank')}</th>
 						<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('status')}</th>
 						<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('message')}</th>
@@ -94,14 +94,21 @@ export function UsersFriends(): JSX.Element {
 				</thead>
 				<tbody>
 					<tr className="font-title">
-						<td className="px-12 py-2 text-center">{friend.name}</td>
-						<td className="px-12 py-2 text-center">{friend.rank}</td>
-						<td className="px-12 py-2 text-center">{friend.status}</td>
+						<td className="px-12 py-2 text-center">Sumin</td>
+						<td className="px-12 py-2 text-center">Gold</td>
+						<td className="px-12 py-2 text-center">Online</td>
 						<td className="px-12 py-2 text-center">
 							<button className="text-pop flex items-center justify-center w-full"><BiSolidMessageRounded size={32}/></button>
 						</td>
 					</tr>
-				
+					<tr className="font-title">
+						<td className="px-12 py-2 text-center">Timo</td>
+						<td className="px-12 py-2 text-center">Silver</td>
+						<td className="px-12 py-2 text-center">Offline</td>
+						<td className="px-12 py-2 text-center">
+							<button className="text-pop flex items-center justify-center w-full"><BiSolidMessageRounded size={32}/></button>
+						</td>
+					</tr>
 				</tbody>
 			</table>
 	

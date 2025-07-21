@@ -210,4 +210,28 @@ export const authController: FastifyPluginAsync = async (app) => {
 				.send();
 		}
 	});
+
+	// WebSocket dedicated api for sending signed token
+	app.get("/ws-token", {
+		handler: async (request, reply) => {
+			if (!request.user) {
+				throw new UnauthorizedException("Unauthorized");
+			}
+
+			// WebSocket token (5min)
+			const wsToken = app.jwt.sign(request.user, { expiresIn: '5m' });
+			
+			console.log(`🔐 WebSocket token generated for user: ${request.user.name} (${request.user.id})`, {
+				timestamp: new Date().toISOString(),
+				userAgent: request.headers['user-agent']?.substring(0, 50) + '...',
+				ip: request.ip,
+				existingConnections: app.connectionService?.getUserConnections(request.user.id)?.length || 0
+			});
+			
+			return reply.code(200).send({ 
+				wsToken,
+				expiresIn: '5m'
+			});
+		}
+	});
 };

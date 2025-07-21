@@ -8,16 +8,17 @@ import { authModule } from "./modules/auth/auth.module";
 import { cookieConfig } from "./config/cookie.config";
 import { CryptoService } from "./common/utils/CryptoService";
 import { databaseModule } from "./modules/database/database.module";
-import { ErrorResponseDto } from "./common/dto/error-response";
 import { mediaModule } from "./modules/media/media.module";
 import { userModule } from "./modules/user/user.module";
 import { UserResponseTwoFactorAuthDto, UserResponseDto } from "./modules/user/user.dto";
 import { existsSync, mkdirSync } from "fs";
+import { realtimeModule } from "./modules/realtime/realtime.module";
 import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { gameHistoryModule } from "./modules/gameHistory/gameHistory.module";
 import { remoteGameModule } from "./modules/remote/remote.module";
 import { statsModule } from "./modules/stats/stats.module";
 import { getErrorResponseDto } from "./common/utils/getErrorResponseDto";
+import { UnauthorizedException } from "./common/exceptions/UnauthorizedException";
 
 declare module "fastify" {
 	interface FastifyInstance {
@@ -48,7 +49,7 @@ const installFastifyPlugins = async (app: FastifyInstance): Promise<void> => {
 
 	await app.register(fastifyJWT, {
 		secret: process.env.JWT_SECRET!,
-		cookie: { cookieName: "accessToken", signed: true }
+		cookie: { cookieName: "accessToken", signed: true } // 프로덕션과 동일하게 서명된 쿠키 사용
 	});
 };
 
@@ -62,8 +63,9 @@ const installPlugins = async (app: FastifyInstance): Promise<void> => {
 	await app.register(authModule, { prefix: "/api/auth" });
 	await app.register(statsModule, { prefix: "/api/stats"});
 	await app.register(gameHistoryModule, { prefix: "/api/history"});
-	await app.register(remoteGameModule, { prefix: "api/remote"})
+	await app.register(remoteGameModule, { prefix: "/api/remote"});
 	await app.register(mediaModule);
+	await app.register(realtimeModule, { prefix: "/api/realtime" });
 }
 
 const registerHooks = async (app: FastifyInstance): Promise<void> => {
@@ -76,10 +78,21 @@ const registerHooks = async (app: FastifyInstance): Promise<void> => {
 	});
 
 	app.addHook("onRequest", async (request, reply) => {
+		if (request.headers.upgrade === "websocket") {
+			return;
+		}
+
+		const publicPaths = ['/api/auth/login', '/api/auth/register', '/api/auth/google'];
+		if (publicPaths.some(path => request.url.startsWith(path))) {
+			return;
+		}
+
 		try {
 			await request.jwtVerify();
 		} catch (error) {
 			console.log((error as Record<string, any>)?.message ?? "Unauthorized");
+			// JWT 검증 실패 시 에러를 throw하여 전역 에러 핸들러가 처리하도록 함
+			throw new UnauthorizedException("Unauthorized");
 		}
 	});
 }

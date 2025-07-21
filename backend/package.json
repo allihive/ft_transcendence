@@ -23,6 +23,7 @@
 		"@fastify/multipart": "^9.0.3",
 		"@fastify/static": "^8.2.0",
 		"@fastify/type-provider-typebox": "^5.1.0",
+		"@fastify/websocket": "^11.1.0",
 		"@mikro-orm/core": "^6.4.15",
 		"@mikro-orm/migrations": "^6.4.15",
 		"@mikro-orm/reflection": "^6.4.15",
@@ -42,6 +43,8 @@
 		"@types/node": "^22.15.14",
 		"@types/qrcode": "^1.5.5",
 		"@types/speakeasy": "^2.0.10",
+		"@types/uuid": "^10.0.0",
+		"@types/ws": "^8.18.1",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.8.3"
 	}
