@@ -16,7 +16,7 @@ export class UserProvider {
 	@Property({ type: "string", unique: true, nullable: false, name: "provider_user_id" })
 	providerUserId!: string;
 
-	@Property({ type: "string", nullable: false})
+	@Property({ type: "string", unique: true, nullable: false})
     email!: string;
 
 	@Property({ type: "timestamptz", nullable: false, defaultRaw: "CURRENT_TIMESTAMP", name: "created_at" })
