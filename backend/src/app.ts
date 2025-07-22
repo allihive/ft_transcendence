@@ -15,7 +15,8 @@ import { existsSync, mkdirSync } from "fs";
 import { realtimeModule } from "./modules/realtime/realtime.module";
 import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { gameHistoryModule } from "./modules/gameHistory/gameHistory.module";
-import { remoteGameModule } from "./modules/remote/remote.module";
+// import { remoteGameModule } from "./modules/remote/remote.module";
+import { tournamentGameModule } from "./modules/tournament/tournament.module";
 import { statsModule } from "./modules/stats/stats.module";
 import { getErrorResponseDto } from "./common/utils/getErrorResponseDto";
 
@@ -62,9 +63,10 @@ const installPlugins = async (app: FastifyInstance): Promise<void> => {
 	await app.register(authModule, { prefix: "/api/auth" });
 	await app.register(statsModule, { prefix: "/api/stats"});
 	await app.register(gameHistoryModule, { prefix: "/api/history"});
-	await app.register(remoteGameModule, { prefix: "/api/remote"});
+	// await app.register(remoteGameModule, { prefix: "/api/remote"});
 	await app.register(mediaModule);
 	await app.register(realtimeModule, { prefix: "/api/realtime" });
+	await app.register(tournamentGameModule, { prefix: "/api/tournament" });
 }
 
 const registerHooks = async (app: FastifyInstance): Promise<void> => {

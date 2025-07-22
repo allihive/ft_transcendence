@@ -28,6 +28,23 @@ export class GameHistoryRepository {
 		);
 	}
 
+		//   /**
+	//    * Get recent matches with pagination
+	//    * @param offset - Number of records to skip
+	//    * @param limit - Maximum number of records to return
+	//    * @returns Promise that resolves to array of recent matches
+	//    */
+
+	//   async getRecentMatches(offset: number = 0, limit: number = 10): Promise<GameHistory[]> {
+	//     return this.find(
+	//       {},
+	//       {
+	//         orderBy: { createdAt: 'DESC' },
+	//         offset,
+	//         limit
+	//       }
+	//     );
+	//   }
 	//   /**
 	//    * Check if a match already exists
 	//    * @param matchId - The match ID to check
@@ -70,22 +87,5 @@ export class GameHistoryRepository {
 	//       winRate: games.length > 0 ? (wins / games.length) * 100 : 0,
 	//       averageScore: games.length > 0 ? totalScore / games.length : 0
 	//     };
-	//   }
-
-	//   /**
-	//    * Get recent matches with pagination
-	//    * @param offset - Number of records to skip
-	//    * @param limit - Maximum number of records to return
-	//    * @returns Promise that resolves to array of recent matches
-	//    */
-	//   async getRecentMatches(offset: number = 0, limit: number = 10): Promise<GameHistory[]> {
-	//     return this.find(
-	//       {},
-	//       {
-	//         orderBy: { createdAt: 'DESC' },
-	//         offset,
-	//         limit
-	//       }
-	//     );
 	//   }
 }

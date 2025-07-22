@@ -38,7 +38,7 @@ export const CreateGameHistoryDtoSchema = Type.Object(
 // Response DTOs
 export const PlayerGameResultDtoSchema = Type.Object(
   {
-    // date: Type.String({ format: "date-time" }),
+    date: Type.String({ format: "date-time" }),
     opponent: Type.Optional(Type.String({ format: "uuid" })), // Optional for local games
     opponentName: Type.Optional(Type.String()), // Display name for local opponents
     playerScore: Type.Number(),
@@ -91,23 +91,3 @@ export type RecordMatchResponseDto = Static<typeof RecordMatchResponseDtoSchema>
 export const GetPlayerHistoryParamsDtoSchema = GetPlayerHistoryParamsSchema;
 export const GetPlayerStatsParamsDtoSchema = GetPlayerStatsParamsSchema;
 export const GetPlayerHistoryQueryDtoSchema = GetPlayerHistoryQuerySchema;
-
-// Helper function to convert entity to response DTO
-// Helper function to determine game result from a player's perspective
-function getPlayerGameResultDto(
-  gameHistory: GameHistory, 
-  playerId: string
-): PlayerGameResultDto {
-  const isWinner = gameHistory.winnerId === playerId;
-  const opponentId = isWinner ? gameHistory.loserId : gameHistory.winnerId;
-  const opponentName = isWinner ? gameHistory.loserName : gameHistory.winnerName;
-
-  return {
-    opponent: opponentId || undefined, // Handle null values for local games
-    opponentName: opponentName || undefined, // Use display name for local opponents
-    playerScore: isWinner ? gameHistory.winnerScore : gameHistory.loserScore,
-    opponentScore: isWinner ? gameHistory.loserScore : gameHistory.winnerScore,
-    result: isWinner ? 'WIN' : 'LOSS',
-    isLocal: gameHistory.local // Indicate if this was a local game
-  };
-}

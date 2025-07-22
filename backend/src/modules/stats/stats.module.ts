@@ -11,10 +11,11 @@ declare module "fastify" {
 	}
 }
 
+//updated 21.7 to include userStateRepository
 const statsPlugin: FastifyPluginAsync = async (app, opts) => {
-	const statsService = new StatsService(
-		new UserStatsService(new UserStatsRepository())
-	);
+	const userStatsRepository = new UserStatsRepository();
+	const userStatsService = new UserStatsService(userStatsRepository);
+	const statsService = new StatsService(userStatsService, userStatsRepository);
 
 	app.decorate("statsService", statsService);
 

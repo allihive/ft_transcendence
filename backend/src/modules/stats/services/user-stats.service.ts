@@ -27,7 +27,8 @@ export class UserStatsService {
 				matchesPlayed: 1,
 				matchesWon: won ? 1 : 0,
 				matchesLost: won ? 0 : 1,
-				winRate: won ? 100.00 : 0.00
+				winRate: won ? 100.00 : 0.00,
+				rating: 100 // Default starting rating
 			};
 
 			return this.userStatsRepository.create(em, userStatsData);

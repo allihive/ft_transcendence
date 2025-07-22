@@ -147,7 +147,6 @@ export class RemoteGameService {
   }
 
     async calculateAndUpdateRating(em: EntityManager, matchResultDto: MatchResultDto): Promise<{ winner: RemoteGame; loser: RemoteGame }> {
-    // Use a transaction to ensure both updates happen atomically
     return em.transactional(async (em) => {
       // Find both players
       const winner = await this.findPlayer(em, { playerId: matchResultDto.winnerId });

@@ -33,7 +33,7 @@ export class GameHistoryService {
 				const opponentName = playerWon ? game.loserName : game.winnerName;
 
 				return {
-					// date: game.createdAt!.toISOString(),
+					date: game.createdAt!.toISOString(),
 					opponent: opponentId || undefined, // Handle null for local games
 					opponentName: opponentName || undefined, // Display name for local opponents
 					playerScore: playerWon ? game.winnerScore : game.loserScore,
@@ -80,6 +80,17 @@ export class GameHistoryService {
 		}
 	}
 }
+
+// async getRecentMatches(page: number = 1, limit: number = 10): Promise<GameHistory[]> {
+// 	try {
+// 		const offset = (page - 1) * limit;
+// 		return await this.gameHistoryRepository.getRecentMatches(offset, limit);
+// 	} catch (error) {
+// 		console.error('Error retrieving recent matches:', error);
+// 		throw error;
+// 	}
+// }
+
 // async getPlayerStats(playerId: string): Promise<{
 // 	totalGames: number;
 // 	wins: number;
@@ -95,15 +106,6 @@ export class GameHistoryService {
 // 	}
 // }
 
-// async getRecentMatches(page: number = 1, limit: number = 10): Promise<GameHistory[]> {
-// 	try {
-// 		const offset = (page - 1) * limit;
-// 		return await this.gameHistoryRepository.getRecentMatches(offset, limit);
-// 	} catch (error) {
-// 		console.error('Error retrieving recent matches:', error);
-// 		throw error;
-// 	}
-// }
 
 // private formatDate(date: Date): string {
 // 	return date.toLocaleDateString('en-US', {

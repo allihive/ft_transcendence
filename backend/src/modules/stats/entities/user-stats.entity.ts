@@ -22,6 +22,9 @@ export class UserStats {
 	@Property({ type: "float", default: 0.0, name: "win_rate" })
 	winRate: number = 0.0;
 
+	@Property({ type: "int", default: 100 })
+	rating!: number; // added 21.7
+
 	@Property({ type: "timestamptz", defaultRaw: "CURRENT_TIMESTAMP", name: "updated_at" })
 	updatedAt?: Date;
 }

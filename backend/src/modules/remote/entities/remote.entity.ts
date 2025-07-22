@@ -1,5 +1,5 @@
 // src/modules/remote/entities/remote.entity.ts
-import { Entity, PrimaryKey, Property, Index } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { randomUUID } from 'crypto';
 
 export enum Status {

@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from "fastify";
 import { UnauthorizedException } from "../../common/exceptions/UnauthorizedException";
-import { UpsertUserStatsDto, UpsertUserStatsDtoSchema, GetUserStatsParamsDto, GetUserStatsParamsDtoSchema, getUserStatsResponseDto } from "./dtos/user-stats.dto";
+import { UpsertUserStatsDto, UpsertUserStatsDtoSchema, GetUserStatsParamsDto, GetUserStatsParamsDtoSchema, getUserStatsResponseDto, MatchResultDtoSchema, MatchResultDto } from "./dtos/user-stats.dto";
 
 export const statsController: FastifyPluginAsync = async (app) => {
 	const userStatsService = app.statsService.getUserStatsService();
@@ -8,9 +8,9 @@ export const statsController: FastifyPluginAsync = async (app) => {
 	app.get("/users/:userId", {
 		schema: { params: GetUserStatsParamsDtoSchema },
 		handler: async (request, reply) => {
-			if (!request.user) {
-				throw new UnauthorizedException("Authentication required to process your request.");
-			}
+			// if (!request.user) {
+			// 	throw new UnauthorizedException("Authentication required to process your request.");
+			// }
 
 			const { userId } = request.params as GetUserStatsParamsDto;
 			const em = request.entityManager;
@@ -26,9 +26,9 @@ export const statsController: FastifyPluginAsync = async (app) => {
 	app.post("/users/", {
 		schema: { body: UpsertUserStatsDtoSchema },
 		handler: async (request, reply) => {
-			if (!request.user) {
-				throw new UnauthorizedException("Authentication required to process your request.");
-			}
+			// if (!request.user) {
+			// 	throw new UnauthorizedException("Authentication required to process your request.");
+			// }
 
 			const em = request.entityManager;
 			const userStats = await userStatsService.upsert(em, request.body as UpsertUserStatsDto);
@@ -37,6 +37,18 @@ export const statsController: FastifyPluginAsync = async (app) => {
 			return reply
 				.code(201)
 				.send(payload);
+		}
+	});
+	
+	//added 21.7 - Update user stats based on match result
+	app.post("/update-stats", {
+		schema: { body: MatchResultDtoSchema },
+		handler: async (request, reply) => {
+			const em = request.entityManager;
+			const response = await app.statsService.updateUserStats(em, request.body as MatchResultDto);
+			return reply
+				.code(201)
+				.send(response);
 		}
 	});
 };
