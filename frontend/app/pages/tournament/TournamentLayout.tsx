@@ -43,8 +43,33 @@ export function TournamentPage(): JSX.Element {
 				bestOf: bestOf
 			};
 
+			// Try to fetch user's actual stats from the database
+			let userStats = null;
+			try {
+				userStats = await getUserStats(user.id);
+			} catch (error) {
+				// User has no stats yet (new user), that's okay
+			}
+
+			// Create a proper player object for the creator
+			const creatorPlayer = {
+				id: user.id,
+				email: user.email || `${user.username}@example.com`,
+				name: user.name || user.username,
+				username: user.username,
+				avatarUrl: user.avatarUrl || '/files/default-avatar.png',
+				joinedAt: new Date().toISOString(),
+				stats: {
+					matchesPlayed: userStats?.matchesPlayed || 0,
+					matchesWon: userStats?.matchesWon || 0,
+					matchesLost: userStats?.matchesLost || 0,
+					winRate: userStats?.winRate || 0,
+					rating: userStats?.winRate || 50 // Use winRate as rating (0-100%), default 50% for new users
+				}
+			};
+
 			const creator = user.name || user.username || user.email || 'Unknown';
-			const newTournament = await createTournament(tournamentData, creator);
+			const newTournament = await createTournament(tournamentData, creator, creatorPlayer);
 			
 			toast.success(`${t('tournamentCreated')} "${newTournamentName}"!`);
 			setNewTournamentName('');
@@ -256,15 +281,23 @@ export function TournamentPage(): JSX.Element {
 									</div>
 									
 									<div className="flex justify-between items-center">
-										<button
-											onClick={() => {
-												setSelectedTournamentForPlayers(tournament);
-												setShowPlayersPopup(true);
-											}}
-											className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-black font-title rounded border-2 border-black transition-colors"
-										>
-											View Players
-										</button>
+										<div className="flex space-x-2">
+											<button
+												onClick={() => {
+													setSelectedTournamentForPlayers(tournament);
+													setShowPlayersPopup(true);
+												}}
+												className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-black font-title rounded border-2 border-black transition-colors"
+											>
+												View Players
+											</button>
+											{tournament.players && tournament.players.length > 0 && (
+												<div className="text-xs text-gray-600">
+													<span className="font-bold">Creator:</span> {tournament.players[0]?.username} 
+													({tournament.players[0]?.stats?.winRate || 0}% win rate)
+												</div>
+											)}
+										</div>
 										
 										<div className="flex space-x-2">
 											{tournament.status === 'in-progress' && (
@@ -295,7 +328,7 @@ export function TournamentPage(): JSX.Element {
 												<button
 												onClick={() => setJoinPopupTournamentId(tournament.id)}
 												disabled={tournament.status !== 'waiting'}
-												className="..."
+												className="px-4 py-2 bg-lightOrange hover:bg-darkOrange text-black font-title rounded border-2 border-black transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
 												>
 												Join Tournament
 												</button>

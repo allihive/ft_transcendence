@@ -27,6 +27,11 @@ interface BracketMatch {
 	status: 'pending' | 'in_progress' | 'completed';
 	nextMatchId?: string;
 	finalScore?: string;
+	gamesWon: {
+		player1: number;
+		player2: number;
+	};
+	requiredWins: number;
 }
 
 {/*
@@ -47,7 +52,25 @@ const MatchCard = ({ match, roundName, compact = false, onStartMatch, canStart =
 	const getPlayerDisplay = (player: any) => {
 		if (!player) return "TBD";
 		const playerName = player.name || player.username || 'Unknown';
-		return playerName; // Always return just the player name, no rating
+		return playerName;
+	};
+
+	const getSeriesDisplay = (match: BracketMatch) => {
+		const { gamesWon, player1, player2 } = match;
+		const p1Wins = gamesWon.player1;
+		const p2Wins = gamesWon.player2;
+		
+		if (p1Wins === 0 && p2Wins === 0) return "Draw 0-0";
+		if (p1Wins === p2Wins) return `Draw ${p1Wins}-${p2Wins}`;
+		if (p1Wins > p2Wins) return `${player1?.username} leads ${p1Wins}-${p2Wins}`;
+		if (p2Wins > p1Wins) return `${player2?.username} leads ${p2Wins}-${p1Wins}`;
+		return `Draw ${p1Wins}-${p2Wins}`;
+	};
+
+	const getButtonText = (match: BracketMatch) => {
+		if (match.status === 'pending') return "START MATCH";
+		if (match.status === 'in_progress') return "PLAY NEXT GAME";
+		return null; // completed
 	};
 
 	const getWinnerName = (winner: any) => {
@@ -95,14 +118,21 @@ const MatchCard = ({ match, roundName, compact = false, onStartMatch, canStart =
 				</div>
 			</div>
 
-			{/* Start Match Button */}
-			{canStartMatch && onStartMatch && (
+			{/* Series Status */}
+			{match.status !== 'pending' && (
+				<div className="text-center text-xs text-gray-600 mt-2">
+					{getSeriesDisplay(match)}
+				</div>
+			)}
+
+			{/* Action Button */}
+			{getButtonText(match) && onStartMatch && (
 				<div className="mt-2 text-center">
 					<button
 						onClick={() => onStartMatch(match)}
 						className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold rounded border border-black transition-colors"
 					>
-						START MATCH
+						{getButtonText(match)}
 					</button>
 				</div>
 			)}
@@ -209,6 +239,19 @@ export function TournamentBracket(): JSX.Element {
 		return previousRoundMatches.every(match => match.status === 'completed');
 	};
 
+	// Check if a match can be started or continued
+	const canStartOrContinueMatch = (match: BracketMatch): boolean => {
+		// Can start if pending and round can start
+		if (match.status === 'pending') {
+			return canRoundStart(match.roundNumber);
+		}
+		// Can continue if in progress (series not complete)
+		if (match.status === 'in_progress') {
+			return true;
+		}
+		return false;
+	};
+
 	// Handle starting a match
 	const handleStartMatch = (match: BracketMatch) => {
 		if (!match.player1 || !match.player2) {
@@ -221,7 +264,8 @@ export function TournamentBracket(): JSX.Element {
 			tournamentId,
 			matchId: match.id,
 			player1: match.player1,  // Full player data including stats
-			player2: match.player2   // Full player data including stats
+			player2: match.player2,  // Full player data including stats
+			bestOf: tournament.bestOf // Pass the tournament's bestOf setting
 		};
 		
 		// Store in localStorage so the game can access the complete player data
@@ -250,7 +294,7 @@ export function TournamentBracket(): JSX.Element {
 									match={match} 
 									roundName="Semifinals" 
 									onStartMatch={handleStartMatch}
-									canStart={canRoundStart(1)}
+									canStart={canStartOrContinueMatch(match)}
 								/>
 							))}
 						</div>
@@ -268,7 +312,7 @@ export function TournamentBracket(): JSX.Element {
 									match={match} 
 									roundName="Final" 
 									onStartMatch={handleStartMatch}
-									canStart={canRoundStart(2)}
+									canStart={canStartOrContinueMatch(match)}
 								/>
 							))}
 						</div>
@@ -294,7 +338,7 @@ export function TournamentBracket(): JSX.Element {
 									roundName="Quarterfinals" 
 									compact 
 									onStartMatch={handleStartMatch}
-									canStart={canRoundStart(1)}
+									canStart={canStartOrContinueMatch(match)}
 								/>
 							))}
 						</div>
@@ -310,7 +354,7 @@ export function TournamentBracket(): JSX.Element {
 										match={match} 
 										roundName="Semifinals" 
 										onStartMatch={handleStartMatch}
-										canStart={canRoundStart(2)}
+										canStart={canStartOrContinueMatch(match)}
 									/>
 								</div>
 							))}
@@ -327,7 +371,7 @@ export function TournamentBracket(): JSX.Element {
 									match={match} 
 									roundName="Final" 
 									onStartMatch={handleStartMatch}
-									canStart={canRoundStart(3)}
+									canStart={canStartOrContinueMatch(match)}
 								/>
 							))}
 						</div>
@@ -354,7 +398,7 @@ export function TournamentBracket(): JSX.Element {
 									roundName="R16" 
 									compact 
 									onStartMatch={handleStartMatch}
-									canStart={canRoundStart(1)}
+									canStart={canStartOrContinueMatch(match)}
 								/>
 							))}
 						</div>
@@ -371,7 +415,7 @@ export function TournamentBracket(): JSX.Element {
 									roundName="Quarterfinals" 
 									compact 
 									onStartMatch={handleStartMatch}
-									canStart={canRoundStart(2)}
+									canStart={canStartOrContinueMatch(match)}
 								/>
 							))}
 						</div>
@@ -387,7 +431,7 @@ export function TournamentBracket(): JSX.Element {
 									match={match} 
 									roundName="Semifinals" 
 									onStartMatch={handleStartMatch}
-									canStart={canRoundStart(3)}
+									canStart={canStartOrContinueMatch(match)}
 								/>
 							))}
 						</div>
@@ -403,7 +447,7 @@ export function TournamentBracket(): JSX.Element {
 									match={match} 
 									roundName="Final" 
 									onStartMatch={handleStartMatch}
-									canStart={canRoundStart(4)}
+									canStart={canStartOrContinueMatch(match)}
 								/>
 							))}
 						</div>

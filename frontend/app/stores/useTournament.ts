@@ -27,6 +27,11 @@ interface BracketMatch {
 	status: 'pending' | 'in_progress' | 'completed';
 	nextMatchId?: string;
 	finalScore?: string;
+	gamesWon: {
+		player1: number;
+		player2: number;
+	};
+	requiredWins: number;
 }
 
 interface TournamentBracket {
@@ -60,7 +65,7 @@ interface TournamentResultsPayload {
 interface TournamentStore {
 	tournaments: TournamentWithPlayers[];
 	loading: boolean;
-	createTournament: (tournamentData: CreateTournamentDto, creator: string) => Promise<TournamentWithPlayers>;
+	createTournament: (tournamentData: CreateTournamentDto, creator: string, creatorPlayer?: TournamentPlayer) => Promise<TournamentWithPlayers>;
 	joinTournament: (tournamentId: string, player: TournamentPlayer) => Promise<TournamentWithPlayers | null>;
 	startTournament: (tournamentId: string) => Promise<TournamentWithPlayers | null>;
 	updateMatchResult: (tournamentId: string, matchId: string, winner: TournamentPlayer, finalScore?: string) => TournamentWithPlayers | null;
@@ -70,7 +75,7 @@ interface TournamentStore {
 }
 
 // Bracket generation functions
-const generateBracketForFourPlayers = (players: TournamentPlayer[]): BracketMatch[] => {
+const generateBracketForFourPlayers = (players: TournamentPlayer[], bestOf: number): BracketMatch[] => {
 	const shuffled = [...players].sort(() => Math.random() - 0.5);
 	
 	const matches: BracketMatch[] = [
@@ -83,7 +88,9 @@ const generateBracketForFourPlayers = (players: TournamentPlayer[]): BracketMatc
 			player2: shuffled[1],
 			winner: null,
 			status: 'pending',
-			nextMatchId: 'match-3'
+			nextMatchId: 'match-3',
+			gamesWon: { player1: 0, player2: 0 },
+			requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 		},
 		{
 			id: 'match-2',
@@ -93,7 +100,9 @@ const generateBracketForFourPlayers = (players: TournamentPlayer[]): BracketMatc
 			player2: shuffled[3],
 			winner: null,
 			status: 'pending',
-			nextMatchId: 'match-3'
+			nextMatchId: 'match-3',
+			gamesWon: { player1: 0, player2: 0 },
+			requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 		},
 		// Final
 		{
@@ -103,14 +112,16 @@ const generateBracketForFourPlayers = (players: TournamentPlayer[]): BracketMatc
 			player1: null, // Winner of match-1
 			player2: null, // Winner of match-2
 			winner: null,
-			status: 'pending'
+			status: 'pending',
+			gamesWon: { player1: 0, player2: 0 },
+			requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 		}
 	];
 	
 	return matches;
 };
 
-const generateBracketWithBaskets = (players: TournamentPlayer[]): BracketMatch[] => {
+const generateBracketWithBaskets = (players: TournamentPlayer[], bestOf: number): BracketMatch[] => {
 	const playerCount = players.length;
 	const isEightPlayers = playerCount === 8;
 	
@@ -156,7 +167,9 @@ const generateBracketWithBaskets = (players: TournamentPlayer[]): BracketMatch[]
 					player2,
 					winner: null,
 					status: 'pending',
-					nextMatchId: semifinalId
+					nextMatchId: semifinalId,
+					gamesWon: { player1: 0, player2: 0 },
+					requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 				});
 				matchId++;
 			}
@@ -170,7 +183,9 @@ const generateBracketWithBaskets = (players: TournamentPlayer[]): BracketMatch[]
 			player2: null, // Winner of match-2
 			winner: null,
 			status: 'pending',
-			nextMatchId: 'match-7'
+			nextMatchId: 'match-7',
+			gamesWon: { player1: 0, player2: 0 },
+			requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 		});
 		matches.push({
 			id: 'match-6',
@@ -180,7 +195,9 @@ const generateBracketWithBaskets = (players: TournamentPlayer[]): BracketMatch[]
 			player2: null, // Winner of match-4
 			winner: null,
 			status: 'pending',
-			nextMatchId: 'match-7'
+			nextMatchId: 'match-7',
+			gamesWon: { player1: 0, player2: 0 },
+			requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 		});
 		// Final (match-7)
 		matches.push({
@@ -190,7 +207,9 @@ const generateBracketWithBaskets = (players: TournamentPlayer[]): BracketMatch[]
 			player1: null, // Winner of match-5
 			player2: null, // Winner of match-6
 			winner: null,
-			status: 'pending'
+			status: 'pending',
+			gamesWon: { player1: 0, player2: 0 },
+			requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 		});
 	} else {
 		// For 16 players: 8 matches, 4 groups of 4
@@ -215,7 +234,9 @@ const generateBracketWithBaskets = (players: TournamentPlayer[]): BracketMatch[]
 					player2,
 					winner: null,
 					status: 'pending',
-					nextMatchId: quarterfinalId
+					nextMatchId: quarterfinalId,
+					gamesWon: { player1: 0, player2: 0 },
+					requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 				});
 				matchId++;
 			}
@@ -231,7 +252,9 @@ const generateBracketWithBaskets = (players: TournamentPlayer[]): BracketMatch[]
 				player2: null,
 				winner: null,
 				status: 'pending',
-				nextMatchId: semifinalId
+				nextMatchId: semifinalId,
+				gamesWon: { player1: 0, player2: 0 },
+				requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 			});
 		}
 		// Semifinals (match-13, match-14)
@@ -243,7 +266,9 @@ const generateBracketWithBaskets = (players: TournamentPlayer[]): BracketMatch[]
 			player2: null, // Winner of match-10
 			winner: null,
 			status: 'pending',
-			nextMatchId: 'match-15'
+			nextMatchId: 'match-15',
+			gamesWon: { player1: 0, player2: 0 },
+			requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 		});
 		matches.push({
 			id: 'match-14',
@@ -253,7 +278,9 @@ const generateBracketWithBaskets = (players: TournamentPlayer[]): BracketMatch[]
 			player2: null, // Winner of match-12
 			winner: null,
 			status: 'pending',
-			nextMatchId: 'match-15'
+			nextMatchId: 'match-15',
+			gamesWon: { player1: 0, player2: 0 },
+			requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 		});
 		// Final (match-15)
 		matches.push({
@@ -263,7 +290,9 @@ const generateBracketWithBaskets = (players: TournamentPlayer[]): BracketMatch[]
 			player1: null, // Winner of match-13
 			player2: null, // Winner of match-14
 			winner: null,
-			status: 'pending'
+			status: 'pending',
+			gamesWon: { player1: 0, player2: 0 },
+			requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 		});
 	}
 	return matches;
@@ -273,11 +302,28 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 	tournaments: [],
 	loading: false,
 
-	createTournament: async (tournamentData: CreateTournamentDto, creator: string) => {
+	createTournament: async (tournamentData: CreateTournamentDto, creator: string, creatorPlayer?: TournamentPlayer) => {
 		set({ loading: true });
 		
 		// Simulate API delay
 		await new Promise(resolve => setTimeout(resolve, 500));
+		
+		// Use provided creator player or create a default one
+		const finalCreatorPlayer: TournamentPlayer = creatorPlayer || {
+			id: creator.toLowerCase().replace(/\s+/g, ''), // Use creator name as ID for now
+			email: `${creator.toLowerCase().replace(/\s+/g, '')}@example.com`,
+			name: creator,
+			username: creator.toLowerCase().replace(/\s+/g, ''),
+			avatarUrl: '/files/default-avatar.png',
+			joinedAt: new Date().toISOString(),
+			stats: {
+				matchesPlayed: 0,
+				matchesWon: 0,
+				matchesLost: 0,
+				winRate: 0,
+				rating: 50 // Default rating for new users
+			}
+		};
 		
 		const newTournament: TournamentWithPlayers = {
 			id: Date.now().toString(),
@@ -288,16 +334,7 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 			bestOf: tournamentData.bestOf,
 			status: 'waiting',
 			createdAt: new Date().toISOString().split('T')[0],
-			players: [
-				{
-					id: 'creator-id', // This would come from the logged-in user
-					email: 'creator@example.com',
-					name: creator,
-					username: creator.toLowerCase().replace(/\s+/g, ''),
-					avatarUrl: '/files/default-avatar.png',
-					joinedAt: new Date().toISOString()
-				}
-			]
+			players: [finalCreatorPlayer]
 		};
 
 		set(state => ({
@@ -379,13 +416,13 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 		let rounds = 0;
 		
 		if (tournament.players.length === 4) {
-			matches = generateBracketForFourPlayers(tournament.players);
+			matches = generateBracketForFourPlayers(tournament.players, tournament.bestOf);
 			rounds = 2; // Semifinals + Final
 		} else if (tournament.players.length === 8) {
-			matches = generateBracketWithBaskets(tournament.players);
+			matches = generateBracketWithBaskets(tournament.players, tournament.bestOf);
 			rounds = 3; // Quarterfinals + Semifinals + Final
 		} else if (tournament.players.length === 16) {
-			matches = generateBracketWithBaskets(tournament.players);
+			matches = generateBracketWithBaskets(tournament.players, tournament.bestOf);
 			rounds = 4; // Round of 16 + Quarterfinals + Semifinals + Final
 		}
 		
@@ -421,12 +458,8 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 	},
 
 	updateMatchResult: (tournamentId: string, matchId: string, winner: TournamentPlayer, finalScore?: string) => {
-		console.log('updateMatchResult called:', { tournamentId, matchId, winner, finalScore });
-		
 		const { tournaments } = get();
 		const tournamentIndex = tournaments.findIndex(t => t.id === tournamentId);
-		
-		console.log('Tournament index:', tournamentIndex, 'Total tournaments:', tournaments.length);
 		
 		if (tournamentIndex === -1) {
 			console.error('Tournament not found');
@@ -434,7 +467,6 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 		}
 		
 		const tournament = tournaments[tournamentIndex];
-		console.log('Found tournament:', tournament);
 		
 		if (!tournament.bracket) {
 			console.error('Tournament has no bracket');
@@ -445,99 +477,93 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 		const updatedTournament = { ...updatedTournaments[tournamentIndex] };
 		const updatedBracket: TournamentBracket = { 
 			...updatedTournament.bracket!,
-			tournamentId: updatedTournament.bracket!.tournamentId,
 			matches: updatedTournament.bracket!.matches || [],
-			rounds: updatedTournament.bracket!.rounds,
-			isGenerated: updatedTournament.bracket!.isGenerated
 		};
 		const updatedMatches = [...updatedBracket.matches];
 		
-		// Find and update the completed match
+		// Find the match to update
 		const matchIndex = updatedMatches.findIndex(m => m.id === matchId);
-		console.log('Match index:', matchIndex, 'Looking for matchId:', matchId);
-		console.log('Available matches:', updatedMatches.map(m => ({ id: m.id, status: m.status })));
 		
 		if (matchIndex === -1) {
 			console.error('Match not found in bracket');
 			return null;
 		}
 		
-		const completedMatch = { ...updatedMatches[matchIndex] };
-		console.log('Before update - Match status:', completedMatch.status);
+		const match = { ...updatedMatches[matchIndex] };
 		
-		completedMatch.winner = winner;
-		completedMatch.status = 'completed';
-		if (finalScore) {
-			completedMatch.finalScore = finalScore;
+		// Update games won for the winner
+		if (winner.id === match.player1?.id) {
+			match.gamesWon.player1++;
+		} else if (winner.id === match.player2?.id) {
+			match.gamesWon.player2++;
 		}
-		updatedMatches[matchIndex] = completedMatch;
 		
-		console.log('After update - Match status:', completedMatch.status);
+		// Check if series is complete
+		const p1Wins = match.gamesWon.player1;
+		const p2Wins = match.gamesWon.player2;
+		const requiredWins = match.requiredWins;
 		
-		// Advance winner to next round if there is a next match
-		console.log('Checking advancement - nextMatchId:', completedMatch.nextMatchId);
-		if (completedMatch.nextMatchId) {
-			const nextMatchIndex = updatedMatches.findIndex(m => m.id === completedMatch.nextMatchId);
-			console.log('Next match index:', nextMatchIndex);
-			if (nextMatchIndex !== -1) {
-				const nextMatch = { ...updatedMatches[nextMatchIndex] };
-				console.log('Next match before advancement:', nextMatch);
-				
-				// Find the complete player data from the tournament's players list
-				// This ensures we preserve all player data including stats
-				const fullWinnerData = updatedTournament.players.find(p => p.id === winner.id) || winner;
-				console.log('Full winner data with stats:', fullWinnerData);
-				
-				// Determine which slot the winner should fill based on bracket structure
-				let targetSlot: 'player1' | 'player2' = 'player1';
-				
-				// 8-player tournament bracket logic
-				if (completedMatch.nextMatchId === 'match-5') {
-					// Quarterfinal to semifinal 1
-					targetSlot = (completedMatch.id === 'match-1') ? 'player1' : 'player2';
-				} else if (completedMatch.nextMatchId === 'match-6') {
-					// Quarterfinal to semifinal 2  
-					targetSlot = (completedMatch.id === 'match-3') ? 'player1' : 'player2';
-				} else if (completedMatch.nextMatchId === 'match-7') {
-					// Semifinal to final
-					targetSlot = (completedMatch.id === 'match-5') ? 'player1' : 'player2';
-				}
-				// 16-player tournament bracket logic
-				else if (completedMatch.nextMatchId === 'match-9') {
-					// Round of 16 to quarterfinal 1 (match-1, match-2 → match-9)
-					targetSlot = (completedMatch.id === 'match-1') ? 'player1' : 'player2';
-				} else if (completedMatch.nextMatchId === 'match-10') {
-					// Round of 16 to quarterfinal 2 (match-3, match-4 → match-10)
-					targetSlot = (completedMatch.id === 'match-3') ? 'player1' : 'player2';
-				} else if (completedMatch.nextMatchId === 'match-11') {
-					// Round of 16 to quarterfinal 3 (match-5, match-6 → match-11)
-					targetSlot = (completedMatch.id === 'match-5') ? 'player1' : 'player2';
-				} else if (completedMatch.nextMatchId === 'match-12') {
-					// Round of 16 to quarterfinal 4 (match-7, match-8 → match-12)
-					targetSlot = (completedMatch.id === 'match-7') ? 'player1' : 'player2';
-				} else if (completedMatch.nextMatchId === 'match-13') {
-					// Quarterfinal to semifinal 1 (match-9, match-10 → match-13)
-					targetSlot = (completedMatch.id === 'match-9') ? 'player1' : 'player2';
-				} else if (completedMatch.nextMatchId === 'match-14') {
-					// Quarterfinal to semifinal 2 (match-11, match-12 → match-14)
-					targetSlot = (completedMatch.id === 'match-11') ? 'player1' : 'player2';
-				} else if (completedMatch.nextMatchId === 'match-15') {
-					// Semifinal to final (match-13, match-14 → match-15)
-					targetSlot = (completedMatch.id === 'match-13') ? 'player1' : 'player2';
-				} else {
-					// Fallback to simple approach for other bracket structures
-					targetSlot = !nextMatch.player1 ? 'player1' : 'player2';
-				}
-				
-				console.log(`Placing winner in ${targetSlot} slot`);
-				nextMatch[targetSlot] = fullWinnerData;
-				
-				console.log('Next match after advancement:', nextMatch);
-				updatedMatches[nextMatchIndex] = nextMatch;
+		if (p1Wins >= requiredWins || p2Wins >= requiredWins) {
+			// Series is complete
+			const seriesWinner = p1Wins >= requiredWins ? match.player1! : match.player2!;
+			match.winner = seriesWinner;
+			match.status = 'completed';
+			if (finalScore) {
+				match.finalScore = finalScore;
 			}
+			
+			// Advance winner to next round if there is a next match
+			if (match.nextMatchId) {
+				const nextMatchIndex = updatedMatches.findIndex(m => m.id === match.nextMatchId);
+				if (nextMatchIndex !== -1) {
+					const nextMatch = { ...updatedMatches[nextMatchIndex] };
+					
+					// Find the complete player data from the tournament's players list
+					const fullWinnerData = updatedTournament.players.find(p => p.id === seriesWinner.id) || seriesWinner;
+					
+					// Determine which slot the winner should fill based on bracket structure
+					let targetSlot: 'player1' | 'player2' = 'player1';
+					
+					// 8-player tournament bracket logic
+					if (match.nextMatchId === 'match-5') {
+						targetSlot = (match.id === 'match-1') ? 'player1' : 'player2';
+					} else if (match.nextMatchId === 'match-6') {
+						targetSlot = (match.id === 'match-3') ? 'player1' : 'player2';
+					} else if (match.nextMatchId === 'match-7') {
+						targetSlot = (match.id === 'match-5') ? 'player1' : 'player2';
+					}
+					// 16-player tournament bracket logic
+					else if (match.nextMatchId === 'match-9') {
+						targetSlot = (match.id === 'match-1') ? 'player1' : 'player2';
+					} else if (match.nextMatchId === 'match-10') {
+						targetSlot = (match.id === 'match-3') ? 'player1' : 'player2';
+					} else if (match.nextMatchId === 'match-11') {
+						targetSlot = (match.id === 'match-5') ? 'player1' : 'player2';
+					} else if (match.nextMatchId === 'match-12') {
+						targetSlot = (match.id === 'match-7') ? 'player1' : 'player2';
+					} else if (match.nextMatchId === 'match-13') {
+						targetSlot = (match.id === 'match-9') ? 'player1' : 'player2';
+					} else if (match.nextMatchId === 'match-14') {
+						targetSlot = (match.id === 'match-11') ? 'player1' : 'player2';
+					} else if (match.nextMatchId === 'match-15') {
+						targetSlot = (match.id === 'match-13') ? 'player1' : 'player2';
+					} else {
+						targetSlot = !nextMatch.player1 ? 'player1' : 'player2';
+					}
+					
+					nextMatch[targetSlot] = fullWinnerData;
+					updatedMatches[nextMatchIndex] = nextMatch;
+				}
+			}
+		} else {
+			// Series continues
+			match.status = 'in_progress';
 		}
 		
-		// Check if tournament is complete (final match completed)
+		// Update the match in the array first
+		updatedMatches[matchIndex] = match;
+		
+		// Check if tournament is complete (final match completed) - moved outside series logic
 		const finalMatches = updatedMatches.filter(m => !m.nextMatchId);
 		const allFinalsComplete = finalMatches.every(m => m.status === 'completed');
 		
@@ -551,7 +577,7 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 				} catch (error) {
 					console.error('Failed to submit tournament results:', error);
 				}
-			}, 2000); // Wait 2 seconds for UI to settle
+			}, 2000);
 		}
 		
 		updatedBracket.matches = updatedMatches;
@@ -560,15 +586,10 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 		
 		set({ tournaments: updatedTournaments });
 		
-		console.log('Final updated tournament being returned:', updatedTournament);
-		console.log('Final bracket matches:', updatedTournament.bracket?.matches);
-		
 		return updatedTournament;
 	},
 
 	submitTournamentResults: async (tournamentId: string) => {
-		console.log('Submitting tournament results for:', tournamentId);
-		
 		const { tournaments } = get();
 		const tournament = tournaments.find(t => t.id === tournamentId);
 		
@@ -640,8 +661,6 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 			matches: matchResults
 		};
 
-		console.log('Tournament results payload:', payload);
-
 		try {
 			// TODO: API call to backend
 			// const response = await fetch('/api/tournaments/results', {
@@ -650,17 +669,9 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 			//   body: JSON.stringify(payload)
 			// });
 			
-			// For now, just log the data that would be sent
-			console.log('🏆 TOURNAMENT RESULTS TO SEND TO BACKEND:');
-			console.log('📊 Tournament ID:', payload.tournamentId);
-			console.log('👑 Overall Winner:', payload.winnerId);
-			console.log('🎯 Total Matches:', payload.matches.length);
-			console.log('📋 Match Details:', payload.matches);
-			
 			// Simulate API delay
 			await new Promise(resolve => setTimeout(resolve, 1000));
 			
-					console.log('✅ Tournament results submitted successfully!');
 	} catch (error) {
 		console.error('❌ Failed to submit tournament results:', error);
 		throw error;
