@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from "fastify";
 import { UnauthorizedException } from "../../common/exceptions/UnauthorizedException";
-import { UpsertUserStatsDto, UpsertUserStatsDtoSchema, GetUserStatsParamsDto, GetUserStatsParamsDtoSchema, getUserStatsResponseDto, MatchResultDtoSchema, MatchResultDto } from "./dtos/user-stats.dto";
+import { UpsertUserStatsDto, UpsertUserStatsDtoSchema, GetUserStatsParamsDto, GetUserStatsParamsDtoSchema, getUserStatsResponseDto, MatchResultDtoSchema, MatchResultDto, UpdateUserRatingDto, UpdateUserRatingDtoSchema } from "./dtos/user-stats.dto";
 
 export const statsController: FastifyPluginAsync = async (app) => {
 	const userStatsService = app.statsService.getUserStatsService();
@@ -40,11 +40,11 @@ export const statsController: FastifyPluginAsync = async (app) => {
 	});
 	
 	//added 21.7 - Update user stats based on match result
-	app.post("/update-stats", {
+	app.post("/update-rating", {
 		schema: { body: MatchResultDtoSchema },
 		handler: async (request, reply) => {
 			const em = request.entityManager;
-			const response = await app.statsService.updateUserStats(em, request.body as MatchResultDto);
+			const response = await userStatsService.updateUserRating(em, request.body as MatchResultDto);
 			return reply
 				.code(201)
 				.send(response);

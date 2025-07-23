@@ -19,11 +19,17 @@ export const UpdateUserStatsDtoSchema = Type.Object(
 		matchesPlayed: Type.Optional(Type.Number({ minimum: 0 })),
 		matchesWon: Type.Optional(Type.Number({ minimum: 0 })),
 		matchesLost: Type.Optional(Type.Number({ minimum: 0 })),
-		winRate: Type.Optional(Type.Number({ minimum: 0, multipleOf: 0.01 })),
-		rating: Type.Optional(Type.Number({ minimum: 0 })) // added 21.7
+		winRate: Type.Optional(Type.Number({ minimum: 0, multipleOf: 0.01 }))
 	},
 	{ additionalProperties: false }
 );
+
+export const UpdateUserRatingDtoSchema = Type.Object(
+	{
+		rating: Type.Number({})
+	},
+	{ additionalProperties: false }
+)
 
 export const UserStatsResponseDtoSchema = Type.Object(
 	{
@@ -48,6 +54,7 @@ export type UpdateUserStatsDto = Static<typeof UpdateUserStatsDtoSchema>;
 export type UserStatsResponseDto = Static<typeof UserStatsResponseDtoSchema>;
 export type GetUserStatsParamsDto = Static<typeof GetUserStatsParamsDtoSchema>;
 export type UpsertUserStatsDto = Static<typeof UpsertUserStatsDtoSchema>;
+export type UpdateUserRatingDto = Static<typeof UpdateUserRatingDtoSchema>;
 export type MatchResultDto = Static<typeof MatchResultDtoSchema>
 
 export const getUserStatsResponseDto = (userStats: UserStats): UserStatsResponseDto => ({
