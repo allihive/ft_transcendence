@@ -78,6 +78,7 @@ const installPlugins = async (app: FastifyInstance): Promise<void> => {
 	await app.register(mediaModule);
 	await app.register(realtimeModule, { prefix: "/api/realtime" });
 	await app.register(tournamentGameModule, { prefix: "/api/tournament" });
+	await app.register(appModule);
 }
 
 const registerHooks = async (app: FastifyInstance): Promise<void> => {
