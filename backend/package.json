@@ -34,6 +34,7 @@
 		"fastify": "^5.3.2",
 		"fastify-plugin": "^5.0.1",
 		"google-auth-library": "^9.15.1",
+		"jsonwebtoken": "^9.0.2",
 		"pino-pretty": "^13.0.0",
 		"qrcode": "^1.5.4",
 		"speakeasy": "^2.0.0"
@@ -41,6 +42,7 @@
 	"devDependencies": {
 		"@mikro-orm/cli": "^6.4.15",
 		"@types/bcrypt": "^5.0.2",
+		"@types/jsonwebtoken": "^9.0.10",
 		"@types/node": "^22.15.14",
 		"@types/qrcode": "^1.5.5",
 		"@types/speakeasy": "^2.0.10",
