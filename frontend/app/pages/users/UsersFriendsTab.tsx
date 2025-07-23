@@ -1,5 +1,5 @@
 import { useState, useEffect, type JSX } from "react"
-import type { PlayerGameResult } from "../../../../backend/services/game/src/modules/game-history/gameHistory.service"
+// import type { PlayerGameResultDto } from "../../../../backend/services/game/src/modules/gameHistory/gameHistory.service"
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { CiCircleCheck } from "react-icons/ci";
 import { BiSolidMessageRounded } from "react-icons/bi";
@@ -13,30 +13,7 @@ import { useTranslation } from "react-i18next";
 //onlick for message button
 
 export function UsersFriends(): JSX.Element {
-	const test_playerId = 1;
-
-	const [matches, setMatches] = useState<PlayerGameResult[]>([]);
 	const { t } = useTranslation();
-	useEffect(() => {
-		console.log(`PlayerId: ${test_playerId}`);
-	  fetch(`http://localhost:3000/api/game-history/${test_playerId}`)
-		.then((res) => res.json())
-		.then((data) => {
-			if (data.success && data.data && Array.isArray(data.data.games)) {
-				setMatches(data.data.games);
-			  } else {
-				console.warn('Unexpected data format:', data);
-				setMatches([]);}
-	})
-		.catch((err) => console.error("Failed to fetch matches:", err));
-	}, []);
-	console.log("matches:", matches)
-	matches.forEach(match => {
-	console.log("Match date:", match.date);
-	console.log("MatchId", match.matchId );
-	console.log("Match opponent", match.opponent );
-	console.log("Match result", match.result );
-	});
 
 	return (
 		<>
@@ -87,6 +64,7 @@ export function UsersFriends(): JSX.Element {
 				<thead>
 					<tr>
 						<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('name')}</th>
+						<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('name')}</th>
 						<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('rank')}</th>
 						<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('status')}</th>
 						<th className="font-title text-darkOrange px-12 py-8 text-left ">{t('message')}</th>
@@ -94,6 +72,9 @@ export function UsersFriends(): JSX.Element {
 				</thead>
 				<tbody>
 					<tr className="font-title">
+						<td className="px-12 py-2 text-center">Sumin name</td>
+						<td className="px-12 py-2 text-center">60th rank</td>
+						<td className="px-12 py-2 text-center">friend online</td>
 						<td className="px-12 py-2 text-center">Sumin</td>
 						<td className="px-12 py-2 text-center">Gold</td>
 						<td className="px-12 py-2 text-center">Online</td>
@@ -111,7 +92,6 @@ export function UsersFriends(): JSX.Element {
 					</tr>
 				</tbody>
 			</table>
-	
 		</>
 	);
 }

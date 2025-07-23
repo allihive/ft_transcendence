@@ -75,6 +75,8 @@
 	"percentile": "percentil",
 	"rank": "Rango",
 	"score": "Puntuación",
+	"yourScore": "Tu Puntuación",
+	"opponentScore": "Adversario/a Puntuación",
 	"friends":"Amigos",
 	"profile": "Perfil",
 	"enable2FA": "Habilitar Autenticación de 2 factores",
@@ -90,10 +92,7 @@
 	"opponent": "Adversario/a",
 	"winOrLoss": "Ganar/Peder",
 	"chats": "Charlas",
-	"chart": {
-		"score": "Tu Puntuación",
-		"opponentScore": "Puntuación del Oponente"
-	},
 	"close": "Cerca",
-	"firstTo5": "¡El primero en llegar a 5 puntos gana la partida!"
+	"noData": "No hay datos disponibles",
+	"winRate": "Tasa de Ganancia"
 }

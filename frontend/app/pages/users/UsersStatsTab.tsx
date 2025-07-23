@@ -1,52 +1,46 @@
 import { useState, useEffect, type JSX } from "react"
 import { useTranslation } from "react-i18next";
-import { MyChart } from "./components/UserStatsGraph";
+import { MyChart } from "../../components/gameStats/UserStatsGraph";
+import type { UserStats } from "~/api/types";
+import { useAuth } from "~/stores/useAuth"
+import type { getUserMatchHistory } from "~/api/stats/types";
 
-interface PlayerGameResult {
+
+export interface PlayerGameResult {
   matchId: string;           // Unique match identifier
   date: string;             // When the game was played (formatted date)
   opponent: number;         // The opponent's player ID
   playerScore: number;      // This player's score
   opponentScore: number;    // Opponent's score
+  UserStats: UserStats[];
   result: 'WIN' | 'LOSS';   // Did this player win or lose?
 }
 // 11.6 we need to find a way to playerId to it fetches the correct gameHistory
 
-const test_playerId = 1;
+type UsersStatsProps = {
+	userStats: any[];
+	userMatchHistory: getUserMatchHistory[];
+};
 
-export function UsersStats(): JSX.Element {
-	//have name be passed as props?
+export function UsersStats({ userStats, userMatchHistory }: UsersStatsProps): JSX.Element {
+
 	const { t } = useTranslation();
+	const user = useAuth((state) => (state.user?.name));
 
-	const [matches, setMatches] = useState<PlayerGameResult[]>([]);
-	useEffect(() => {
-		console.log(`PlayerId: ${test_playerId}`);
-		fetch(`http://localhost:3000/api/history/${test_playerId}`)
-			.then((res) => res.json())
-			.then((data) => {
-				if (data.success && data.data && Array.isArray(data.data.games)) {
-					setMatches(data.data.games);
-				} else {
-					console.warn('Unexpected data format:', data);
-					setMatches([]);
-				}
-			})
-			.catch((err) => console.error("Failed to fetch matches:", err));
-	}, []);
 	return (
 		<>
 			<div className="flex items-center justify-center w-full my-4">
 				<div className="flex-grow mx-8">
 					<div className="w-full border-t border-black dark:border-white" />
 				</div>
-				<span className="text-black dark:text-background font-title">{t('hello')} Name</span>
+				<span className="text-black dark:text-background font-title">{t('hello')} {user}</span>
 				<div className="flex-grow mx-8">
 					<div className="w-full border-t border-black dark:border-white" />
 				</div>
 			</div>
 
 			<div className="flex items-center justify-center w-full py-8">
-				<MyChart />
+				<MyChart matches={userMatchHistory} userStats={userStats} />
 			</div>
 			<div className="flex items-center justify-center w-full my-8">
 				<span className="px-4 text-black dark:text-background font-title">{t('results')}</span>
@@ -61,11 +55,16 @@ export function UsersStats(): JSX.Element {
 					</tr>
 				</thead>
 				<tbody className="font-body text-black dark:text-background">
-					{matches.map((match) => (
-						<tr key={match.matchId} className="border-b border-black dark:border-lightOrange">
-							<td className="px-12 py-4 text-left">{match.date}</td>
-							<td className="px-12 py-4 text-left">{match.opponent}</td>
-							<td className="px-12 py-4 text-left">{match.opponentScore} - {match.playerScore}</td>
+					{userMatchHistory.map((match, index) => (
+						<tr key={`match-${index}`} className="border-b border-black dark:border-lightOrange">
+							<td className="px-12 py-4 text-left text-xs font-body">{new Date(match.date).toLocaleDateString()}</td>
+							<td className="px-12 py-4 text-left">
+								{match.isLocal 
+									? match.opponentName || 'Local Player' 
+									: match.opponent || 'Unknown'
+								}
+							</td>
+							<td className="px-12 py-4 text-left">{match.playerScore} - {match.opponentScore}</td>
 							<td className={`px-12 py-4 text-left ${match.result === 'WIN' ? 'text-green-500' : 'text-red-500'}`}>{match.result}</td>
 						</tr>
 					))}

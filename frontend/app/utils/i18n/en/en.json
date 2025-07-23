@@ -75,6 +75,8 @@
 	"percentile":"percentile",
 	"rank": "Rank",
 	"score": "Score",
+	"yourScore": "Your Score",
+	"opponentScore": "Opponent's Score",
 	"friends": "Friends",
 	"profile": "Profile",
 	"enable2FA": "Enable 2 Factor Authentication",
@@ -90,10 +92,7 @@
 	"opponent": "Opponent",
 	"winOrLoss": "Win/Loss",
 	"chats": "Chats",
-	"chart": {
-		"score": "Your Score",
-		"opponentScore": "Opponent's Score"
-	},
 	"close": "Close",
-	"firstTo5": "First to 5 points wins the match!"
+	"noData": "No data available",
+	"winRate": "Win Rate"
 }

@@ -11,7 +11,6 @@ export const statsController: FastifyPluginAsync = async (app) => {
 			// if (!request.user) {
 			// 	throw new UnauthorizedException("Authentication required to process your request.");
 			// }
-
 			const { userId } = request.params as GetUserStatsParamsDto;
 			const em = request.entityManager;
 			const userStats = await userStatsService.find(em, userId);
