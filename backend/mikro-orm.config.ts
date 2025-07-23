@@ -1,6 +1,10 @@
 import { Migrator } from "@mikro-orm/migrations";
 import { TsMorphMetadataProvider } from "@mikro-orm/reflection";
-import { defineConfig } from "@mikro-orm/sqlite";
+import { defineConfig, ReflectMetadataProvider } from "@mikro-orm/sqlite";
+
+const metadataProvider = (process.env.NODE_ENV  && process.env.NODE_ENV !== "production")
+	?	TsMorphMetadataProvider
+	:	ReflectMetadataProvider;
 
 export default defineConfig({
 	dbName: "database/sqlite.db",
@@ -17,6 +21,6 @@ export default defineConfig({
 		emit: "ts",
 	},
 
-	metadataProvider: TsMorphMetadataProvider,
+	metadataProvider,
 	extensions: [Migrator]
 });

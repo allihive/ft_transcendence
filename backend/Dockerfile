@@ -2,7 +2,7 @@ FROM node:20-alpine3.21
 
 RUN apk add --no-cache openssl
 
-WORKDIR /transcendence
+WORKDIR /app
 
 COPY package*.json ./
 
@@ -12,7 +12,7 @@ COPY . .
 
 RUN chmod +x entrypoint.sh
 
-EXPOSE 5173
+EXPOSE 3000
 
 ENTRYPOINT ["sh", "entrypoint.sh"]
 

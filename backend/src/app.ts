@@ -1,4 +1,5 @@
-import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
+import Fastify, { FastifyHttpsOptions, type FastifyInstance } from "fastify";
+import fastifyCORS from "@fastify/cors";
 import fastifyCookie from "@fastify/cookie";
 import fastifyJWT from "@fastify/jwt";
 import fastifyMultipart from "@fastify/multipart";
@@ -19,6 +20,8 @@ import { gameHistoryModule } from "./modules/gameHistory/gameHistory.module";
 import { tournamentGameModule } from "./modules/tournament/tournament.module";
 import { statsModule } from "./modules/stats/stats.module";
 import { getErrorResponseDto } from "./common/utils/getErrorResponseDto";
+import { appModule } from "./app.module";
+import { Server } from "https";
 
 declare module "fastify" {
 	interface FastifyInstance {
@@ -34,6 +37,14 @@ declare module "@fastify/jwt" {
 }
 
 const installFastifyPlugins = async (app: FastifyInstance): Promise<void> => {
+	await app.register(fastifyCORS, {
+		origin: [
+			"http://localhost:5173",
+			"https://localhost:5173"
+		],
+		credentials: true
+	});
+
 	await app.register(fastifyStatic, {
 		root: resolve(process.env.UPLOAD_DIR!)
 	});
@@ -91,7 +102,7 @@ const registerHooks = async (app: FastifyInstance): Promise<void> => {
 	});
 }
 
-export const createApp = async (opts: FastifyServerOptions): Promise<FastifyInstance> => {
+export const createApp = async (opts: FastifyHttpsOptions<Server>): Promise<FastifyInstance> => {
 	const app = Fastify(opts).withTypeProvider<TypeBoxTypeProvider>();
 
 	app.setErrorHandler((error, request, reply) => {

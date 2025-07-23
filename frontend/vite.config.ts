@@ -2,37 +2,27 @@ import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+import fs from "fs";
+
+const keyExists = fs.existsSync("/etc/ssl/certs/key.pem");
+const certExists = fs.existsSync("/etc/ssl/certs/cert.pem");
 
 export default defineConfig({
 	plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
-	server: {
-		open: true,
-		proxy: {
-			"/api/realtime/ws": {
-				target: "http://localhost:3000/",
-				changeOrigin: true,
-				secure: false,
-				ws: true,
-				configure: (proxy, options) => {
-					// 쿠키 전달을 명시적으로 활성화
-					proxy.on('proxyReq', (proxyReq, req, res) => {
-						console.log('🔍 WebSocket proxy request - cookies:', req.headers.cookie);
-					});
+	preview: {
+		open: false,
+		https: certExists && keyExists
+			?	{
+					key: fs.readFileSync("/etc/ssl/certs/key.pem"),
+					cert: fs.readFileSync("/etc/ssl/certs/cert.pem"),
 				}
-			},
-			"/api": {
-				target: "http://localhost:3000/",
-				changeOrigin: true,
-				secure: false,
-				rewrite: (path: string) => path.replace(/^\/api/, ""),
-				ws: true 
-			},
-			"/files": {
-				target: "http://localhost:3000/",
-				changeOrigin: true,
-				secure: false,
-				rewrite: (path: string) => path.replace(/^\/files/, "")
-			}
-		},
+			:	{},
+		port: 5173,
+		strictPort: true,
+		host: "0.0.0.0",
 	},
+	server: {
+		port: 5173,
+		open: true
+	}
 });

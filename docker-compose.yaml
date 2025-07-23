@@ -1,0 +1,35 @@
+services:
+    backend:
+        build: ./backend
+        image: transcendence-backend:1.0
+        container_name: transcendence-backend
+        restart: always
+        healthcheck:
+            test: ["CMD", "wget", "--spider", "--no-check-certificate", "-q", "https://localhost:3000/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+        env_file:
+            - ./backend/.env
+        ports:
+            - "3000:3000"
+        networks:
+            - hive
+    frontend:
+        build: ./frontend
+        image: transcendence-frontend:1.0
+        container_name: transcendence-frontend
+        restart: always
+        depends_on:
+            backend:
+                condition: service_healthy
+        env_file:
+            - ./frontend/.env.docker
+        ports:
+            - "5173:5173"
+        networks:
+            - hive
+
+networks:
+    hive:
+        driver: bridge
