@@ -5,7 +5,6 @@ import {
   FriendListResponsePayloadSchema
 } from './dto/friend.schema';
 import { RoomInvitationPayload } from './dto/room.schema';
-// UserStatusEvent import 제거됨 (isOnline은 실시간 connection 체크로 처리)
 import { ChatMessage } from './dto/chat.schema';
 
 export class EventService extends EventEmitter {
@@ -53,7 +52,10 @@ export class EventService extends EventEmitter {
     console.log(`Event: Unread count updated for user ${data.userId} in room ${data.roomId}: ${data.unreadCount}`);
   }
 
-  // emitUserStatusChange 제거됨 (isOnline은 실시간 connection 체크로 처리)
+  emitUserStatusUpdate(data: { userId: string; isOnline: boolean }) {
+    this.emit('user:status', data);
+    console.log(`Event: User status update for ${data.userId} → ${data.isOnline ? 'online' : 'offline'}`);
+  }
 
 // event listener
 
@@ -79,6 +81,10 @@ export class EventService extends EventEmitter {
 
   onUnreadCountUpdate(callback: (data: { roomId: string; userId: string; unreadCount: number }) => void) {
     this.on('unread:count_update', callback);
+  }
+
+  onUserStatusUpdate(callback: (data: { userId: string; isOnline: boolean }) => void) {
+    this.on('user:status', callback);
   }
 
 } 

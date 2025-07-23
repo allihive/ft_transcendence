@@ -1,5 +1,5 @@
 import { EntityManager } from "@mikro-orm/core";
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { Room } from "./entities/room.entity";
 import { RoomMember as RoomMemberEntity } from "./entities/room-member.entity";
 import { User } from "../user/entities/user.entity";
@@ -35,7 +35,7 @@ export class RoomService {
     console.log(`[createRoom] Creating room "${name}" for user ${masterId}`);
 
     const room = em.create(Room, {
-      id: uuidv4(),
+      id: randomUUID(),
       name,
       masterId,
       description,
@@ -107,7 +107,7 @@ export class RoomService {
 
         // 멤버 추가
         const member = em.create(RoomMemberEntity, {
-          id: uuidv4(),
+          id: randomUUID(),
           userId: inviteeUser.id,
           name,
           joinedAt: new Date(),

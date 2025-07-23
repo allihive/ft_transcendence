@@ -34,7 +34,7 @@ export const FriendRequests = ({
     }
   };
 
-  const formatRequestTime = (timestamp: string) => {
+  const formatRequestTime = (timestamp: number) => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -95,17 +95,9 @@ export const FriendRequests = ({
             <div className="flex items-center space-x-3">
               {/* Avatar */}
               <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
-                {request.requesterAvatar ? (
-                  <img 
-                    src={request.requesterAvatar} 
-                    alt={request.requesterName}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="text-blue-800 font-medium font-body">
-                    {request.requesterName.charAt(0).toUpperCase()}
-                  </span>
-                )}
+                <span className="text-blue-800 font-medium font-body">
+                  {request.requesterName.charAt(0).toUpperCase()}
+                </span>
               </div>
 
               {/* Request info */}
@@ -113,9 +105,6 @@ export const FriendRequests = ({
                 <h3 className="text-sm font-medium text-gray-900 font-body">
                   {request.requesterName}
                 </h3>
-                <p className="text-xs text-gray-500 font-body">
-                  @{request.requesterUsername}
-                </p>
                 <p className="text-xs text-blue-600 font-body">
                   Sent friend request {formatRequestTime(request.createdAt)}
                 </p>

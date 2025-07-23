@@ -1,12 +1,14 @@
 import { FastifyRequest } from "fastify";
 import { EntityManager } from "@mikro-orm/core";
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { WebSocket } from 'ws';
 import { ConnectionService } from "./connection.service";
 import { RoomService } from "./room.service";
 import { MessageService } from "./message.service";
-import { FriendshipService } from "./friendship.service";
+import { EventService } from "./event.service";
 import { SyncService } from "./sync.service";
+import jwt from 'jsonwebtoken';
+
 
 export interface WebSocketConnection {
   socketId: string;
@@ -14,6 +16,7 @@ export interface WebSocketConnection {
   name: string;
   connectionId: string;
   socket: any; // WebSocket instance
+  token: string;
   entityManager: EntityManager; // Connection-specific EntityManager for each connection
 }
 
@@ -27,7 +30,7 @@ export class WebSocketConnectionManager {
     private connectionService: ConnectionService,
     private roomService: RoomService,
     private messageService: MessageService,
-    private friendshipService: FriendshipService,
+    private eventService: EventService,
     private syncService: SyncService
   ) {}
 
@@ -48,7 +51,7 @@ export class WebSocketConnectionManager {
     }
 
     const { id: userId, name, email } = user;
-    const connectionId = uuidv4();
+    const connectionId = randomUUID();
 
     const wsConnection: WebSocketConnection = {
       socketId,
@@ -56,6 +59,7 @@ export class WebSocketConnectionManager {
       name,
       connectionId,
       socket: connection.socket,
+      token: request.cookies.accessToken || '',
       entityManager: request.entityManager
     };
 
@@ -65,6 +69,8 @@ export class WebSocketConnectionManager {
     // Register with connection service
     this.connectionService.createConnection(connectionId, socketId, email, userId, name);
 
+    //log user status update
+    this.eventService.emitUserStatusUpdate({ userId, isOnline: true });
     // Initialize connection
     await this.initializeConnection(wsConnection);
 
@@ -124,11 +130,18 @@ export class WebSocketConnectionManager {
 
     attemptRecreation();
   }
-
   // Ping interval 설정
   private setupPingInterval(wsConnection: WebSocketConnection) {
     const pingInterval = setInterval(() => {
       if (wsConnection.socket.readyState === WebSocket.OPEN) {
+        try {
+          // JWT 유효성 검사 (만료 포함)
+            jwt.verify(wsConnection.token, process.env.JWT_SECRET!);
+          } catch (e) {
+          wsConnection.socket.close(4001, "Token expired");
+          this.handleConnectionClose(wsConnection.socketId);
+        return;
+    }
         this.sendPingAndTrack(wsConnection);
       } else {
         // Socket이 이미 닫혔으면 정리
@@ -193,7 +206,7 @@ export class WebSocketConnectionManager {
     if (!wsConnection) return;
 
     console.log(`WebSocket connection closed: ${socketId} for user: ${wsConnection.userId}`);
-
+    await this.eventService.emitUserStatusUpdate({ userId: wsConnection.userId, isOnline: false });
     // Clear ping interval
     const pingInterval = this.pingIntervals.get(socketId);
     if (pingInterval) {

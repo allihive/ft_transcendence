@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Friend, Room } from '../../types/realtime.types';
+import type { Friend, Room, FriendRequest } from '../../types/realtime.types';
 import { AddFriendForm } from '../Friends/AddFriendForm';
 
 interface ChatSidebarProps {
@@ -19,7 +19,7 @@ interface ChatSidebarProps {
   onUnblockFriend: (friendId: string) => Promise<void>;
   
   // Friend Requests
-  pendingRequests: any[];
+  pendingRequests: FriendRequest[];
   onAcceptRequest: (requestId: string) => Promise<void>;
   onRejectRequest: (requestId: string) => Promise<void>;
   onSendFriendRequest: (email: string) => Promise<void>;
@@ -397,17 +397,9 @@ export const ChatSidebar = ({
                       <div className="flex items-center space-x-3">
                         {/* Avatar */}
                         <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
-                          {request.requesterAvatar ? (
-                            <img 
-                              src={request.requesterAvatar} 
-                              alt={request.requesterName}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-blue-600 font-medium font-body">
-                              {request.requesterName?.charAt(0)?.toUpperCase() || '?'}
-                            </span>
-                          )}
+                          <span className="text-blue-600 font-medium font-body">
+                            {request.requesterName?.charAt(0)?.toUpperCase() || '?'}
+                          </span>
                         </div>
 
                         {/* Request info */}

@@ -32,7 +32,7 @@ export class WebSocketService {
       connectionService,
       roomService,
       messageService,
-      friendshipService,
+      eventService,
       syncService
     );
 
@@ -64,8 +64,8 @@ export class WebSocketService {
     fastify.get('/ws', { websocket: true } as any, (connection: any, req: any) => {
       console.log('🔌 WebSocket connection received from Fastify');
       console.log('🔌 Connection object:', connection);
-      console.log('🔌 Connection keys:', Object.keys(connection));
-      console.log('🔌 Request object:', req);
+      // console.log('🔌 Connection keys:', Object.keys(connection));
+      // console.log('🔌 Request object:', req);
       
       // WebSocket 객체 찾기
       let socket: any = null;
@@ -211,7 +211,7 @@ export class WebSocketService {
         }
         
         const rawCookieValue = accessTokenCookie.substring('accessToken='.length);
-        console.log('🔍 Raw cookie value:', rawCookieValue.substring(0, 100) + '...');
+        // console.log('🔍 Raw cookie value:', rawCookieValue.substring(0, 100) + '...');
         
         // 서명된 쿠키를 올바르게 처리
         let processedCookieValue = rawCookieValue;
@@ -230,13 +230,13 @@ export class WebSocketService {
         console.log('🔍 URL decode failed, using original value');
       }
       
-      // 토큰 형식 검증
-      console.log('🔍 Token format check:');
-      console.log('  - Length:', processedCookieValue.length);
-      console.log('  - Starts with s::', processedCookieValue.startsWith('s:'));
-      console.log('  - Contains dots:', (processedCookieValue.match(/\./g) || []).length);
-      console.log('  - First 50 chars:', processedCookieValue.substring(0, 50));
-      console.log('  - Last 50 chars:', processedCookieValue.substring(processedCookieValue.length - 50));
+      // // 토큰 형식 검증
+      // console.log('🔍 Token format check:');
+      // console.log('  - Length:', processedCookieValue.length);
+      // console.log('  - Starts with s::', processedCookieValue.startsWith('s:'));
+      // console.log('  - Contains dots:', (processedCookieValue.match(/\./g) || []).length);
+      // console.log('  - First 50 chars:', processedCookieValue.substring(0, 50));
+      // console.log('  - Last 50 chars:', processedCookieValue.substring(processedCookieValue.length - 50));
       
       // 서명된 쿠키 처리 (프로덕션과 동일)
       if (processedCookieValue.startsWith('s:')) {
@@ -276,8 +276,8 @@ export class WebSocketService {
       };
     }
     
-    console.log('🔍 Final accessToken:', accessToken.substring(0, 100) + '...');
-    console.log('🔍 Token length:', accessToken.length);
+    // console.log('🔍 Final accessToken:', accessToken.substring(0, 100) + '...');
+    // console.log('🔍 Token length:', accessToken.length);
     
     // JWT 검증
     try {

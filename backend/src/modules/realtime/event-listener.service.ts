@@ -19,15 +19,36 @@ export class EventListenerService {
     private orm: any // MikroORM instance
   ) {}
 
-  /**
-   * 모든 이벤트 리스너를 설정합니다
-   * @param sendToUser - 특정 사용자에게 메시지를 전송하는 함수
-   * @param broadcastToRoom - 룸에 메시지를 브로드캐스트하는 함수
-   */
   setupEventListeners(
     sendToUser: (userId: string, message: any) => Promise<void>,
     broadcastToRoom: (roomId: string, message: any) => Promise<void>
   ) {
+      console.log('🎯 All event listeners have been set up successfully');
+    
+    // 1. 유저 온라인/오프라인 상태 변경 이벤트 리스너
+    this.eventService.onUserStatusUpdate(async (data) => {
+      try {
+        const { userId, isOnline } = data;
+        const em = this.orm.em.fork();
+        // 친구 목록 가져오기 (async)
+        const friends = await this.friendshipService.getFriendIds(em, userId);
+        const message = {
+          id: `user_status_${Date.now()}`,
+          timestamp: Date.now(),
+          version: '1.0',
+          type: 'user_status',
+          payload: { userId, isOnline }
+        };
+        for (const friendId of friends) {
+          await sendToUser(friendId, message);
+        }
+        // console.log(`✅ User status (${isOnline ? 'online' : 'offline'}) broadcasted to friends of ${userId}`);
+      } catch (error) {
+        console.error('Error broadcasting user status update:', error);
+      }
+    });
+    
+
     // 2. 채팅 메시지 이벤트
     this.eventService.onChatMessage(async (data) => {
       console.log(`📢 Processing chat message in room ${data.roomId}`);
@@ -127,7 +148,7 @@ export class EventListenerService {
             addresseeId: data.addresseeId,
             addresseeEmail: data.addresseeEmail,
             addresseeName: data.addresseeName,
-            message: `${data.requesterName}님이 친구 요청을 보냈습니다.`,
+            message: `${data.requesterName} has requested to be your friend.`,
             createdAt: data.createdAt
           }
         };
@@ -274,8 +295,6 @@ export class EventListenerService {
         console.error('Error handling unread count update event:', error);
       }
     });
-    
-    console.log('🎯 All event listeners have been set up successfully');
   }
 
   private async sendFriendListUpdateToUsers(

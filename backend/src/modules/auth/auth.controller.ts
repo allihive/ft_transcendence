@@ -64,7 +64,6 @@ export const authController: FastifyPluginAsync = async (app) => {
 			const em = request.entityManager;
 			const user = await app.authService.loginWithGoogle(em, idToken);
 			const payload = getUserResponseDto(user);
-
 			return reply.code(200).send(payload);
 		}
 	});
@@ -211,7 +210,7 @@ export const authController: FastifyPluginAsync = async (app) => {
 		}
 	});
 
-	// WebSocket dedicated api for sending signed token
+// WebSocket dedicated api for sending signed token
 	app.get("/ws-token", {
 		handler: async (request, reply) => {
 			if (!request.user) {

@@ -6,6 +6,12 @@ import { useChat } from '../../stores/useChat';
 import { useFriends } from '../../stores/useFriends';
 import { useAuth } from '../../stores/useAuth';
 import { websocketService } from '../../services/websocket.service';
+import type { 
+  FriendRequestMessage, 
+  FriendRequestResponseMessage, 
+  FriendListResponseMessage, 
+  ErrorMessage 
+} from '../../types/realtime.types';
 import toast from 'react-hot-toast';
 
 
@@ -89,19 +95,19 @@ const ChatPage = () => {
   useEffect(() => {
     // useChat에서 이미 WebSocket을 연결하므로, 여기서는 핸들러만 추가
     const friendHandlers = {
-      onFriendRequest: (message: any) => {
+      onFriendRequest: (message: FriendRequestMessage) => {
         console.log('Friend request received:', message);
         friends.loadPendingRequests();
       },
-      onFriendRequestResponse: (message: any) => {
+      onFriendRequestResponse: (message: FriendRequestResponseMessage) => {
         console.log('Friend request response:', message);
         friends.loadFriends();
         friends.loadPendingRequests();
       },
-      onFriendList: (message: any) => {
+      onFriendList: (message: FriendListResponseMessage) => {
         friends.handleFriendListUpdate(message);
       },
-      onErrorMessage: (message: any) => {
+      onErrorMessage: (message: ErrorMessage) => {
         console.log('WebSocket error message:', message);
         
         // 친구 목록 업데이트 에러 처리
@@ -181,7 +187,6 @@ const ChatPage = () => {
               currentUserId={user.id}
               onSendMessage={chat.sendMessage}
               isConnected={chat.connectionStatus === 'connected'}
-              friends={friends.friends}
             />
           ) : (
             <div className="h-full flex items-center justify-center bg-background/50 dark:bg-darkBlue/50">

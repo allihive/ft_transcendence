@@ -78,7 +78,7 @@ export const FriendsList = ({
               {/* Avatar */}
               <div className="relative">
                 <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                  {friend.avatarUrl ? (
+                  {friend.avatarUrl && friend.avatarUrl !== '' ? (
                     <img 
                       src={friend.avatarUrl} 
                       alt={friend.name}

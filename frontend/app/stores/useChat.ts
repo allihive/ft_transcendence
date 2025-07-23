@@ -6,22 +6,23 @@ import type {
   SyncMessage, 
   Room,
   ConnectionStatus,
-  WebSocketEventHandlers
+  WebSocketEventHandlers,
+  UnreadCountMessage,
+  RoomMember,
+  RoomStateMessage,
+  UserStatusMessage
 } from '../types/realtime.types';
 
 interface ChatRoom extends Room {
   messages: ChatMessage[];
-  members: Array<{
-    userId: string;
-    name: string;
-    isOnline: boolean;
-  }>;
+  members: RoomMember[];
   lastReadTimestamp?: number;
   unreadCount: number;
 }
 
 interface UseChatState {
   rooms: ChatRoom[];
+  // friends: Friend[];
   currentRoomId: string | null;
   connectionStatus: ConnectionStatus;
   loading: boolean;
@@ -101,28 +102,20 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
           if (room.id === roomId) {
             return {
               ...room,
+              // 백엔드에서 보낸 messages는 ChatMessagePayload[]이므로 ChatMessage로 변환
               messages: messages.map(msg => ({
-                id: msg.id,
-                timestamp: msg.timestamp,
+                id: crypto.randomUUID(), // 백엔드에서 id를 제공하지 않으므로 생성
+                timestamp: Date.now(), // 백엔드에서 timestamp를 제공하지 않으므로 생성
                 version: '1.0',
-                type: 'chat',
-                payload: {
-                  roomId,
-                  userId: msg.userId,
-                  name: msg.name,
-                  content: msg.content,
-                  messageType: msg.messageType || 'text',
-                  originalFilename: msg.originalFilename,
-                  mimeType: msg.mimeType,
-                  fileSize: msg.fileSize
-                }
+                type: 'chat' as const,
+                payload: msg
               })),
               members: users.map(user => ({
                 userId: user.userId,
                 name: user.name,
+                joinedAt: new Date().toISOString(), // 백엔드에서 제공하지 않으므로 생성
                 isOnline: user.status === 'online'
               }))
-              // lastReadTimestamp: message.lastReadTimestamp
             };
           }
           return room;
@@ -130,17 +123,9 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
       }));
     },
 
-    onRoomState: (message: any) => {
-      const { room, previousMessages, unreadMessages, members } = message.payload;
+    onRoomState: (message: RoomStateMessage) => {
+      const { room, previousMessages, unreadMessages, members, readState } = message.payload;
       const allMessages = [...previousMessages, ...unreadMessages];
-      
-      console.log(`🏠 Room state received for room ${room.name}:`, {
-        roomId: room.id,
-        previousMessages: previousMessages.length,
-        unreadMessages: unreadMessages.length,
-        totalMessages: allMessages.length,
-        members: members.length
-      });
       
       setState(prev => ({
         ...prev,
@@ -149,25 +134,22 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
             return {
               ...existingRoom,
               ...room,
+              // 백엔드에서 보낸 메시지들을 ChatMessage로 변환
               messages: allMessages.map(msg => ({
                 id: msg.id,
-                timestamp: new Date(msg.timestamp).getTime(),
+                timestamp: parseInt(msg.timestamp),
                 version: '1.0',
-                type: 'chat',
+                type: 'chat' as const,
                 payload: {
                   roomId: room.id,
                   userId: msg.userId,
                   name: msg.userName,
                   content: msg.content,
-                  messageType: msg.messageType || 'text'
+                  messageType: msg.messageType as 'text' | 'image' | 'file'
                 }
               })),
-              members: members.map((member: any) => ({
-                userId: member.userId,
-                name: member.name,
-                isOnline: true // Will be updated by connection status
-              })),
-              unreadCount: message.payload.readState.unreadCount
+              members: members, // 백엔드에서 이미 RoomMember[] 형태로 제공
+              unreadCount: readState.unreadCount
             };
           }
           return existingRoom;
@@ -190,7 +172,17 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
         });
         return current;
       });
-    }
+    },
+
+    onUnreadCount: (message: UnreadCountMessage) => {
+      const { roomId, unreadCount } = message.payload;
+      setState(prev => ({
+        ...prev,
+        rooms: prev.rooms.map(room =>
+          room.id === roomId ? { ...room, unreadCount } : room
+        )
+      }));
+    },
   });
 
   // Load user's rooms
@@ -214,6 +206,7 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
               members: members.map(m => ({
                 userId: m.userId,
                 name: m.name,
+                joinedAt: new Date().toISOString(), //the server does not provide this value
                 isOnline: m.isOnline
               })),
               unreadCount: 0
@@ -310,6 +303,7 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
             members: members.map(m => ({
               userId: m.userId,
               name: m.name,
+              joinedAt: new Date().toISOString(), // API에서 제공하지 않으므로 생성
               isOnline: m.isOnline
             })),
             unreadCount: 0
@@ -369,7 +363,7 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
       console.error('❌ WebSocket not connected, cannot send message');
       return;
     }
-    
+    console.log('🔍 websocketService.isConnected():', websocketService.isConnected());
     if (!websocketService.isConnected()) {
       console.error('❌ WebSocket service not connected');
       return;

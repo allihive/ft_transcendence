@@ -1,27 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChatMessageComponent } from './ChatMessage';
 import { MessageInput } from './MessageInput';
-import type { ChatMessage } from '../../types/realtime.types';
+import type { ChatMessage, RoomMember, Friend } from '../../types/realtime.types';
 import { roomAPI } from '../../api/room';
 import toast from 'react-hot-toast';
+import { useFriends } from '../../stores/useFriends';
 
 interface ChatRoomProps {
   roomId: string;
   roomName: string;
   messages: ChatMessage[];
-  members: Array<{
-    userId: string;
-    name: string;
-    isOnline: boolean;
-  }>;
+  members: RoomMember[];
   currentUserId: string;
   onSendMessage: (roomId: string, content: string) => void;
   isConnected: boolean;
-  friends: Array<{
-    id: string;
-    name: string;
-    isOnline: boolean;
-  }>;
 }
 
 export const ChatRoom = ({ 
@@ -31,9 +23,9 @@ export const ChatRoom = ({
   members, 
   currentUserId, 
   onSendMessage,
-  isConnected,
-  friends
+  isConnected
 }: ChatRoomProps) => {
+  const { friends } = useFriends();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -103,12 +95,20 @@ export const ChatRoom = ({
     );
   };
 
-  const onlineMembers = members.filter(member => member.isOnline);
-  const offlineMembers = members.filter(member => !member.isOnline);
+  // members에서 필터링하되, friends에서 온라인 상태를 가져와서 사용
+  const onlineMembers = members.filter(member => {
+    const friend = friends.find(f => f.id === member.userId);
+    return friend?.isOnline;
+  });
 
+  const offlineMembers = members.filter(member => {
+    const friend = friends.find(f => f.id === member.userId);
+    return !friend?.isOnline;
+  });
+  
   // Filter out friends who are already in the room
-  const availableFriends = friends.filter(friend => 
-    !members.some(member => member.name === friend.name)
+  const availableFriends = friends.filter((friend: Friend) => 
+    !members.some(member => member.userId === friend.id)
   );
 
   return (
@@ -191,7 +191,7 @@ export const ChatRoom = ({
             <div className="mb-4">
               <h4 className="text-xs font-medium text-green-600 mb-2 font-body">Online ({onlineMembers.length})</h4>
               <div className="space-y-1">
-                {onlineMembers.map(member => (
+                {onlineMembers.map((member: RoomMember) => (
                   <div key={member.userId} className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-sm text-darkOrange dark:text-background font-body">{member.name}</span>
@@ -206,7 +206,7 @@ export const ChatRoom = ({
             <div>
               <h4 className="text-xs font-medium text-gray-500 mb-2 font-body">Offline ({offlineMembers.length})</h4>
               <div className="space-y-1">
-                {offlineMembers.map(member => (
+                {offlineMembers.map((member: RoomMember) => (
                   <div key={member.userId} className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                     <span className="text-sm text-darkOrange/60 dark:text-background/60 font-body">{member.name}</span>
@@ -245,7 +245,7 @@ export const ChatRoom = ({
               <>
                 <div className="flex-1 overflow-y-auto mb-4">
                   <div className="space-y-2">
-                    {availableFriends.map(friend => (
+                    {availableFriends.map((friend: Friend) => (
                       <label key={friend.id} className="flex items-center space-x-3 p-2 hover:bg-darkOrange/10 dark:hover:bg-background/10 rounded cursor-pointer">
                         <input
                           type="checkbox"

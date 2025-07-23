@@ -1,13 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { friendshipAPI, type FriendsListResponse } from '../api/friendship';
-import type { Friend, FriendRequest } from '../types/realtime.types';
+import type { Friend, FriendRequest, FriendListResponseMessage, UserStatusMessage, WebSocketEventHandlers } from '../types/realtime.types';
+import { websocketService } from '../services/websocket.service';
 import toast from 'react-hot-toast';
+
 
 interface UseFriendsState {
   friends: Friend[];
   blockedFriends: Friend[];
   pendingRequests: FriendRequest[];
-  onlineFriends: Friend[];
+  // onlineFriends: Friend[];
   loading: boolean;
   error: string | null;
 }
@@ -16,14 +18,14 @@ interface UseFriendsActions {
   loadFriends: () => Promise<void>;
   loadBlockedFriends: () => Promise<void>;
   loadPendingRequests: () => Promise<void>;
-  loadOnlineFriends: () => Promise<void>;
+  // loadOnlineFriends: () => Promise<void>;
   sendFriendRequest: (email: string) => Promise<void>;
   acceptFriendRequest: (requestId: string) => Promise<void>;
   rejectFriendRequest: (requestId: string) => Promise<void>;
   removeFriend: (friendId: string) => Promise<void>;
   blockFriend: (friendId: string) => Promise<void>;
   unblockFriend: (friendId: string) => Promise<void>;
-  handleFriendListUpdate: (message: any) => void;
+  handleFriendListUpdate: (message: FriendListResponseMessage) => void;
   handleFriendListError: (errorMessage: any) => void;
   clearError: () => void;
 }
@@ -33,7 +35,7 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
     friends: [],
     blockedFriends: [],
     pendingRequests: [],
-    onlineFriends: [],
+    // onlineFriends: [],
     loading: false,
     error: null
   });
@@ -80,35 +82,35 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
     }
   }, []);
 
-  // Load online friends
-  const loadOnlineFriends = useCallback(async () => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    try {
-      const response = await friendshipAPI.getOnlineFriends();
-      // Convert to Friend type
-      const onlineFriends: Friend[] = response.friends.map(friend => ({
-        id: friend.id,
-        name: friend.name,
-        email: friend.email,
-        avatarUrl: friend.avatarUrl || '',
-        isOnline: friend.isOnline,
-        lastSeen: friend.connectedAt || Date.now()
-      }));
-      setState(prev => ({
-        ...prev,
-        onlineFriends,
-        loading: false
-      }));
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load online friends';
-      setState(prev => ({
-        ...prev,
-        error: errorMessage,
-        loading: false
-      }));
-      toast.error(errorMessage);
-    }
-  }, []);
+  // // Load online friends
+  // const loadOnlineFriends = useCallback(async () => {
+  //   setState(prev => ({ ...prev, loading: true, error: null }));
+  //   try {
+  //     const response = await friendshipAPI.getOnlineFriends();
+  //     // 백엔드에서 이미 Friend 타입과 동일한 구조로 제공
+  //     const onlineFriends: Friend[] = response.friends.map(friend => ({
+  //       id: friend.id,
+  //       name: friend.name,
+  //       email: friend.email,
+  //       avatarUrl: friend.avatarUrl || '',
+  //       isOnline: friend.isOnline,
+  //       lastSeen: friend.connectedAt || Date.now()
+  //     }));
+  //     setState(prev => ({
+  //       ...prev,
+  //       onlineFriends,
+  //       loading: false
+  //     }));
+  //   } catch (error) {
+  //     const errorMessage = error instanceof Error ? error.message : 'Failed to load online friends';
+  //     setState(prev => ({
+  //       ...prev,
+  //       error: errorMessage,
+  //       loading: false
+  //     }));
+  //     toast.error(errorMessage);
+  //   }
+  // }, []);
 
   // Send friend request
   const sendFriendRequest = useCallback(async (email: string) => {
@@ -270,7 +272,7 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
   }, [loadFriends, loadBlockedFriends]);
 
   // Handle real-time friend list updates from WebSocket
-  const handleFriendListUpdate = useCallback((message: any) => {
+  const handleFriendListUpdate = useCallback((message: FriendListResponseMessage) => {
     setState(prev => ({
       ...prev,
       friends: message.payload.friends
@@ -300,12 +302,28 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
     loadPendingRequests();
   }, [loadFriends, loadBlockedFriends, loadPendingRequests]);
 
+  useEffect(() => {
+  const handlers: Partial<WebSocketEventHandlers> = {
+    onUserStatus: (message: UserStatusMessage) => {
+        setState(prev => ({
+    ...prev,
+    friends: prev.friends.map(friend =>
+      friend.id === message.payload.userId
+        ? { ...friend, isOnline: message.payload.isOnline }
+        : friend
+    )
+  }));
+    }
+  };
+  websocketService.addEventHandlers(handlers);
+}, []);
+
   return {
     ...state,
     loadFriends,
     loadBlockedFriends,
     loadPendingRequests,
-    loadOnlineFriends,
+    // loadOnlineFriends,
     sendFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,

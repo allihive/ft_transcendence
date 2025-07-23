@@ -6,3 +6,4 @@ uploads/
 sqlite.db
 *.txt
 .DS_Store
+/vscode/

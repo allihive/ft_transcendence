@@ -49,7 +49,7 @@ const installFastifyPlugins = async (app: FastifyInstance): Promise<void> => {
 
 	await app.register(fastifyJWT, {
 		secret: process.env.JWT_SECRET!,
-		cookie: { cookieName: "accessToken", signed: true } // 프로덕션과 동일하게 서명된 쿠키 사용
+		cookie: { cookieName: "accessToken", signed: true }
 	});
 };
 

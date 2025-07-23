@@ -1,5 +1,5 @@
 import { EntityManager } from "@mikro-orm/core";
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { User } from "../user/entities/user.entity";
 import { Friendship } from "./entities/friendship.entity";
 import { FriendRequest } from "./entities/friendship.entity";
@@ -57,7 +57,7 @@ export class FriendshipService {
     }
 
     const friendRequest = em.create(FriendRequest, {
-      id: uuidv4(),
+      id: randomUUID(),
       requester,
       addressee,
       status: 'pending',
@@ -99,7 +99,7 @@ async CreateFriendship(em: EntityManager, userId: string, friendId: string): Pro
         }
 
         const newFriendship = em.create(Friendship, {
-            id: uuidv4(),
+            id: randomUUID(),
             user: user,
             friend: friend,
             status: 'active',
@@ -304,7 +304,7 @@ async CreateFriendship(em: EntityManager, userId: string, friendId: string): Pro
         };
       });
       const friendsList: FriendListResponseSchema = {
-        id: uuidv4(),
+        id: randomUUID(),
         timestamp: Date.now(),
         version: '1.0',
         type: 'friend_list',
@@ -339,7 +339,7 @@ async CreateFriendship(em: EntityManager, userId: string, friendId: string): Pro
     });
 
           const blockedFriendsList: FriendListResponseSchema = {
-        id: uuidv4(),
+        id: randomUUID(),
         timestamp: Date.now(),
         version: '1.0',
         type: 'friend_list',
@@ -410,4 +410,13 @@ async CreateFriendship(em: EntityManager, userId: string, friendId: string): Pro
     }
 
     return friendRequest;
-  }}
+  }
+  // 친구 userId 배열 반환 (online/offline 브로드캐스트용)
+  async getFriendIds(em: EntityManager, userId: string): Promise<string[]> {
+    const friendships = await em.find(Friendship, {
+      user: { id: userId },
+      status: 'active'
+    }, { populate: ['friend'] });
+    return friendships.map(f => f.friend.id);
+  }
+}

@@ -1,5 +1,5 @@
 import { EntityManager } from "@mikro-orm/core";
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { 
   ChatMessage,
   PingMessage, 
@@ -40,7 +40,7 @@ export class MessageService {
     fileSize?: number
   ): Promise<ChatMessageEntity> {
     const chatMessageEntity = em.create(ChatMessageEntity, {
-      id: uuidv4(),
+      id: randomUUID(),
       roomId,
       userId,
       name, 
@@ -240,7 +240,7 @@ export class MessageService {
     fileSize?: number
   ): ChatMessage {
     return {
-      id: uuidv4(),
+      id: randomUUID(),
       timestamp: Date.now(),
       version: '1.0',
       type: 'chat',
@@ -260,7 +260,7 @@ export class MessageService {
   // Create a ping message
   createPingMessage(): PingMessage {
     return {
-      id: uuidv4(),
+      id: randomUUID(),
       timestamp: Date.now(), // 이것이 ping 시작 시간
       version: '1.0',
       type: 'ping'
@@ -270,7 +270,7 @@ export class MessageService {
   // Create a pong message
   createPongMessage(pingTimestamp: number): PongMessage {
     return {
-      id: uuidv4(),
+      id: randomUUID(),
       timestamp: Date.now(),
       version: '1.0',
       type: 'pong',

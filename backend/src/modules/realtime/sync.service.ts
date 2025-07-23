@@ -1,5 +1,5 @@
 import { EntityManager } from "@mikro-orm/core";
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { ChatMessage } from './dto';
 import { ChatMessage as ChatMessageEntity } from './entities/chat-message.entity';
 import { UserReadMessageEntity } from './entities/user-read-message.entity';
@@ -181,7 +181,7 @@ export class SyncService {
 
       // Create new record if it doesn't exist
       userRead = em.create(UserReadMessageEntity, {
-        id: uuidv4(),
+        id: randomUUID(),
         user,
         room,
         lastReadTimestamp: 0,

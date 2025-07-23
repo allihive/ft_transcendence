@@ -1,10 +1,10 @@
 import { ErrorPayload, ErrorMessage } from './dto/error.schema';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 export class WebSocketErrorHandler {
   static createErrorMessage(code: string, message: string, details?: unknown): ErrorMessage {
     return {
-      id: uuidv4(),
+      id: randomUUID(),
       timestamp: Date.now(),
       version: '1.0',
       type: 'error',
@@ -22,7 +22,7 @@ export class WebSocketErrorHandler {
     sendError?: (error: any) => void
   ) {
     const errorMessage: ErrorMessage = {
-      id: uuidv4(),
+      id: randomUUID(),
       timestamp: Date.now(),
       version: '1.0',
       type: 'error',

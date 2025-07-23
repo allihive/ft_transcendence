@@ -190,7 +190,7 @@ export class WebSocketMessageHandler {
     console.log(`🏓 Creating pong response for ping message:`, message.id);
     // Create pong response using existing timestamp
     const pongMessage = this.messageService.createPongMessage(message.timestamp);
-    console.log(`🏓 Sending pong response:`, pongMessage);
+    // console.log(`🏓 Sending pong response:`, pongMessage);
     sendMessageCallback(pongMessage);
   }
 
