@@ -42,6 +42,7 @@ const installFastifyPlugins = async (app: FastifyInstance): Promise<void> => {
 			"http://localhost:5173",
 			"https://localhost:5173"
 		],
+		methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
 		credentials: true
 	});
 

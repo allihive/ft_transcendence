@@ -3,7 +3,7 @@ import type { FetchError } from "./types";
 
 export const fetchJson = async<T> (url: string, options?: RequestInit): Promise<T | null> => {
 	try {
-		const response = await fetch(url, options);
+		const response = await fetch(url, { credentials: "include" , ...options });
 
 
 		if (!response.ok) {
