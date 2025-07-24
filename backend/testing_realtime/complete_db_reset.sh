@@ -24,7 +24,7 @@ pkill -f "node.*main" 2>/dev/null || true
 sleep 2
 
 echo -e "\n${BLUE}2. Navigating to backend folder...${NC}"
-cd backend || { echo "❌ backend directory not found"; exit 1; }
+cd .. || { echo "❌ backend directory not found"; exit 1; }
 
 echo -e "\n${BLUE}3. Deleting all SQLite database files...${NC}"
 find . -type f -name "*.db" -exec rm -v {} \;

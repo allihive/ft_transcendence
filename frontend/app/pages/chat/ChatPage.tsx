@@ -6,12 +6,7 @@ import { useChat } from '../../stores/useChat';
 import { useFriends } from '../../stores/useFriends';
 import { useAuth } from '../../stores/useAuth';
 import { websocketService } from '../../services/websocket.service';
-import type { 
-  FriendRequestMessage, 
-  FriendRequestResponseMessage, 
-  FriendListResponseMessage, 
-  ErrorMessage 
-} from '../../types/realtime.types';
+
 import toast from 'react-hot-toast';
 
 
@@ -23,42 +18,36 @@ const ChatPage = () => {
 
   // Redirect to login if not authenticated
   useEffect(() => {
+    console.log('🔍 ChatPage redirect check:', { isLoggingIn, user: user ? 'exists' : 'null' });
     if (!isLoggingIn && !user) {
+      console.log('🚨 Redirecting to login - user is null');
       navigate('/login');
     }
   }, [isLoggingIn, user, navigate]);
 
-  // Don't render anything while loading or if no user
-  if (isLoggingIn) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gradient-to-t from-darkOrange to-background dark:from-darkBlue dark:to-darkOrange">
-        <div className="text-center text-darkOrange dark:text-background">
-          <div className="animate-spin w-8 h-8 border-2 border-darkOrange dark:border-background border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="font-body">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   if (!user) {
     return null;
   }
-
-  // Chat state
+  // Chat state + connect to WebSocket
   const chat = useChat(user.id, user.name);
   
   // Friends state
   const friends = useFriends();
 
-  // Load initial data and connect to WebSocket
+  // Load initial data
   useEffect(() => {
+    // once user is logged in, initialize chat
+    if (!user) {
+      console.log('⏳ User not logged in, skipping chat initialization');
+      return;
+    }
+
     const initializeChat = async () => {
       try {
+        console.log('🔄 Initializing chat for user:', user.name);
+        
         // Load user's room list
         await chat.loadUserRooms();
-        
-        // Connect to WebSocket
-        await chat.connectWebSocket();
         
         // Load friend data
         await friends.loadFriends();
@@ -71,55 +60,12 @@ const ChatPage = () => {
     };
 
     initializeChat();
-    
+  
     return () => {
-      chat.disconnectWebSocket();
+      console.log('🛑 ChatPage unmounting, WebSocket connection maintained globally');
     };
-  }, []);
+  }, [user]);
 
-  // 스크롤 위치 복원
-  useEffect(() => {
-    const savedScrollPosition = sessionStorage.getItem('chatPageScrollPosition');
-    if (savedScrollPosition) {
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedScrollPosition));
-      }, 100);
-    }
-
-    return () => {
-      sessionStorage.setItem('chatPageScrollPosition', window.scrollY.toString());
-    };
-  }, []);
-
-  // Set up WebSocket handlers for friends - useChat에서 이미 연결하므로 핸들러만 추가
-  useEffect(() => {
-    // useChat에서 이미 WebSocket을 연결하므로, 여기서는 핸들러만 추가
-    const friendHandlers = {
-      onFriendRequest: (message: FriendRequestMessage) => {
-        console.log('Friend request received:', message);
-        friends.loadPendingRequests();
-      },
-      onFriendRequestResponse: (message: FriendRequestResponseMessage) => {
-        console.log('Friend request response:', message);
-        friends.loadFriends();
-        friends.loadPendingRequests();
-      },
-      onFriendList: (message: FriendListResponseMessage) => {
-        friends.handleFriendListUpdate(message);
-      },
-      onErrorMessage: (message: ErrorMessage) => {
-        console.log('WebSocket error message:', message);
-        
-        // 친구 목록 업데이트 에러 처리
-        if (message.payload?.code === 'FRIEND_LIST_UPDATE_ERROR') {
-          friends.handleFriendListError(message);
-        }
-      }
-    };
-
-    // 기존 핸들러에 친구 핸들러 추가
-    websocketService.addEventHandlers(friendHandlers);
-  }, []);
 
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) return;
@@ -136,14 +82,7 @@ const ChatPage = () => {
     }
   };
 
-  const handleFriendChat = (friendId: string, friendName: string) => {
-    // For demo, create a private room with the friend
-    // In real implementation, you might want to check if a private room already exists
-    console.log(`Starting chat with ${friendName} (${friendId})`);
-    // Implementation depends on your private messaging strategy
-  };
-
-  const currentRoom = chat.rooms.find(room => room.id === chat.currentRoomId);
+  const currentRoom = chat.currentRoom;
 
   return (
     <div className="h-screen bg-gradient-to-t from-darkOrange to-background dark:from-darkBlue dark:to-darkOrange flex">
@@ -151,7 +90,7 @@ const ChatPage = () => {
       <div className="flex-1 flex">
         {/* Chat Sidebar */}
         <ChatSidebar
-          rooms={chat.rooms.map(room => ({ ...room, unreadCount: room.unreadCount || 0 }))}
+          rooms={chat.rooms}
           currentRoomId={chat.currentRoomId}
           onRoomSelect={async (roomId: string) => {
             try {
@@ -165,7 +104,6 @@ const ChatPage = () => {
           onLeaveRoom={chat.leaveRoom}
           friends={friends.friends}
           blockedFriends={friends.blockedFriends}
-          onFriendChat={handleFriendChat}
           onRemoveFriend={friends.removeFriend}
           onBlockFriend={friends.blockFriend}
           onUnblockFriend={friends.unblockFriend}
@@ -187,6 +125,7 @@ const ChatPage = () => {
               currentUserId={user.id}
               onSendMessage={chat.sendMessage}
               isConnected={chat.connectionStatus === 'connected'}
+              lastReadTimestamp={currentRoom.lastReadTimestamp}
             />
           ) : (
             <div className="h-full flex items-center justify-center bg-background/50 dark:bg-darkBlue/50">
@@ -259,7 +198,7 @@ const ChatPage = () => {
           <div className="bg-red-500 text-white px-3 py-2 rounded-lg shadow-lg text-sm font-body flex items-center space-x-2">
             <span>⚠️ Connection failed</span>
             <button
-              onClick={() => chat.connectWebSocket()}
+              onClick={() => websocketService.connect()}
               className="text-white hover:text-gray-200 underline"
             >
               Retry

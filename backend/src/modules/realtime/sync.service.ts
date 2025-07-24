@@ -26,21 +26,21 @@ export class SyncService {
   async restoreUserSession(em: EntityManager, userId: string, sendMessageCallback: (message: any) => void): Promise<void> {
     try {
 
-      // 1. 친구 목록 동기화
+      // 1. sync friend list
       await this.syncFriendList(em, userId, sendMessageCallback);
       console.log(`[${userId}] Friend list synchronized`);
 
-      // 2. 사용자의 룸들을 메모리에 복원
+      // 2. restore user rooms to memory
       const userRooms = await this.restoreUserRoomsToMemory(em, userId);
       console.log(`[${userId}] Restored to ${userRooms.length} rooms in memory`);
       
-      // 3. 읽지 않은 메시지 수만 확인 (메시지 동기화는 룸 입장 시에)
+      // 3. check unread message count (message sync is done when user enters the room)
       for (const roomId of userRooms) {
-        // 읽지 않은 메시지 수만 확인
+        // check unread message count
         const unreadCount = await this.getUnreadMessageCount(em, userId, roomId);
         
         if (unreadCount > 0) {
-          // EventService를 통해 unread count 업데이트 이벤트 발생
+          // emit unread count update event through EventService
           if (!this.eventService) {
             console.warn(`[${userId}] EventService not available for unread count update`);
             return;
@@ -65,11 +65,11 @@ export class SyncService {
         return [];
       }
 
-      // 데이터베이스에서 사용자의 룸 목록 조회
+      // get user rooms from database
       const userRooms = await this.roomService.getUserRooms(em, userId);
       const roomIds: string[] = [];
 
-      // 각 룸을 메모리에 추가 (이미 있으면 중복 추가되지 않음)
+      // add each room to memory (no duplicate addition if already exists)
       for (const room of userRooms) {
         this.roomService.addUserToRoomInMemory(userId, room.id);
         roomIds.push(room.id);
@@ -90,7 +90,7 @@ export class SyncService {
         return;
       }
 
-      // 친구 목록 조회 및 전송
+      // get friend list and send it to user
       const friendList = await this.friendshipService.getFriendsList(em, userId);
       sendMessageCallback({
         id: friendList.id,
@@ -117,26 +117,33 @@ export class SyncService {
     const userRead = await em.findOne(UserReadMessageEntity, { user: { id: userId }, room: { id: roomId } });
     const lastReadTimestamp = userRead?.lastReadTimestamp || 0;
 
-    // Get previous messages (최대 1000개까지 가져오기)
-    const previousMessageEntities = await em.find(ChatMessageEntity, {
+    console.log(`[${userId}] Syncing room ${roomId}, lastReadTimestamp: ${lastReadTimestamp}`);
+
+    // Get all messages for the room (최대 1000개까지 가져오기)
+    const allMessageEntities = await em.find(ChatMessageEntity, {
       roomId
     }, {
-      orderBy: { timestamp: 'DESC' }
+      orderBy: { timestamp: 'ASC' }  // sort by timestamp in ascending order as it will be put it in revers anyway later
     });
 
-    // Get unread messages (after last read timestamp) - DESC order for efficiency
-    const unreadMessageEntities = await em.find(ChatMessageEntity, {
-      roomId,
-      timestamp: { $gt: lastReadTimestamp }
-    }, {
-      orderBy: { timestamp: 'DESC' }
-    });
+    // Split into previous and unread messages based on lastReadTimestamp
+    const previousMessages: ChatMessage[] = [];
+    const unreadMessages: ChatMessage[] = [];
 
-    // Convert to ChatMessage format
-    const previousMessages = this.messageService?.setMapInChatMessageForm(previousMessageEntities.reverse()) || [];
-    const unreadMessages = this.messageService?.setMapInChatMessageForm(unreadMessageEntities.reverse()) || [];
+    for (const msgEntity of allMessageEntities) {
+      const chatMessage = this.messageService?.setMapInChatMessageForm([msgEntity])?.[0];
+      if (chatMessage) {
+        if (msgEntity.timestamp <= lastReadTimestamp) {
+          previousMessages.push(chatMessage);
+        } else {
+          unreadMessages.push(chatMessage);
+        }
+      }
+    }
 
-    // 🎯 메시지들을 메모리 캐시에 저장
+    console.log(`[${userId}] Room ${roomId}: ${previousMessages.length} previous, ${unreadMessages.length} unread messages`);
+
+    // save messages to memory cache
     if (this.messageService && (previousMessages.length > 0 || unreadMessages.length > 0)) {
       const allMessages = [...previousMessages, ...unreadMessages];
       this.messageService.addMessagesToCache(roomId, allMessages);
@@ -150,7 +157,7 @@ export class SyncService {
     };
   }
 
-  // 읽지 않은 메시지 수만 조회 (가벼운 쿼리)
+  // get unread message count (lightweight query)
   async getUnreadMessageCount(em: EntityManager, userId: string, roomId: string): Promise<number> {
     // Get user's last read timestamp
     const userRead = await em.findOne(UserReadMessageEntity, { user: { id: userId }, room: { id: roomId } });
@@ -159,7 +166,8 @@ export class SyncService {
     // Count unread messages (after last read timestamp)
     const unreadCount = await em.count(ChatMessageEntity, {
       roomId,
-      timestamp: { $gt: lastReadTimestamp }
+      timestamp: { $gt: lastReadTimestamp },
+      userId: { $ne: userId } // not including messages sent by the user
     });
 
     return unreadCount;
@@ -194,44 +202,4 @@ export class SyncService {
     userRead.lastReadTimestamp = lastReadTimestamp;
     await em.persistAndFlush(userRead);
   }
-
-
-
-  // // Get unread counts for all user's rooms
-  // async getAllUnreadCounts(em: EntityManager, userId: string): Promise<{ roomId: string; unreadCount: number }[]> {
-  //   try {
-  //     if (!this.roomService) {
-  //       return [];
-  //     }
-
-  //     // Get user's rooms
-  //     const userRooms = await this.roomService.getUserRooms(em, userId);
-  //     const unreadCounts: { roomId: string; unreadCount: number }[] = [];
-
-  //     // Get user's read records for all rooms
-  //     const userReadRecords = await em.find(UserReadMessageEntity, { user: { id: userId } }, { populate: ['room'] });
-
-  //     for (const room of userRooms) {
-  //       const userRead = userReadRecords.find(record => record.room?.id === room.id);
-  //       const lastReadTimestamp = userRead?.lastReadTimestamp || 0;
-
-  //       const unreadCount = await em.count(ChatMessageEntity, {
-  //         roomId: room.id,
-  //         timestamp: { $gt: lastReadTimestamp }
-  //       });
-
-  //       if (unreadCount > 0) {
-  //         unreadCounts.push({
-  //           roomId: room.id,
-  //           unreadCount
-  //         });
-  //       }
-  //     }
-
-  //     return unreadCounts;
-  //   } catch (error) {
-  //     console.error(`Error getting unread counts for user ${userId}:`, error);
-  //     return [];
-  //   }
-  // }
 } 

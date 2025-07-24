@@ -130,7 +130,7 @@ class WebSocketTester {
   async setupTestEnvironment() {
     this.logStep("Setting up test environment");
 
-    const timestamp = Date.now();
+    const timestamp = new Date();
     const randomNum = Math.floor(Math.random() * 10000);
     const email = `wstest_${timestamp}_${randomNum}@test.com`;
     const name = `WebSocket Test User ${timestamp}_${randomNum}`;
@@ -198,7 +198,7 @@ class WebSocketTester {
 
     try {
       const response = await this.makeRequest("POST", "/realtime/rooms", {
-        name: `WebSocket Test Room ${Date.now()}`,
+        name: `WebSocket Test Room $Date.now()}`,
         description: "Room for WebSocket testing",
         isPrivate: false,
         maxUsers: 10,
@@ -471,7 +471,7 @@ class WebSocketTester {
           users: [],
           messages: [],
         },
-        timestamp: Date.now(),
+        timestamp: new Date(),
         version: "1.0",
       };
 
@@ -609,7 +609,7 @@ class WebSocketTester {
         payload: {
           invalid: "data",
         },
-        timestamp: Date.now(),
+        timestamp: new Date(),
         version: "1.0",
       };
 
@@ -643,7 +643,7 @@ class WebSocketTester {
           id: this.generateId(),
           type: "ping",
           payload: {},
-          timestamp: Date.now(),
+          timestamp: new Date(),
           version: "1.0",
         };
 

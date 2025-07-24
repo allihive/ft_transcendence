@@ -56,24 +56,14 @@ export class ConnectionService {
       .filter((conn): conn is UserConnection => conn !== undefined);
   }
 
-  // getEmailByUserId(userId : string) : string {
-  //   const connections = this.getUserConnections(userId);
-  //   if (connections.length === 0) {
-  //     return "";
-  //   }
-  //   return connections[0].email;
-  // }
-
   removeConnection(connectionId: string): boolean {
     const connection = this.connections.get(connectionId);
     if (!connection) {
       console.warn(`Connection ${connectionId} not found for removal`);
       return false;
     }
-
     const userId = connection.userId;
     const userName = connection.name;
-
     this.connections.delete(connectionId);
 
     const userConnections = this.userConnections.get(userId);

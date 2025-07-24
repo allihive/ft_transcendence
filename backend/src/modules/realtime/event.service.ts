@@ -5,20 +5,14 @@ import {
   FriendListResponsePayloadSchema
 } from './dto/friend.schema';
 import { RoomInvitationPayload } from './dto/room.schema';
-import { ChatMessage } from './dto/chat.schema';
 
 export class EventService extends EventEmitter {
   constructor() {
     super();
-    
-    //프로세스 crash 방지용 (꼭 필요한 최소한의 처리) 지금은 사실 없음 거의 
+  
     this.on('error', (error) => {
       console.error('EventService error:', error);
-      // 로그만 찍고 끝 - 프로세스 crash 방지가 목적
     });
-
-    // 현재 5개 리스너만 있으므로 기본값(10)으로도 충분
-    // 필요시 주석 해제: this.setMaxListeners(20);
   }
 
 //event emit
@@ -37,14 +31,14 @@ export class EventService extends EventEmitter {
     console.log(`Event: Friend request ${data.status} by ${data.addresseeName} to ${data.requesterName}`);
   }
 
-  emitRoomInvitation(data: RoomInvitationPayload) {
-    this.emit('room:invitation', data);
-    console.log(`Event: Room invitation from ${data.inviterName} to ${data.inviteeName}`);
+  emitRoomJoined(data: RoomInvitationPayload) {
+    this.emit('room:joined', data);
+    console.log(`Event: Room joined - ${data.inviteeName} joined room ${data.roomName}`);
   }
 
-  emitChatMessage(roomId: string, message: ChatMessage) {
-    this.emit('chat:message', { roomId, message });
-    console.log(`Event: Chat message in room ${roomId} from ${message.payload.name}`);
+  emitLeaveRoom(data: { roomId: string; userId: string; name: string }) {
+    this.emit('room:leave', data);
+    console.log(`Event: User ${data.name} left room ${data.roomId}`);
   }
 
   emitUnreadCountUpdate(data: { roomId: string; userId: string; unreadCount: number }) {
@@ -56,6 +50,7 @@ export class EventService extends EventEmitter {
     this.emit('user:status', data);
     console.log(`Event: User status update for ${data.userId} → ${data.isOnline ? 'online' : 'offline'}`);
   }
+
 
 // event listener
 
@@ -71,12 +66,12 @@ export class EventService extends EventEmitter {
     this.on('friend:response', callback);
   }
 
-  onRoomInvitation(callback: (data: RoomInvitationPayload) => void) {
-    this.on('room:invitation', callback);
+  onRoomJoined(callback: (data: RoomInvitationPayload) => void) {
+    this.on('room:joined', callback);
   }
 
-  onChatMessage(callback: (data: { roomId: string; message: ChatMessage }) => void) {
-    this.on('chat:message', callback);
+  onLeaveRoom(callback: (data: { roomId: string; userId: string; name: string }) => void) {
+    this.on('room:leave', callback);
   }
 
   onUnreadCountUpdate(callback: (data: { roomId: string; userId: string; unreadCount: number }) => void) {

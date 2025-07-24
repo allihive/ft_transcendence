@@ -42,7 +42,6 @@
 	"devDependencies": {
 		"@mikro-orm/cli": "^6.4.15",
 		"@types/bcrypt": "^5.0.2",
-		"@types/jsonwebtoken": "^9.0.10",
 		"@types/node": "^22.15.14",
 		"@types/qrcode": "^1.5.5",
 		"@types/speakeasy": "^2.0.10",

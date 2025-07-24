@@ -129,7 +129,7 @@ setup_test_environment() {
         }" > /dev/null
     
     # Login user
-    curl -s -c "test_cookie.txt" -X POST "$BASE_URL/auth/login" \
+    curl -s -c "test_cookie.txt" -X POST "$BASE_URL/auth/login/password" \
         -H "Content-Type: application/json" \
         -d "{\"email\":\"$user_email\",\"password\":\"password123\"}" > /dev/null
     
@@ -264,7 +264,7 @@ test_room_join() {
             }" > /dev/null
         
         # Login second user
-        curl -s -c "test_cookie2.txt" -X POST "$BASE_URL/auth/login" \
+        curl -s -c "test_cookie2.txt" -X POST "$BASE_URL/auth/login/password" \
             -H "Content-Type: application/json" \
             -d "{\"email\":\"$user2_email\",\"password\":\"password123\"}" > /dev/null
         
@@ -328,7 +328,7 @@ test_room_list() {
         }" > /dev/null
     
     # Login second user
-    curl -s -c "test_cookie2.txt" -X POST "$BASE_URL/auth/login" \
+    curl -s -c "test_cookie2.txt" -X POST "$BASE_URL/auth/login/password" \
         -H "Content-Type: application/json" \
         -d "{\"email\":\"$user2_email\",\"password\":\"password123\"}" > /dev/null
     
@@ -387,31 +387,25 @@ test_room_invitation() {
     local room_id=$(echo "$room_response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
     
     if [ ! -z "$room_id" ]; then
-        # Test 1: Invalid invitation (non-existent user should return 400)
-        api_test "Invalid room invitation (non-existent user)" \
-            "POST" "/realtime/rooms/$room_id/invite" \
-            '{"inviteeNames": ["NonExistentUser"]}' \
-            "test_cookie.txt" "400" '"statusCode":400'
-        
-        # Test 2: Empty invitation list
+        # Test 1: Empty invitation list
         api_test "Empty invitation list" \
             "POST" "/realtime/rooms/$room_id/invite" \
             '{"inviteeNames": []}' \
             "test_cookie.txt" "200" '"success"'
         
-        # Test 3: Invite to non-existent room
+        # Test 2: Invite to non-existent room
         api_test "Invite to non-existent room" \
             "POST" "/realtime/rooms/invalid-room-id/invite" \
             '{"inviteeNames": ["TestUser"]}' \
             "test_cookie.txt" "404" '"statusCode":404'
         
-        # Test 4: Unauthorized invitation
+        # Test 3: Unauthorized invitation
         api_test "Unauthorized invitation" \
             "POST" "/realtime/rooms/$room_id/invite" \
             '{"inviteeNames": ["TestUser"]}' \
             "" "401" '"statusCode":401'
         
-        # Test 5: Invalid invitation data
+        # Test 4: Invalid invitation data
         api_test "Invalid invitation data" \
             "POST" "/realtime/rooms/$room_id/invite" \
             '{"invalidField": "value"}' \

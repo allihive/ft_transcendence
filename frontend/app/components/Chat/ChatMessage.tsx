@@ -15,6 +15,20 @@ export const ChatMessageComponent = memo(({ message, isOwnMessage, showSender = 
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  // 🎯 시스템 메시지 확인
+  const isSystemMessage = payload.userId === 'system';
+
+  // 🎯 시스템 메시지는 중앙 정렬
+  if (isSystemMessage) {
+    return (
+      <div className="flex justify-center mb-3">
+        <div className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full text-xs font-body">
+          {payload.content}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`flex mb-3 ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${

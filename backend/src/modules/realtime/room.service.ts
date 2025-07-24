@@ -5,7 +5,6 @@ import { RoomMember as RoomMemberEntity } from "./entities/room-member.entity";
 import { User } from "../user/entities/user.entity";
 import { NotFoundException } from "../../common/exceptions/NotFoundException";
 import { BadRequestException } from "../../common/exceptions/BadRequestException";
-import { ConnectionService } from "./connection.service";
 import { EventService } from "./event.service";
 
 export class RoomService {
@@ -121,7 +120,7 @@ export class RoomService {
 
         // 이벤트 발생 (초대자와 피초대자가 다른 경우만)
         if (inviteeUser.id !== inviterId) {
-          this.eventService.emitRoomInvitation({
+          this.eventService.emitRoomJoined({
             roomId: room.id,
             roomName: room.name,
             inviteeName: name,

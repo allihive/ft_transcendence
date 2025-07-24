@@ -16,7 +16,7 @@ export const roomCreationRequestSchema = Type.Object({
 export const roomMemberDtoSchema = Type.Object({
   userId: Type.String(),
   name: Type.String(),
-  joinedAt: Type.String(),
+  joinedAt: Type.Number(),
   isOnline: Type.Boolean()
 });
 
@@ -85,7 +85,7 @@ export const roomStatePayloadSchema = Type.Object({
     userId: Type.String(),
     userName: Type.String(),
     messageType: Type.String(),
-    timestamp: Type.String(),
+    timestamp: Type.Number(),
     isRead: Type.Boolean()
   })),
   unreadMessages: Type.Array(Type.Object({
@@ -94,12 +94,12 @@ export const roomStatePayloadSchema = Type.Object({
     userId: Type.String(),
     userName: Type.String(),
     messageType: Type.String(),
-    timestamp: Type.String(),
+    timestamp: Type.Number(),
     isRead: Type.Boolean()
   })),
   members: Type.Array(roomMemberDtoSchema),
   readState: Type.Object({
-    lastReadTimestamp: Type.String(),
+    lastReadTimestamp: Type.Number(),
     unreadCount: Type.Number(),
     totalMessages: Type.Number()
   })
@@ -122,4 +122,6 @@ export type RoomMemberDto = Static<typeof roomMemberDtoSchema>;
 export type RoomCreatedPayload = Static<typeof roomCreatedPayloadSchema>;
 export type RoomInvitationPayload = Static<typeof roomInvitationPayloadSchema>;
 export type LeaveRoomPayload = Static<typeof leaveRoomPayloadSchema>;
+export type LeaveRoomMessage = Static<typeof leaveRoomMessageSchema>;
 export type RoomJoinedMessage = Static<typeof roomJoinedMessageSchema>;
+export type RoomStateMessage = Static<typeof roomStateMessageSchema>;

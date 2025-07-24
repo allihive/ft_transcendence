@@ -3,10 +3,9 @@ import { RoomService } from './room.service';
 import { ConnectionService } from './connection.service';
 import { MessageService } from './message.service';
 import { FriendshipService } from './friendship.service';
-import { UserService } from '../user/user.service';
 import { NotificationMessage} from './dto';
 import { WebSocketErrorHandler } from './websocket-error-handler';
-import { unreadCountMessageSchema, UnreadCountMessage } from './dto/sync.schema';
+import { UnreadCountMessage } from './dto/sync.schema';
 
 export class EventListenerService {
   constructor(
@@ -15,7 +14,6 @@ export class EventListenerService {
     private connectionService: ConnectionService,
     private messageService: MessageService,
     private friendshipService: FriendshipService,
-    private userService: UserService,
     private orm: any // MikroORM instance
   ) {}
 
@@ -25,15 +23,14 @@ export class EventListenerService {
   ) {
       console.log('🎯 All event listeners have been set up successfully');
     
-    // 1. 유저 온라인/오프라인 상태 변경 이벤트 리스너
+    // 1. user status update event listener
     this.eventService.onUserStatusUpdate(async (data) => {
       try {
         const { userId, isOnline } = data;
         const em = this.orm.em.fork();
-        // 친구 목록 가져오기 (async)
         const friends = await this.friendshipService.getFriendIds(em, userId);
         const message = {
-          id: `user_status_${Date.now()}`,
+          id: `user_status_$Date.now()}`,
           timestamp: Date.now(),
           version: '1.0',
           type: 'user_status',
@@ -49,65 +46,15 @@ export class EventListenerService {
     });
     
 
-    // 2. 채팅 메시지 이벤트
-    this.eventService.onChatMessage(async (data) => {
-      console.log(`📢 Processing chat message in room ${data.roomId}`);
-      
-      try {
-        const em = this.orm.em.fork();
-        const { roomId, message } = data;
-        const { content, userId, name } = message.payload;
-
-        // 기본 검증 + 사용자 피드백 
-        // 프론트엔드에서 이미 빈 메시지 필터링하지만, 백엔드 검증 필요한 케이스들:
-        // 1. 보안 공격 (직접 WebSocket API 호출)
-        // 2. 프론트엔드 버그나 예외 상황
-        // 3. 다른 클라이언트 (모바일 앱, 써드파티)
-        // 4. 개발 과정에서의 실수 (검증 로직 누락) 
-        if (!content || !roomId) {
-          console.warn(`🚫 Invalid chat message from user ${userId}: content="${content}", roomId="${roomId}"`);
-          
-          // 채팅 에러만 사용자에게 알림 (간단하게)
-          const errorMessage = WebSocketErrorHandler.createErrorMessage(
-            'INVALID_MESSAGE',
-            'Message content and room ID are required',
-            { hasContent: !!content, hasRoomId: !!roomId }
-          );
-          await sendToUser(userId, errorMessage);
-          return;
-        }
-
-        // 메시지 저장 (브로드캐스팅은 websocket-message.handler에서 처리)
-        await this.messageService.saveChatMessage(
-          em, roomId, userId, name, content, 'text'
-        );
-        console.log(`✅ Chat message saved to database`);
-        
-      } catch (error) {
-        console.error('Error handling chat message event:', error);
-        
-        // 채팅 에러만 사용자에게 알림 (간단하게)
-        try {
-          const errorMessage = WebSocketErrorHandler.createErrorMessage(
-            'CHAT_ERROR',
-            'Failed to send message. Please try again.'
-          );
-          await sendToUser(data.message?.payload?.userId, errorMessage);
-        } catch (notificationError) {
-          console.error('Failed to send error notification:', notificationError);
-        }
-      }
-    });
-
-    // 3. 룸 초대 이벤트(알림만 처리, 데이터베이스는 HTTP API에서 이미 처리됨)
-    this.eventService.onRoomInvitation(async (data) => {
-      console.log(`📢 Broadcasting room invitation: ${data.inviterName} invited ${data.inviteeName} to room ${data.roomName}`);
+    // 2. room joined event listener only for notification
+    this.eventService.onRoomJoined(async (data) => {
+      console.log(`📢 Broadcasting room joined: ${data.inviteeName} joined room ${data.roomName}`);
       
       try {
         const { roomId, roomName, inviterName, inviteeName } = data;
 
         const roomJoinedMessage: NotificationMessage = {
-          id: `room_joined_${new Date().toISOString()}`,
+          id: `room_joined_${Date.now()}`,
           type: 'room_joined',
           payload: {
             roomId,
@@ -119,26 +66,48 @@ export class EventListenerService {
           version: '1.0'
         };
 
-        const roomMembers = this.roomService.getRoomMembersFromMemory(roomId);
-        for (const userId of roomMembers) {
-          await sendToUser(userId, roomJoinedMessage);
-        }
-
-        console.log(`✅ Room join notification sent to ${roomMembers.length} members in room ${roomName}`);
+        await broadcastToRoom(roomId, roomJoinedMessage);
+        console.log(`✅ Room joined notification broadcasted to room ${roomName}`);
         
       } catch (error) {
-        console.error('Error broadcasting room invitation event:', error);
-        // 룸 초대는 알림 실패해도 사용자에게 별도 알림 안함
+        console.error('Error broadcasting room joined event:', error);
       }
     });
 
-    // 4. 친구 요청 이벤트
+    // 3. room leave event listener
+    this.eventService.onLeaveRoom(async (data) => {
+      console.log(`📢 Broadcasting room leave: ${data.name} left room ${data.roomId}`);
+      
+      try {
+        const { roomId, userId, name } = data;
+
+        const leaveRoomMessage = {
+          id: `leave_room_${Date.now()}`,
+          type: 'leave_room',
+          payload: {
+            roomId,
+            userId,
+            name
+          },
+          timestamp: Date.now(),
+          version: '1.0'
+        };
+
+        await broadcastToRoom(roomId, leaveRoomMessage);
+        console.log(`✅ Room leave broadcasted to room ${roomId}`);
+        
+      } catch (error) {
+        console.error('Error handling room leave event:', error);
+      }
+    });
+
+    // 4. friend request event listener
     this.eventService.onFriendRequest(async (data) => {
       console.log(`📢 Processing friend request: ${data.requesterName} → ${data.addresseeName}`);
       
       try {
         const friendRequestMessage: NotificationMessage = {
-        id: `friend_request_${Date.now()}`,
+        id: `friend_request_$Date.now()}`,
         version: '1.0',
         timestamp: Date.now(),  
         type: 'friend_request',
@@ -158,20 +127,20 @@ export class EventListenerService {
         
       } catch (error) {
         console.error('Error handling friend request event:', error);
-        // 친구 요청 알림 실패는 사용자에게 별도 알림 안함 (이미 HTTP 응답으로 처리됨)
+      // no notification for friend request failure (already handled by HTTP response)
       }
     });
 
-    // 5. 친구 요청 응답 이벤트
+    // 5. friend request response event listener
     this.eventService.onFriendRequestResponse(async (data) => {
       console.log(`📢 Processing friend request response: ${data.addresseeName} ${data.status} ${data.requesterName}'s request`);
       
       try {
         const friendResponseMessage: NotificationMessage = {
-          id: `friend_response_${Date.now()}`,
+          id: `friend_response_$Date.now()}`,
           type: 'friend_request_response',
           payload: {
-            requestId: `req_${Date.now()}`,
+            requestId: `req_$Date.now()}`,
             requesterId: data.requesterId,
             requesterName: data.requesterName,
             addresseeId: data.addresseeId,
@@ -199,7 +168,7 @@ export class EventListenerService {
           } catch (friendListError) {
             console.error('Error updating friend list:', friendListError);
             
-            // 친구 목록 업데이트 실패 시 관련 사용자들에게 에러 알림
+            // send error notification to affected users
             const affectedUsers = [data.requesterId, data.addresseeId];
             for (const userId of affectedUsers) {
               if (this.connectionService.isUserOnline(userId)) {
@@ -224,12 +193,11 @@ export class EventListenerService {
         }
         
       } catch (error) {
-        console.error('Error handling friend request response event:', error);
-        // 친구 응답 알림 실패는 사용자에게 별도 알림 안함 (이미 HTTP 응답으로 처리됨)
+        console.error('Error handling friend request response event:', error); // 친구 응답 알림 실패는 사용자에게 별도 알림 안함 (이미 HTTP 응답으로 처리됨)
       }
     });
 
-    // 6. 친구 목록 업데이트 이벤트
+    // 6. friend list update event listener
     this.eventService.onUpdateFriendList(async (data) => {
       console.log(`📢 Updating friend list: ${data.updateReason || 'unknown'}`);
       
@@ -269,14 +237,14 @@ export class EventListenerService {
       }
     });
 
-    // 7. 읽지 않은 메시지 수 업데이트 이벤트
+    // 7. unread count update event listener
     this.eventService.onUnreadCountUpdate(async (data) => {
       console.log(`📢 Updating unread count for user ${data.userId} in room ${data.roomId}: ${data.unreadCount}`);
       
       try {
         if (this.connectionService.isUserOnline(data.userId)) {
           const unreadCountMessage: UnreadCountMessage = {
-            id: `unread_${Date.now()}`,
+            id: `unread_$Date.now()}`,
             type: 'unread_count',
             payload: { 
               roomId: data.roomId, 
@@ -319,7 +287,7 @@ export class EventListenerService {
         } catch (userError) {
           console.error(`Error sending friend list to user ${userId}:`, userError);
           
-          // 개별 사용자에게 친구 목록 업데이트 실패 알림
+          // send error notification to user
           try {
             const errorMessage = WebSocketErrorHandler.createErrorMessage(
               'FRIEND_LIST_UPDATE_ERROR',

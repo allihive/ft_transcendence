@@ -4,7 +4,7 @@ import { AddFriendForm } from '../Friends/AddFriendForm';
 
 interface ChatSidebarProps {
   // Rooms
-  rooms: Array<Room & { unreadCount: number }>;
+  rooms: Array<Room & { unreadCount?: number }>;
   currentRoomId: string | null;
   onRoomSelect: (roomId: string) => Promise<void>;
   onCreateRoom: () => void;
@@ -13,7 +13,6 @@ interface ChatSidebarProps {
   // Friends
   friends: Friend[];
   blockedFriends: Friend[];
-  onFriendChat: (friendId: string, friendName: string) => void;
   onRemoveFriend: (friendId: string) => Promise<void>;
   onBlockFriend: (friendId: string) => Promise<void>;
   onUnblockFriend: (friendId: string) => Promise<void>;
@@ -38,7 +37,6 @@ export const ChatSidebar = ({
   onLeaveRoom,
   friends, 
   blockedFriends,
-  onFriendChat,
   onRemoveFriend,
   onBlockFriend,
   onUnblockFriend,
@@ -81,8 +79,11 @@ export const ChatSidebar = ({
     return date.toLocaleDateString();
   };
 
-  const totalUnreadCount = rooms.reduce((total, room) => total + room.unreadCount, 0);
   const onlineFriends = friends.filter(friend => friend.isOnline);
+  
+  // // Debug: Log friends and online friends
+  // console.log('🔍 ChatSidebar friends:', friends.map(f => ({ id: f.id, name: f.name, isOnline: f.isOnline })));
+  // console.log('🔍 ChatSidebar onlineFriends count:', onlineFriends.length);
 
   return (
     <div className="w-80 bg-lightOrange dark:bg-darkBlue border-r border-darkOrange dark:border-background flex flex-col h-full">
@@ -109,11 +110,6 @@ export const ChatSidebar = ({
             }`}
           >
             Rooms
-            {totalUnreadCount > 0 && (
-              <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
-                {totalUnreadCount}
-              </span>
-            )}
           </button>
           <button
             onClick={() => setActiveTab('friends')}
@@ -177,7 +173,7 @@ export const ChatSidebar = ({
                         <h3 className="text-sm font-medium text-darkOrange dark:text-background truncate font-body">
                           {room.name}
                         </h3>
-                        {room.unreadCount > 0 && (
+                        {room.id !== currentRoomId && (room.unreadCount || 0) > 0 && (
                           <span className="bg-red-500 text-white text-xs rounded-full px-2 py-0.5">
                             {room.unreadCount}
                           </span>
@@ -319,7 +315,7 @@ export const ChatSidebar = ({
                       {/* Actions */}
                       <div className="flex items-center space-x-2">
                         {/* Chat button */}
-                        <button
+                        {/* <button
                           onClick={() => onFriendChat(friend.id, friend.name)}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Start chat"
@@ -327,7 +323,7 @@ export const ChatSidebar = ({
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                           </svg>
-                        </button>
+                        </button> */}
 
                         {/* More actions */}
                         <button
@@ -397,9 +393,9 @@ export const ChatSidebar = ({
                       <div className="flex items-center space-x-3">
                         {/* Avatar */}
                         <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
-                          <span className="text-blue-600 font-medium font-body">
-                            {request.requesterName?.charAt(0)?.toUpperCase() || '?'}
-                          </span>
+                            <span className="text-blue-600 font-medium font-body">
+                              {request.requesterName?.charAt(0)?.toUpperCase() || '?'}
+                            </span>
                         </div>
 
                         {/* Request info */}

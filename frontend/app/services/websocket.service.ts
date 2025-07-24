@@ -1,25 +1,22 @@
 import type { 
   AnyMessage, 
   ChatMessage, 
-  SyncMessage,
   PingMessage,
-  RoomStateMessage,
   ConnectionStatus,
   WebSocketEventHandlers,
   PongMessage,
   UnreadCountMessage,
   RoomJoinedMessage,
+  LeaveRoomMessage,
   FriendRequestMessage,
   FriendRequestResponseMessage,
   FriendListResponseMessage,
-  ErrorMessage,
   UserStatusMessage,
-
+  RoomStateMessage,
 } from '../types/realtime.types';
 
-// 스키마 맞추기 용 더미 ID (백엔드에서 사용하지 않음)
 const generateId = (): string => {
-  return crypto.randomUUID(); // 간단하게 UUID 사용
+  return crypto.randomUUID();
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
@@ -27,49 +24,11 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL;
 export class WebSocketService {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 3; // 5에서 3으로 감소
-  private reconnectDelay = 2000; // 0.5초에서 2초로 증가
+  private maxReconnectAttempts = 3;
+  private reconnectDelay = 2000;
   private pingInterval: NodeJS.Timeout | null = null;
   private eventHandlers: WebSocketEventHandlers = {};
   private connectionStatus: ConnectionStatus = 'disconnected';
-  private cachedToken: string | null = null;
-  private tokenExpiry: number = 0;
-
-  private async getWebSocketUrl(): Promise<string | null> {
-    // 캐시된 토큰이 있고 아직 만료되지 않았으면 사용
-    // if (this.cachedToken && Date.now() < this.tokenExpiry) {
-    //   console.log('🔐 Using cached WebSocket token');
-    // } else {
-    //   // 토큰이 없거나 만료되었으면 새로 요청
-    //   this.cachedToken = await this.getWebSocketToken();
-    //   if (this.cachedToken) {
-    //     // 토큰 만료 시간 설정 (5분 - 30초 여유)
-    //     this.tokenExpiry = Date.now() + (5 * 60 - 30) * 1000;
-    //   }
-    this.cachedToken = await this.getWebSocketToken();
-    if (!this.cachedToken) {
-        // alert('Session expired. Please login again.');
-        // window.location.href = '/login';
-        return null;
-      }
-    const token = this.cachedToken;
-    
-    // // 개발 환경에서는 직접 백엔드로 연결
-    // if (import.meta.env.DEV) {
-    //   if (token) {
-    //     return `ws://localhost:3000/api/realtime/ws?token=${encodeURIComponent(token)}`;
-    //   }
-    //   return 'ws://localhost:3000/api/realtime/ws';
-    // }
-    
-    // 프로덕션에서는 상대 경로 사용
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    
-    console.log('🔍 WebSocket URL generation');
-    
-    return `${protocol}//${host}/api/realtime/ws?token=${encodeURIComponent(token)}`;
-  }
 
   private async getWebSocketToken(): Promise<string | null> {
     try {
@@ -82,11 +41,11 @@ export class WebSocketService {
       });
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5초 타임아웃
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
       
       const response = await fetch(tokenUrl, {
         method: 'GET',
-        credentials: 'include', // 쿠키 포함
+        credentials: 'include',
         signal: controller.signal
       });
       
@@ -94,18 +53,21 @@ export class WebSocketService {
       
       if (!response.ok) {
         console.error('❌ Failed to get WebSocket token:', response.status, response.statusText);
+        
+        if (response.status === 401) {
+          console.log('🔐 WebSocket token request failed with 401, but auto-logout disabled for debugging');
+        }
+        
         return null;
       }
       
       const data = await response.json();
-      // data.expiresIn = 7;
       console.log('✅ WebSocket token received:', {
-        token: data.wsToken ? data.wsToken.substring(0, 20) + '...' : 'null',
-        expiresIn: data.expiresIn,
+        token: data.accessToken ? data.accessToken.substring(0, 20) + '...' : 'null',
         timestamp: new Date().toISOString()
       });
       
-      return data.wsToken;
+      return data.accessToken;
     } catch (error) {
       console.error('❌ Error getting WebSocket token:', error);
       return null;
@@ -115,25 +77,38 @@ export class WebSocketService {
   async connect(handlers: WebSocketEventHandlers = {}): Promise<void> {
     console.log('🔄 Starting WebSocket connection...');
     this.eventHandlers = { ...this.eventHandlers, ...handlers };
-    
+  
     try {
-      const wsUrl = await this.getWebSocketUrl();
-      console.log('❌ wsUrl:', wsUrl);
-      if (!wsUrl) {
-        console.log('❌ wsUrl is null, aborting connect');
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        console.log('🛑 WebSocket already connected, skipping connect');
         return;
       }
-      console.log('🔗 Connecting to WebSocket:', wsUrl);
-      
-      if (!this.ws || this.ws.readyState === WebSocket.CLOSED || this.ws.readyState === WebSocket.CLOSING) {
-        this.ws = new WebSocket(wsUrl);
-      } else {
-        console.log('🔄 WebSocket already connected, skipping connection');
+
+      if (this.ws && this.ws.readyState === WebSocket.CONNECTING) {
+        console.log('🛑 WebSocket is connecting, waiting...');
+        return;
       }
+      
+      const token = await this.getWebSocketToken();
+      if (!token) {
+        console.log('❌ No WebSocket token available, aborting connect');
+        this.connectionStatus = 'disconnected';
+        return;
+      }
+
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//localhost:3000/api/realtime/ws?token=${token}`;
+      
+      console.log('🔗 Connecting to WebSocket:', wsUrl);
+      console.log('🍪 Cookies will be automatically sent with WebSocket connection');
+      
+      this.ws = new WebSocket(wsUrl);
       this.connectionStatus = 'connecting';
+      console.log('🔍 WebSocket created, initial readyState:', this.ws.readyState);
       
       this.ws.onopen = () => {
         console.log('✅ WebSocket connected successfully');
+        console.log('🔍 WebSocket readyState after onopen:', this.ws?.readyState);
         this.connectionStatus = 'connected';
         this.reconnectAttempts = 0;
         this.eventHandlers.onOpen?.();
@@ -142,31 +117,22 @@ export class WebSocketService {
       
       this.ws.onclose = (event) => {
         console.log('🛑 WebSocket connection closed:', event.code, event.reason);
-        // this.connectionStatus = 'disconnected';
-        this.stopPingInterval();
+        console.log('🔍 WebSocket readyState on close:', this.ws?.readyState);
+        this.disconnect();
         this.eventHandlers.onClose?.();
-        if (event.code === 4001) {
-          alert("Session expired. Please login again.");
-          fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
-          .then(() => {
-            window.location.href = "/login";
-          })
-          .catch(() => {
-              window.location.href = "/login";
-          });
-          return;
-        }
-        // try to reconnect
+        
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
           console.log(`🔄 Attempting to reconnect (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})...`);
           setTimeout(() => this.attemptReconnect(), this.reconnectDelay);
         } else {
-          console.log('❌ Max reconnection attempts reached');
+          console.log('❌ Max reconnection attempts reached, but auto-logout disabled for debugging');
+          this.handleAuthFailure();
         }
       };
       
       this.ws.onerror = (error) => {
         console.error('❌ WebSocket error:', error);
+        console.log('🔍 WebSocket readyState on error:', this.ws?.readyState);
         this.connectionStatus = 'error';
         this.eventHandlers.onError?.(error);
       };
@@ -198,8 +164,12 @@ export class WebSocketService {
     this.connectionStatus = 'disconnected';
   }
 
-  getConnectionStatus(): string {
+  getConnectionStatus(): ConnectionStatus {
     return this.connectionStatus;
+  }
+
+  isConnected(): boolean {
+    return this.ws?.readyState === WebSocket.OPEN;
   }
 
   send(message: AnyMessage): void {
@@ -227,24 +197,68 @@ export class WebSocketService {
       }
     };
     
+    console.log(`📤 Sending chat message: ${content} to room ${roomId} (ID: ${message.id})`);
     this.send(message);
   }
 
-  requestRoomSync(roomId: string): void {
-    const message: SyncMessage = {
+  markMessageAsRead(roomId: string, messageTimestamp: number): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.error(`❌ WebSocket not open, cannot send mark read request`);
+      return;
+    }
+    
+    const message = {
       id: generateId(),
       timestamp: Date.now(),
       version: '1.0',
-      type: 'sync',
+      type: 'mark_read' as const,
       payload: {
         roomId,
-        users: [],
-        messages: [],
-        syncType: 'rooms'
+        lastReadTimestamp: messageTimestamp
       }
     };
     
+    console.log(`📖 Marking message as read in room ${roomId} up to timestamp: ${messageTimestamp}`);
     this.send(message);
+  }
+
+  requestRoomSync(roomId: string): void {    
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.error(`❌ WebSocket not open, cannot send room sync request for room: ${roomId}`);
+      return;
+    }
+    
+    const message = {
+      id: generateId(),
+      timestamp: Date.now(),
+      version: '1.0',
+      type: 'room_state' as const,
+      payload: {
+        room: { 
+          id: roomId,
+          name: '',
+          masterId: '',
+          description: '',
+          isPrivate: false,
+          maxUsers: 50,
+          memberCount: 0,
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        },
+        previousMessages: [],
+        unreadMessages: [],
+        members: [],
+        readState: {
+          lastReadTimestamp: 0,
+          unreadCount: 0,
+          totalMessages: 0
+        }
+      }
+    };
+    
+    console.log(`📤 Sending room sync message:`, message);
+    this.send(message);
+    console.log(`✅ Room sync message sent for room: ${roomId}`);
   }
 
   sendPing(): void {
@@ -259,15 +273,15 @@ export class WebSocketService {
   }
 
   sendPong(): void {
-  const message: PongMessage = {
-    id: generateId(),
-    timestamp: Date.now(),
-    version: '1.0',
-    type: 'pong',
-    payload: {}
-  };
-  this.send(message);
-}
+    const message: PongMessage = {
+      id: generateId(),
+      timestamp: Date.now(),
+      version: '1.0',
+      type: 'pong',
+      payload: {}
+    };
+    this.send(message);
+  }
 
   private handleMessage(message: AnyMessage): void {
     console.log(`📨 Received ${message.type} message`);
@@ -276,14 +290,11 @@ export class WebSocketService {
       case 'chat':
         this.eventHandlers.onChatMessage?.(message as ChatMessage);
         break;
-      case 'sync':
-        this.eventHandlers.onSync?.(message as SyncMessage);
-        break;
-      case 'room_state':
-        this.eventHandlers.onRoomState?.(message as RoomStateMessage);
-        break;
       case 'room_joined':
         this.eventHandlers.onRoomJoined?.(message as RoomJoinedMessage);
+        break;
+      case 'leave_room':
+        this.eventHandlers.onLeaveRoom?.(message as LeaveRoomMessage);
         break;
       case 'unread_count':
         this.eventHandlers.onUnreadCount?.(message as UnreadCountMessage);
@@ -300,8 +311,8 @@ export class WebSocketService {
       case 'user_status':
         this.eventHandlers.onUserStatus?.(message as UserStatusMessage);
         break;
-      case 'error':
-        this.eventHandlers.onErrorMessage?.(message as ErrorMessage);
+      case 'room_state':
+        this.eventHandlers.onRoomState?.(message as RoomStateMessage);
         break;
       case 'ping':
         this.sendPong();
@@ -318,7 +329,7 @@ export class WebSocketService {
   private startPingInterval(): void {
     this.pingInterval = setInterval(() => {
       this.sendPing();
-    }, 30000); // 30초마다 ping
+    }, 30000);
   }
 
   private stopPingInterval(): void {
@@ -333,21 +344,52 @@ export class WebSocketService {
     console.log(`🔄 Reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
     
     try {
+      if (this.ws) {
+        this.ws.close();
+        this.ws = null;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
       await this.connect();
     } catch (error) {
       console.error('❌ Reconnection failed:', error);
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         setTimeout(() => this.attemptReconnect(), this.reconnectDelay);
+      } else {
+        console.log('❌ Max reconnection attempts reached');
+        this.connectionStatus = 'error';
       }
     }
   }
 
   addEventHandlers(handlers: Partial<WebSocketEventHandlers>): void {
-    this.eventHandlers = { ...this.eventHandlers, ...handlers };
+    if (Object.keys(handlers).length === 0) {
+      console.log('🧹 Clearing all event handlers');
+      this.eventHandlers = {};
+    } else {
+      console.log('🔗 Adding/updating event handlers');
+      this.eventHandlers = { ...this.eventHandlers, ...handlers };
+    }
   }
 
-  isConnected(): boolean {
-    return this.ws?.readyState === WebSocket.OPEN;
+  private handleAuthFailure(): void {
+    console.log('🔐 Handling authentication failure...');
+    
+    this.addEventHandlers({});
+    this.disconnect();
+  
+    fetch('/api/auth/logout', { 
+      method: 'POST', 
+      credentials: 'include' 
+    })
+    .then(() => {
+      console.log('✅ Logout successful, redirecting to login...');
+      window.location.href = "/login";
+    })
+    .catch((error) => {
+      console.error('❌ Logout failed:', error);
+      window.location.href = "/login";
+    });
   }
 }
 

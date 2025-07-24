@@ -1,5 +1,5 @@
 import { FastifyPluginAsync } from "fastify";
-import { CreateUserDto, CreateUserDtoSchema, getUserResponseDto, UserResponseTwoFactorAuthDto } from "../user/user.dto";
+import { CreateUserDto, CreateUserDtoSchema, getUserResponseDto, UserResponseTwoFactorAuthDto, UserResponseDto} from "../user/user.dto";
 import {
 	GoogleLoginDto,
 	GoogleLoginDtoSchema,
@@ -211,26 +211,26 @@ export const authController: FastifyPluginAsync = async (app) => {
 	});
 
 // WebSocket dedicated api for sending signed token
-	app.get("/ws-token", {
+	app.get('/ws-token', {
 		handler: async (request, reply) => {
-			if (!request.user) {
-				throw new UnauthorizedException("Unauthorized");
+			try {
+				if (!request.user) {
+					throw new UnauthorizedException("Unauthorized user is not allowed");
+				}
+				const user = request.user as UserResponseDto;
+				const wsPayload = {
+					...user,
+					avatarUrl: user.avatarUrl ? Buffer.from(user.avatarUrl).toString('base64') : undefined
+				};
+				
+				const wsToken = app.jwt.sign(wsPayload, { expiresIn: "1h" });
+				return reply.send({ accessToken: wsToken });
+			} catch (error) {
+				console.error('JWT verification failed:', error);
+				return reply.code(401).send({ error: 'Invalid token' });
 			}
-
-			// WebSocket token (5min)
-			const wsToken = app.jwt.sign(request.user, { expiresIn: '5m' });
-			
-			console.log(`🔐 WebSocket token generated for user: ${request.user.name} (${request.user.id})`, {
-				timestamp: new Date().toISOString(),
-				userAgent: request.headers['user-agent']?.substring(0, 50) + '...',
-				ip: request.ip,
-				existingConnections: app.connectionService?.getUserConnections(request.user.id)?.length || 0
-			});
-			
-			return reply.code(200).send({ 
-				wsToken,
-				expiresIn: '5m'
-			});
 		}
 	});
 };
+
+

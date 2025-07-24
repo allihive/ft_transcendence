@@ -9,19 +9,33 @@ interface MessageInputProps {
 export const MessageInput = ({ onSendMessage, disabled = false, placeholder = "Type a message..." }: MessageInputProps) => {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isComposingRef = useRef(false);
+  const isSendingRef = useRef(false);
 
   const handleSend = () => {
-    if (message.trim() && !disabled) {
+    console.log('🔍 MessageInput handleSend called:', { message, trimmed: message.trim(), disabled, isSending: isSendingRef.current });
+    if (message.trim() && !disabled && !isSendingRef.current) {
+      isSendingRef.current = true;
       onSendMessage(message.trim());
       setMessage('');
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
       }
+      // Reset sending flag after a short delay
+      setTimeout(() => {
+        isSendingRef.current = false;
+      }, 100);
     }
   };
 
-  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleButtonClick = () => {
+    // console.log('🔍 MessageInput handleButtonClick called');
+    handleSend();
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    // console.log('🔍 MessageInput handleKeyDown:', { key: e.key, shiftKey: e.shiftKey, message, isComposing: isComposingRef.current });
+    if (e.key === 'Enter' && !e.shiftKey && !isComposingRef.current) {
       e.preventDefault();
       handleSend();
     }
@@ -37,6 +51,16 @@ export const MessageInput = ({ onSendMessage, disabled = false, placeholder = "T
     }
   };
 
+  const handleCompositionStart = () => {
+    // console.log('🔍 Composition start');
+    isComposingRef.current = true;
+  };
+
+  const handleCompositionEnd = () => {
+    // console.log('🔍 Composition end');
+    isComposingRef.current = false;
+  };
+
   return (
     <div className="border-t border-darkOrange dark:border-background bg-lightOrange dark:bg-darkBlue p-4">
       <div className="flex items-end space-x-2">
@@ -45,7 +69,9 @@ export const MessageInput = ({ onSendMessage, disabled = false, placeholder = "T
             ref={textareaRef}
             value={message}
             onChange={handleInputChange}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
             placeholder={placeholder}
             disabled={disabled}
             rows={1}
@@ -55,7 +81,7 @@ export const MessageInput = ({ onSendMessage, disabled = false, placeholder = "T
         </div>
         
         <button
-          onClick={handleSend}
+          onClick={handleButtonClick}
           disabled={!message.trim() || disabled}
           className="px-4 py-2 bg-darkOrange dark:bg-background text-background dark:text-darkOrange rounded-lg hover:bg-darkOrange/90 dark:hover:bg-background/90 focus:outline-none focus:ring-2 focus:ring-darkOrange dark:focus:ring-background focus:ring-offset-2 disabled:bg-darkOrange/30 dark:disabled:bg-background/30 disabled:cursor-not-allowed transition-colors font-body"
         >

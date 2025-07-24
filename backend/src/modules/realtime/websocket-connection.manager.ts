@@ -7,7 +7,6 @@ import { RoomService } from "./room.service";
 import { MessageService } from "./message.service";
 import { EventService } from "./event.service";
 import { SyncService } from "./sync.service";
-import jwt from 'jsonwebtoken';
 
 
 export interface WebSocketConnection {
@@ -16,7 +15,6 @@ export interface WebSocketConnection {
   name: string;
   connectionId: string;
   socket: any; // WebSocket instance
-  token: string;
   entityManager: EntityManager; // Connection-specific EntityManager for each connection
 }
 
@@ -40,7 +38,7 @@ export class WebSocketConnectionManager {
       return null;
     }
 
-    const socketId = connection.socket.id || `socket_${Date.now()}`;
+    const socketId = `socket_${Date.now()}_${randomUUID()}`;
 
     // Get user info from JWT token
     const user = request.user as any;
@@ -52,6 +50,7 @@ export class WebSocketConnectionManager {
 
     const { id: userId, name, email } = user;
     const connectionId = randomUUID();
+  
 
     const wsConnection: WebSocketConnection = {
       socketId,
@@ -59,9 +58,14 @@ export class WebSocketConnectionManager {
       name,
       connectionId,
       socket: connection.socket,
-      token: request.cookies.accessToken || '',
       entityManager: request.entityManager
     };
+
+    //check if user has existing connections
+    const existingConnections = this.getUserConnections(userId);
+    if (existingConnections.length > 0) {
+      console.log(`🔍 User ${userId} has ${existingConnections.length} existing connections (multi-device support enabled)`);
+    }
 
     // Store connection
     this.connections.set(socketId, wsConnection);
@@ -69,6 +73,8 @@ export class WebSocketConnectionManager {
     // Register with connection service
     this.connectionService.createConnection(connectionId, socketId, email, userId, name);
 
+    //log user status update
+    this.eventService.emitUserStatusUpdate({ userId, isOnline: true });
     //log user status update
     this.eventService.emitUserStatusUpdate({ userId, isOnline: true });
     // Initialize connection
@@ -80,11 +86,11 @@ export class WebSocketConnectionManager {
 
   private async initializeConnection(wsConnection: WebSocketConnection) {
     if (wsConnection.entityManager) {
-      // 🔄 사용자 재연결 시 버퍼된 메시지 플러시 (세션 복원 전에 실행)
+      // flush buffered messages when user reconnects (before session restoration)
       await this.flushBufferedMessages(wsConnection.userId);
       await this.restoreUserSession(wsConnection);
     } else {
-      await this.recreateEntityManager(wsConnection);
+      await this.waitForEntityManager(wsConnection);
     }
 
     this.setupPingInterval(wsConnection);
@@ -92,7 +98,7 @@ export class WebSocketConnectionManager {
 
   private async restoreUserSession(wsConnection: WebSocketConnection) {
     try {
-      // 🎯 SyncService로 세션 복원 위임
+      // delegate session restoration to SyncService
       await this.syncService.restoreUserSession(
         wsConnection.entityManager!,
         wsConnection.userId,
@@ -103,48 +109,41 @@ export class WebSocketConnectionManager {
     }
   }
 
-  // EntityManager 재생성 시도
-  private async recreateEntityManager(wsConnection: WebSocketConnection) {
-    console.error('EntityManager is not available, attempting to recreate...');
+  // wait for EntityManager to become available
+  private async waitForEntityManager(wsConnection: WebSocketConnection) {
+    console.error('EntityManager is not available, waiting for it to become available...');
 
     let retryCount = 0;
     const maxRetries = 10;
     const retryInterval = 1000;
 
-    const attemptRecreation = async () => {
-      // EntityManager는 request에서 이미 fork된 상태이므로 재생성 불필요
+    const attemptCheck = async () => {
+      // EntityManager is already forked in request, no need to recreate
       if (wsConnection.entityManager) {
-        await this.restoreUserSession(wsConnection); // 재생성 후에도 세션 복원
-        console.log(`EntityManager already available, session restored`);
+        await this.restoreUserSession(wsConnection); // restore session after EntityManager becomes available
+        console.log(`EntityManager now available, session restored`);
       } else {
         retryCount++;
         if (retryCount < maxRetries) {
-          console.log(`EntityManager recreation attempt ${retryCount}/${maxRetries}, retrying in ${retryInterval}ms...`);
-          setTimeout(attemptRecreation, retryInterval);
+          console.log(`EntityManager availability check attempt ${retryCount}/${maxRetries}, retrying in ${retryInterval}ms...`);
+          setTimeout(attemptCheck, retryInterval);
         } else {
-          console.error(`Failed to recreate EntityManager after ${maxRetries} attempts, closing connection`);
+          console.error(`EntityManager not available after ${maxRetries} attempts, closing connection`);
           this.handleConnectionClose(wsConnection.socketId);
         }
       }
     };
 
-    attemptRecreation();
+    attemptCheck();
   }
-  // Ping interval 설정
+  // setup ping interval
   private setupPingInterval(wsConnection: WebSocketConnection) {
     const pingInterval = setInterval(() => {
       if (wsConnection.socket.readyState === WebSocket.OPEN) {
-        try {
-          // JWT 유효성 검사 (만료 포함)
-            jwt.verify(wsConnection.token, process.env.JWT_SECRET!);
-          } catch (e) {
-          wsConnection.socket.close(4001, "Token expired");
-          this.handleConnectionClose(wsConnection.socketId);
-        return;
-    }
+        // simply send ping and check connection status
         this.sendPingAndTrack(wsConnection);
       } else {
-        // Socket이 이미 닫혔으면 정리
+        // if socket is already closed, clean up
         this.handleConnectionClose(wsConnection.socketId);
       }
     }, 30000); // 30 seconds
@@ -152,21 +151,21 @@ export class WebSocketConnectionManager {
     this.pingIntervals.set(wsConnection.socketId, pingInterval);
   }
 
-  // Ping 전송 및 추적
+  // send ping and track connection status
   private sendPingAndTrack(wsConnection: WebSocketConnection) {
     const socketId = wsConnection.socketId;
     const pendingPing = this.pendingPings.get(socketId);
     
-    // 이전 ping에 대한 pong이 아직 오지 않았다면
+    // if previous ping has not received pong yet
     if (pendingPing) {
-      const timeSinceLastPing = Date.now() - pendingPing.timestamp;
+      const timeSinceLastPing = new Date().getTime() - pendingPing.timestamp;
       
-      // 60초 이상 pong이 오지 않았다면 missed ping으로 처리
+      // if 60 seconds have passed since last ping, consider it missed
       if (timeSinceLastPing > 60000) {
         pendingPing.missedPongs++;
         console.warn(`Missed pong from ${wsConnection.userId} (${pendingPing.missedPongs}/3)`);
         
-        // 3번 연속 pong이 오지 않으면 연결 종료
+        // if 3 consecutive pongs are not received, close connection
         if (pendingPing.missedPongs >= 3) {
           console.error(`Connection ${socketId} unresponsive after 3 missed pongs, closing connection`);
           this.handleConnectionClose(socketId);
@@ -175,37 +174,38 @@ export class WebSocketConnectionManager {
       }
     }
 
-    // 새로운 ping 전송
+    // send new ping
     const pingMessage = this.messageService.createPingMessage();
     this.sendMessage(wsConnection, pingMessage);
     
-    // ping 추적 시작/업데이트
+    // start/update ping tracking
     this.pendingPings.set(socketId, {
-      timestamp: Date.now(),
+      timestamp: new Date().getTime(),
       missedPongs: pendingPing?.missedPongs || 0
     });
     
     // console.log(`Ping sent to ${wsConnection.userId}`);
   }
 
-  // Pong 응답 처리 (WebSocketMessageHandler에서 호출됨)
+  // handle pong response (called by WebSocketMessageHandler)
   handlePongReceived(socketId: string) {
     const pendingPing = this.pendingPings.get(socketId);
     if (pendingPing) {
-      const latency = Date.now() - pendingPing.timestamp;
+      const latency = new Date().getTime() - pendingPing.timestamp;
       // console.log(`Pong received from ${socketId}, latency: ${latency}ms`);
       
-      // pong 받았으므로 pending ping 제거
+      // if pong is received, remove pending ping
       this.pendingPings.delete(socketId);
     }
   }
 
-  // 연결 종료 처리
+  // handle connection close
   async handleConnectionClose(socketId: string) {
     const wsConnection = this.connections.get(socketId);
     if (!wsConnection) return;
 
     console.log(`WebSocket connection closed: ${socketId} for user: ${wsConnection.userId}`);
+    await this.eventService.emitUserStatusUpdate({ userId: wsConnection.userId, isOnline: false });
     await this.eventService.emitUserStatusUpdate({ userId: wsConnection.userId, isOnline: false });
     // Clear ping interval
     const pingInterval = this.pingIntervals.get(socketId);
@@ -217,11 +217,8 @@ export class WebSocketConnectionManager {
     // Clear pending ping tracking
     this.pendingPings.delete(socketId);
 
-    // 🎯 연결 종료 시 세션 상태만 저장 (룸에서 제거하지 않음)
+    // save session state only (do not remove from room)
     const userRooms = this.roomService.getUserRoomsFromMemory(wsConnection.userId);
-
-    // Save session state before cleanup
-    await this.saveSessionState(wsConnection, userRooms);
 
     // Remove from connection service
     this.connectionService.removeConnection(wsConnection.connectionId);
@@ -239,35 +236,8 @@ export class WebSocketConnectionManager {
     }
   }
 
-  // 세션 상태 저장 (연결 종료 시)
-  private async saveSessionState(wsConnection: WebSocketConnection, userRooms: string[]) {
-    if (!wsConnection.entityManager) return;
 
-    try {
-      const currentTime = Date.now();
-      
-      // 각 룸별로 읽기 상태 업데이트
-      for (const roomId of userRooms) {
-        try {
-          await this.syncService.markMessagesAsRead(
-            wsConnection.entityManager,
-            wsConnection.userId,
-            roomId,
-            currentTime
-          );
-          console.log(`Saved read state for user ${wsConnection.userId} in room ${roomId}`);
-        } catch (error) {
-          console.error(`Error saving read state for room ${roomId}:`, error);
-        }
-      }
 
-      console.log(`Session state saved for user ${wsConnection.userId}`);
-    } catch (error) {
-      console.error('Error saving session state:', error);
-    }
-  }
-
-  
 
   sendMessage(wsConnection: WebSocketConnection, message: any) {
     try {
@@ -293,7 +263,7 @@ export class WebSocketConnectionManager {
     const buffer = this.messageBuffer.get(userId)!;
     buffer.push(message);
     
-    // 버퍼 크기 제한 (최대 1000개)
+    // limit buffer size (maximum 1000 messages)
     if (buffer.length > 1000) {
       buffer.shift();
     }
@@ -331,22 +301,18 @@ export class WebSocketConnectionManager {
   }
 
   // Getters
-  // 🔍 연결 조회 메서드
+  // get connection
   getConnection(socketId: string): WebSocketConnection | undefined {
     return this.connections.get(socketId);
   }
 
-  // 📋 모든 연결 조회
+  // get all connections
   getAllConnections(): WebSocketConnection[] {
     return Array.from(this.connections.values());
   }
 
-  // 👤 특정 사용자의 모든 연결 조회
+  // get all connections for a user
   getUserConnections(userId: string): WebSocketConnection[] {
     return Array.from(this.connections.values()).filter(conn => conn.userId === userId);
-  }
-
-  getConnections(): Map<string, WebSocketConnection> {
-    return this.connections;
   }
 } 

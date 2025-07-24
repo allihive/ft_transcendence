@@ -23,33 +23,12 @@ export interface ChatMessage extends BaseMessage {
   payload: ChatMessagePayload;
 }
 
-// Sync user info (백엔드 SyncUserInfo와 동일)
-export interface SyncUserInfo {
-  userId: string;
-  name: string;
-  status: 'online' | 'offline' | 'away' | 'busy';
-}
-
-// Sync message payload (백엔드 SyncPayload와 동일)
-export interface SyncPayload {
-  roomId: string;
-  users: SyncUserInfo[];
-  messages: ChatMessagePayload[];
-  lastReadTimestamp?: number;
-  syncType?: 'friends' | 'rooms' | 'full';
-}
-
-// Sync message (백엔드 SyncMessage와 동일)
-export interface SyncMessage extends BaseMessage {
-  type: 'sync';
-  payload: SyncPayload;
-}
 
 // Room member (백엔드 RoomMemberDto와 동일)
 export interface RoomMember {
   userId: string;
   name: string;
-  joinedAt: string;
+  joinedAt: number;
   isOnline: boolean;
 }
 
@@ -75,7 +54,7 @@ export interface RoomStatePayload {
     userId: string;
     userName: string;
     messageType: string;
-    timestamp: string;
+    timestamp: number;
     isRead: boolean;
   }>;
   unreadMessages: Array<{
@@ -84,12 +63,12 @@ export interface RoomStatePayload {
     userId: string;
     userName: string;
     messageType: string;
-    timestamp: string;
+    timestamp: number;
     isRead: boolean;
   }>;
   members: RoomMember[];
   readState: {
-    lastReadTimestamp: string;
+    lastReadTimestamp: number;
     unreadCount: number;
     totalMessages: number;
   };
@@ -225,6 +204,19 @@ export interface RoomJoinedMessage extends BaseMessage {
   payload: RoomJoinedPayload;
 }
 
+// Leave room payload (백엔드 LeaveRoomPayload와 동일)
+export interface LeaveRoomPayload {
+  roomId: string;
+  userId: string;
+  name: string;
+}
+
+// Leave room message (백엔드 LeaveRoomMessage와 동일)
+export interface LeaveRoomMessage extends BaseMessage {
+  type: 'leave_room';
+  payload: LeaveRoomPayload;
+}
+
 // User status (online/offline) message
 export interface UserStatusPayload {
   userId: string;
@@ -235,8 +227,31 @@ export interface UserStatusMessage extends BaseMessage {
   payload: UserStatusPayload;
 }
 
+// Mark read payload
+export interface MarkReadPayload {
+  roomId: string;
+  lastReadTimestamp: number;
+}
+
+// Mark read message
+export interface MarkReadMessage extends BaseMessage {
+  type: 'mark_read';
+  payload: MarkReadPayload;
+}
+
 // Connection status
 export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'error';
+
+// Room invitation message
+export interface RoomInvitationMessage extends BaseMessage {
+  type: 'room_invitation';
+  payload: {
+    roomId: string;
+    roomName: string;
+    inviterName: string;
+    message: string;
+  };
+}
 
 // WebSocket event handlers
 export interface WebSocketEventHandlers {
@@ -244,25 +259,25 @@ export interface WebSocketEventHandlers {
   onClose?: () => void;
   onError?: (error: any) => void;
   onChatMessage?: (message: ChatMessage) => void;
-  onSync?: (message: SyncMessage) => void;
-  onRoomState?: (message: RoomStateMessage) => void;
   onRoomJoined?: (message: RoomJoinedMessage) => void;
+  onRoomInvitation?: (message: RoomInvitationMessage) => void;
+  onLeaveRoom?: (message: LeaveRoomMessage) => void;
   onReconnect?: () => void;
   onUnreadCount?: (message: UnreadCountMessage) => void;
-  onRoomInvitation?: (message: any) => void;
   onFriendRequest?: (message: FriendRequestMessage) => void;
   onFriendRequestResponse?: (message: FriendRequestResponseMessage) => void;
   onFriendList?: (message: FriendListResponseMessage) => void;
   onErrorMessage?: (message: ErrorMessage) => void;
   onUserStatus?: (message: UserStatusMessage) => void;
+  onRoomState?: (message: RoomStateMessage) => void;
 }
 
 // Union type for all messages
 export type AnyMessage = 
   | ChatMessage
-  | SyncMessage
   | RoomStateMessage
   | RoomJoinedMessage
+  | LeaveRoomMessage
   | UnreadCountMessage
   | FriendRequestMessage
   | FriendRequestResponseMessage
@@ -270,4 +285,5 @@ export type AnyMessage =
   | ErrorMessage
   | PingMessage
   | PongMessage
-  | UserStatusMessage; 
+  | UserStatusMessage
+  | MarkReadMessage; 

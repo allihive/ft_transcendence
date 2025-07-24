@@ -1,4 +1,3 @@
-import fp from "fastify-plugin";
 import { FastifyPluginAsync } from "fastify";
 import { Type } from '@sinclair/typebox';
 
@@ -7,7 +6,9 @@ import {
   roomCreatedPayloadSchema,
   roomCreationRequestSchema,
   roomMemberDtoSchema,
-  roomInvitationRequestSchema
+  roomInvitationRequestSchema,
+  LeaveRoomMessage,
+  RoomJoinedMessage
 } from './dto/room.schema';
 import { chatMessageSchema } from './dto/chat.schema';
 
@@ -19,11 +20,13 @@ import { ForbiddenException } from "../../common/exceptions/ForbiddenException";
 import { BadRequestException } from "../../common/exceptions/BadRequestException";
 import { InternalServerErrorException } from "../../common/exceptions/InternalServerErrorException";
 import { SyncService } from './sync.service';
+import { EventService } from './event.service';
 
 // Type declaration for decorated properties (decoration is only for runtime check)
 declare module 'fastify' {
   interface FastifyInstance {
     syncService: SyncService;
+    eventService: EventService;
   }
 }
 export const roomController: FastifyPluginAsync = async (fastify, opts) => {
@@ -168,7 +171,7 @@ export const roomController: FastifyPluginAsync = async (fastify, opts) => {
     });
   });
 
-  fastify.get("/rooms/:userId/roomlist", {
+fastify.get("/rooms/:userId/roomlist", {
     schema: {
       params: Type.Object({
         userId: Type.String()
@@ -277,6 +280,8 @@ export const roomController: FastifyPluginAsync = async (fastify, opts) => {
     const userId = (request.user as any)?.id;
     const userName = (request.user as any)?.name;
 
+    console.log('🔍 Invite request:', { roomId, inviteeNames, userId, userName });
+
     if (!userId) {
       throw new UnauthorizedException("Authentication required");
     }
@@ -291,13 +296,17 @@ export const roomController: FastifyPluginAsync = async (fastify, opts) => {
         userName
       );
 
-      // 🎯 결과에 따른 응답 전략
-      if (results.success.length === 0 && results.failed.length > 0) {
-        // 모든 초대 실패 → 400 Bad Request
-        throw new BadRequestException(
-          `Failed to invite any users: ${results.failed.map(f => `${f.name} (${f.reason})`).join(', ')}`
-        );
-      }
+       const room = await fastify.roomService.getRoom(request.entityManager, roomId);
+       if (room) {
+         for (const invitedUserName of results.success) {
+           fastify.eventService.emitRoomJoined({
+             roomId,
+             roomName: room.name,
+             inviterName: userName,
+             inviteeName: invitedUserName
+           });
+         }
+       }
 
       // 부분적 성공 또는 전체 성공 → 200 OK
       return reply.send({
@@ -311,9 +320,13 @@ export const roomController: FastifyPluginAsync = async (fastify, opts) => {
       if (error.statusCode) {
         throw error;
       }
-      //예상치 못한 에러만 일반적 에러로 처리
       console.error('Unexpected error in room invitation:', error);
-      throw new BadRequestException('Failed to invite users to room');
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack?.split('\n')[0]
+      });
+      throw new BadRequestException(`Failed to invite users to room: ${error.message}`);
     }
   });
 
@@ -348,6 +361,12 @@ export const roomController: FastifyPluginAsync = async (fastify, opts) => {
         roomId
       );
 
+      fastify.eventService.emitLeaveRoom({
+        roomId,
+        userId,
+        name: userName}
+      );
+
       return reply.send({
         success: true,
         message: `${userName} successfully left the room`
@@ -357,7 +376,6 @@ export const roomController: FastifyPluginAsync = async (fastify, opts) => {
       if (error.statusCode) {
         throw error;
       }
-      
       // 예상치 못한 에러만 일반적 에러로 처리
       console.error('Unexpected error in leave room:', error);
       throw new NotFoundException(`Failed to leave room: ${error.message}`);
@@ -392,7 +410,7 @@ export const roomController: FastifyPluginAsync = async (fastify, opts) => {
     const members = roomMembers.map(member => ({
       userId: member.userId,
       name: member.name,
-      joinedAt: member.joinedAt?.toISOString(),
+      joinedAt: member.joinedAt?.getTime() || Date.now(),
       isOnline: fastify.connectionService.isUserOnline(member.userId) // 🎯 동적 계산
     }));
 

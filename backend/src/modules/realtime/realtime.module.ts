@@ -1,5 +1,4 @@
-import fp from "fastify-plugin";
-import { FastifyPluginAsync } from "fastify";
+ import { FastifyPluginAsync } from "fastify";
 import { RoomService } from "./room.service";
 import { ConnectionService } from "./connection.service";
 import { MessageService } from "./message.service";
@@ -45,11 +44,10 @@ export const realtimeModule: FastifyPluginAsync = async (fastify, options) => {
     connectionService,
     messageService,
     friendshipService,
-    fastify.userService,
     fastify.orm
   );
   
-  const websocketService = new WebSocketService(roomService, connectionService, messageService, friendshipService, fastify.userService, eventService, eventListenerService, syncService, fastify.orm);
+  const websocketService = new WebSocketService(roomService, connectionService, messageService, eventService, syncService, eventListenerService);
 
   fastify.decorate('roomService', roomService);
   fastify.decorate('connectionService', connectionService);

@@ -3,14 +3,12 @@ import { FastifyPluginOptions } from "fastify";
 import { RoomService } from "./room.service";
 import { ConnectionService } from "./connection.service";
 import { MessageService } from "./message.service";
-import { FriendshipService } from "./friendship.service";
-import { UserService } from "../user/user.service";
 import { EventService } from "./event.service";
+import { SyncService } from "./sync.service";
 import { EventListenerService } from "./event-listener.service";
 import { WebSocketConnectionManager, WebSocketConnection } from './websocket-connection.manager';
 import { WebSocketMessageHandler } from './websocket-message.handler';
 import { WebSocketErrorHandler } from './websocket-error-handler';
-import { SyncService } from './sync.service';
 import { AnyMessage } from "./dto";
 
 export class WebSocketService {
@@ -21,25 +19,24 @@ export class WebSocketService {
     private roomService: RoomService,
     private connectionService: ConnectionService,
     private messageService: MessageService,
-    private friendshipService: FriendshipService,
-    private userService: UserService,
     private eventService: EventService,
-    private eventListenerService: EventListenerService,
     private syncService: SyncService,
-    private orm: any // MikroORM instance
+    private eventListenerService: EventListenerService
   ) {
     this.connectionManager = new WebSocketConnectionManager(
-      connectionService,
-      roomService,
-      messageService,
-      eventService,
-      syncService
+      this.connectionService,
+      this.roomService,
+      this.messageService,
+      this.eventService,
+      this.syncService
     );
 
     this.messageHandler = new WebSocketMessageHandler(
-      messageService,
-      syncService,
-      roomService,
+      this.messageService,
+      this.syncService,
+      this.roomService,
+      this.eventService,
+      this.connectionService,
       this.connectionManager
     );
     
@@ -63,24 +60,20 @@ export class WebSocketService {
 
     fastify.get('/ws', { websocket: true } as any, (connection: any, req: any) => {
       console.log('🔌 WebSocket connection received from Fastify');
-      console.log('🔌 Connection object:', connection);
-      // console.log('🔌 Connection keys:', Object.keys(connection));
-      // console.log('🔌 Request object:', req);
-      
-      // WebSocket 객체 찾기
+
       let socket: any = null;
       
-      // 1. connection.socket이 있는 경우
+      // 1. connection.socket exists
       if (connection.socket && connection.socket.readyState !== undefined) {
         socket = connection.socket;
         console.log('✅ Found socket in connection.socket');
       }
-      // 2. connection 객체 자체가 socket인 경우
+      // 2. connection object itself is the socket
       else if (connection.readyState !== undefined) {
         socket = connection;
         console.log('✅ Connection object itself is the socket');
       }
-      // 3. 다른 구조일 수 있음
+      // 3. other structure
       else {
         console.error('❌ No valid WebSocket found in connection object');
         console.log('🔍 Connection type:', typeof connection);
@@ -95,7 +88,7 @@ export class WebSocketService {
   // Handle new WebSocket connection
   private async handleWebSocketConnection(connection: any, request: any) {
     try {
-      // 사용자 인증
+
       const authResult = this.verifyUser(request);
       
       if (!authResult.success) {
@@ -111,7 +104,6 @@ export class WebSocketService {
       
       console.log('✅ WebSocket authentication successful for user:', user.name);
       
-      // 연결 생성을 ConnectionManager에 위임
       const wsConnection = await this.connectionManager.createConnection(connection, request);
       
       if (!wsConnection) {
@@ -121,12 +113,12 @@ export class WebSocketService {
 
       console.log('✅ WebSocket connection created successfully:', wsConnection.socketId);
 
-      // 메시지 수신 처리
+      //message handling
       connection.socket.on('message', async (data: Buffer) => {
         await this.handleMessage(wsConnection, data);
       });
 
-      // 연결 종료 처리
+      // connection close handling
       connection.socket.on('close', async () => {
         await this.connectionManager.handleConnectionClose(wsConnection.socketId);
       });
@@ -164,111 +156,18 @@ export class WebSocketService {
     let accessToken = '';
     let urlToken = '';
     
-    // 1. URL 쿼리 파라미터에서 토큰 확인
+    // 1. check token in url query parameter
     if (request.url) {
       const url = new URL(request.url, 'http://localhost');
       urlToken = url.searchParams.get('token') || '';
       if (urlToken) {
         console.log('🔍 Found token in URL query parameter');
+        // use original token (no url decoding)
         accessToken = urlToken;
+        console.log('🔍 Using original token from URL');
       }
     }
-    
-    // 2. 쿠키에서 토큰 확인 (URL에 없으면)
-    if (!accessToken) {
-      const cookieHeader = request.headers?.cookie;
-      if (!cookieHeader) {
-        console.error('❌ No cookies found in WebSocket request');
-        return {
-          success: false,
-          error: 'No cookies found'
-        };
-      }
-    
-      console.log('🔍 Full cookie header:', cookieHeader);
-      
-      // 서명된 쿠키를 올바르게 처리
-      try {
-        const allCookies = cookieHeader.split(';');
-        console.log('🔍 All cookies:', allCookies);
-        
-        // accessToken 쿠키 찾기
-        let accessTokenCookie = null;
-        for (const cookie of allCookies) {
-          const trimmed = cookie.trim();
-          if (trimmed.startsWith('accessToken=')) {
-            accessTokenCookie = trimmed;
-            break;
-          }
-        }
-        
-        if (!accessTokenCookie) {
-          console.error('❌ No accessToken cookie found in:', allCookies);
-          return {
-            success: false,
-            error: 'No accessToken cookie found'
-          };
-        }
-        
-        const rawCookieValue = accessTokenCookie.substring('accessToken='.length);
-        // console.log('🔍 Raw cookie value:', rawCookieValue.substring(0, 100) + '...');
-        
-        // 서명된 쿠키를 올바르게 처리
-        let processedCookieValue = rawCookieValue;
-      
-      // 쿠키 값이 따옴표로 감싸져 있을 수 있으므로 제거
-      if (processedCookieValue.startsWith('"') && processedCookieValue.endsWith('"')) {
-        processedCookieValue = processedCookieValue.slice(1, -1);
-        console.log('🔍 Removed quotes from cookie value');
-      }
-      
-            // URL 디코딩 (쿠키에 인코딩된 문자가 있을 수 있음)
-      try {
-        processedCookieValue = decodeURIComponent(processedCookieValue);
-        console.log('🔍 URL decoded cookie value:', processedCookieValue.substring(0, 100) + '...');
-      } catch (decodeError) {
-        console.log('🔍 URL decode failed, using original value');
-      }
-      
-      // // 토큰 형식 검증
-      // console.log('🔍 Token format check:');
-      // console.log('  - Length:', processedCookieValue.length);
-      // console.log('  - Starts with s::', processedCookieValue.startsWith('s:'));
-      // console.log('  - Contains dots:', (processedCookieValue.match(/\./g) || []).length);
-      // console.log('  - First 50 chars:', processedCookieValue.substring(0, 50));
-      // console.log('  - Last 50 chars:', processedCookieValue.substring(processedCookieValue.length - 50));
-      
-      // 서명된 쿠키 처리 (프로덕션과 동일)
-      if (processedCookieValue.startsWith('s:')) {
-        console.log('🔍 Detected signed cookie, using Fastify unsignCookie');
-        
-        const cookieValue = request.server.unsignCookie(rawCookieValue);
-        
-        if (!cookieValue.valid) {
-          console.error('❌ Invalid signed cookie:', cookieValue.reason);
-          return {
-            success: false,
-            error: 'Invalid signed cookie'
-          };
-        }
-        
-        accessToken = cookieValue.value;
-        console.log('🔍 Unsigned cookie value:', accessToken.substring(0, 100) + '...');
-      } else {
-        console.log('🔍 Unsigned cookie detected - using directly');
-        accessToken = processedCookieValue;
-      }
-      
-      } catch (error) {
-        console.error('❌ Error processing cookie:', error);
-        return {
-          success: false,
-          error: 'Error processing cookie'
-        };
-      }
-    }
-    
-    // 토큰이 없으면 실패
+    // fail if no token
     if (!accessToken) {
       return {
         success: false,
@@ -278,13 +177,14 @@ export class WebSocketService {
     
     // console.log('🔍 Final accessToken:', accessToken.substring(0, 100) + '...');
     // console.log('🔍 Token length:', accessToken.length);
+    // console.log('🔍 Final accessToken:', accessToken.substring(0, 100) + '...');
+    // console.log('🔍 Token length:', accessToken.length);
     
-    // JWT 검증
+    // JWT verification
     try {
       const decoded = request.server.jwt.verify(accessToken);
       console.log('🔍 JWT decoded successfully:', decoded);
-      
-      // 사용자 정보 검증
+
       if (!decoded.id || !decoded.name) {
         console.error('❌ Invalid user data in token:', decoded);
         return {
@@ -314,7 +214,7 @@ export class WebSocketService {
     }
   }
   
-  // 메시지 처리
+  //message handling
   private async handleMessage(wsConnection: WebSocketConnection, data: Buffer) {
     let message: any;
     
@@ -331,8 +231,6 @@ export class WebSocketService {
         this.sendMessage(wsConnection, errorMessage);
         return;
       }
-
-      // 🎯 새로운 구조로 메시지 핸들링
       console.log(`🔄 Processing message type: ${message.type} for user: ${wsConnection.userId}`);
       await this.messageHandler.handleMessage(
         wsConnection.entityManager,
@@ -341,7 +239,7 @@ export class WebSocketService {
         wsConnection.name,
         (msg: any) => {
           console.log(`📤 Sending response to ${wsConnection.userId}:`, msg.type);
-          this.sendMessage(wsConnection, msg);
+          this.sendToUser(wsConnection.userId, msg);
         },
         (roomId: string, msg: any) => {
           console.log(`📢 Broadcasting to room ${roomId}:`, msg.type);
@@ -353,7 +251,7 @@ export class WebSocketService {
     } catch (error) {
       console.error('Error handling message:', error);
       
-      // 메시지 처리 에러를 클라이언트에게 전송
+      // send message processing error to client
       const errorMessage = WebSocketErrorHandler.createErrorMessage(
         'MESSAGE_PROCESSING_ERROR',
         'Failed to process message. Please try again.',
@@ -367,23 +265,23 @@ export class WebSocketService {
     }
   }
 
-  // 메시지 전송 (개별 연결)
+  // send message (individual connection)
   private sendMessage(wsConnection: WebSocketConnection, message: AnyMessage) {
     this.connectionManager.sendMessage(wsConnection, message);
   }
 
-  // 사용자 메시지 전송 (온라인 사용자에게 즉시 전송, 오프라인 사용자는 버퍼링)
+  // send message to user (send to online users immediately, buffer for offline users)
   async sendToUser(userId: string, message: AnyMessage): Promise<void> {
     const connections = this.connectionService.getUserConnections(userId);
     
     if (connections.length === 0) {
-      // 사용자 연결이 없으면 버퍼링 (나중에 접속 시 전송)
+      // if user has no connection, buffer the message (send later when user reconnects)
       this.connectionManager.bufferMessage(userId, message);
       console.log(`[${userId}] User offline, message buffered`);
       return;
     }
     
-    // 온라인 사용자에게 즉시 전송
+    // send to online users immediately
     for (const connection of connections) {
       const wsConnection = this.connectionManager.getConnection(connection.socketId);
       if (wsConnection) {
@@ -396,11 +294,13 @@ export class WebSocketService {
   private async broadcastToRoom(roomId: string, message: AnyMessage): Promise<void> {
     console.log(`📢 Broadcasting message to room ${roomId}`);
     
-    //메모리에서 빠르게 룸 멤버들 조회
+    // get room members from memory quickly
     const userIds = this.roomService.getRoomMembersFromMemory(roomId);
     console.log(`👥 Room ${roomId} has ${userIds.length} members`);
     
     for (const userId of userIds) {
+      const connections = this.connectionService.getUserConnections(userId);
+      console.log(`🔍 User ${userId} has ${connections.length} connections:`, connections.map(c => c.socketId));
       await this.sendToUser(userId, message);
     }
   }

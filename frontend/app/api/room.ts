@@ -104,13 +104,17 @@ class RoomAPI {
     if (!response.ok) {
       try {
         const errorData = await response.json();
+        console.error(`❌ Error response:`, errorData);
         throw new Error(errorData.message || `Failed to invite users: ${response.status}`);
       } catch (parseError) {
+        console.error(`❌ Parse error:`, parseError);
         throw new Error(`Failed to invite users: ${response.status}`);
       }
     }
     
-    return response.json();
+    const result = await response.json();
+    console.log(`✅ Invite success:`, result);
+    return result;
   }
 
   // Leave room
@@ -120,21 +124,28 @@ class RoomAPI {
       credentials: 'include'
     });
     
+    // console.log(`📡 Response status: ${response.status}`);
+    // console.log(`📡 Response headers:`, Object.fromEntries(response.headers.entries()));
+    
     if (!response.ok) {
       try {
         const errorData = await response.json();
+        console.error(`❌ Error response:`, errorData);
         throw new Error(errorData.message || `Failed to leave room: ${response.status}`);
       } catch (parseError) {
+        console.error(`❌ Parse error:`, parseError);
         throw new Error(`Failed to leave room: ${response.status}`);
       }
     }
     
-    return response.json();
+    const result = await response.json();
+    console.log(`✅ Leave room success:`, result);
+    return result;
   }
 
   // Get user's room list
   async getUserRooms(userId: string): Promise<{
-    roomList: Room[];
+    roomList: (Room & { unreadCount: number })[];
     onlineMembers: number;
   }> {
     const response = await fetch(`${API_BASE}/api/realtime/rooms/${userId}/roomlist`, {

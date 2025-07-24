@@ -1,8 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { friendshipAPI, type FriendsListResponse } from '../api/friendship';
-import type { Friend, FriendRequest, FriendListResponseMessage, UserStatusMessage, WebSocketEventHandlers } from '../types/realtime.types';
+import type { 
+  Friend, 
+  FriendRequest, 
+  FriendListResponseMessage, 
+  UserStatusMessage, 
+  WebSocketEventHandlers,
+  FriendRequestMessage,
+  FriendRequestResponseMessage,
+  ErrorMessage
+} from '../types/realtime.types';
 import { websocketService } from '../services/websocket.service';
 import toast from 'react-hot-toast';
+
 
 
 interface UseFriendsState {
@@ -94,7 +104,7 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
   //       email: friend.email,
   //       avatarUrl: friend.avatarUrl || '',
   //       isOnline: friend.isOnline,
-  //       lastSeen: friend.connectedAt || Date.now()
+  //       lastSeen: friend.connectedAt || new Date()
   //     }));
   //     setState(prev => ({
   //       ...prev,
@@ -283,7 +293,7 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
   const handleFriendListError = useCallback((errorMessage: any) => {
     console.error('Friend list update error:', errorMessage);
     
-    // 에러 메시지를 사용자에게 표시
+    // show error message to user
     setState(prev => ({
       ...prev,
       error: errorMessage.payload?.message || 'Failed to update friend list'
@@ -302,21 +312,60 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
     loadPendingRequests();
   }, [loadFriends, loadBlockedFriends, loadPendingRequests]);
 
+  // WebSocket event handlers
   useEffect(() => {
-  const handlers: Partial<WebSocketEventHandlers> = {
-    onUserStatus: (message: UserStatusMessage) => {
-        setState(prev => ({
-    ...prev,
-    friends: prev.friends.map(friend =>
-      friend.id === message.payload.userId
-        ? { ...friend, isOnline: message.payload.isOnline }
-        : friend
-    )
-  }));
-    }
-  };
-  websocketService.addEventHandlers(handlers);
-}, []);
+      const handlers: Partial<WebSocketEventHandlers> = {
+        onUserStatus: (message: UserStatusMessage) => {
+          console.log('🟢 useFriends onUserStatus received:', message);
+          
+          // Update friends state with optimization
+          setState(prev => {
+            // Check if update is needed
+            const targetFriend = prev.friends.find(friend => friend.id === message.payload.userId);
+            if (!targetFriend || targetFriend.isOnline === message.payload.isOnline) {
+              console.log('🟢 Skipping duplicate status update for:', message.payload.userId);
+              return prev; // No change needed
+            }
+            
+            const updatedFriends = prev.friends.map(friend =>
+              friend.id === message.payload.userId
+                ? { ...friend, isOnline: message.payload.isOnline }
+                : friend
+            );
+            return { ...prev, friends: updatedFriends };
+          });
+
+          // Dispatch custom event for other components
+          window.dispatchEvent(new CustomEvent('userStatusUpdate', {
+            detail: {
+              userId: message.payload.userId,
+              isOnline: message.payload.isOnline
+            }
+          }));
+        },
+      onFriendRequest: (message: FriendRequestMessage) => {
+        console.log('Friend request received:', message);
+        loadPendingRequests();
+      },
+      onFriendRequestResponse: (message: FriendRequestResponseMessage) => {
+        console.log('Friend request response:', message);
+        loadFriends();
+        loadPendingRequests();
+      },
+      onFriendList: (message: FriendListResponseMessage) => {
+        handleFriendListUpdate(message);
+      },
+      onErrorMessage: (message: ErrorMessage) => {
+        console.log('WebSocket error message:', message);
+        
+        // handle friend list update error
+        if (message.payload?.code === 'FRIEND_LIST_UPDATE_ERROR') {
+          handleFriendListError(message);
+        }
+      }
+    };
+    websocketService.addEventHandlers(handlers);
+  }, []);
 
   return {
     ...state,

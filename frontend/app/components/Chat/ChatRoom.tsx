@@ -14,6 +14,7 @@ interface ChatRoomProps {
   currentUserId: string;
   onSendMessage: (roomId: string, content: string) => void;
   isConnected: boolean;
+  lastReadTimestamp?: number;
 }
 
 export const ChatRoom = ({ 
@@ -23,21 +24,87 @@ export const ChatRoom = ({
   members, 
   currentUserId, 
   onSendMessage,
-  isConnected
+  isConnected,
+  lastReadTimestamp
 }: ChatRoomProps) => {
   const { friends } = useFriends();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const lastReadMessageRef = useRef<HTMLDivElement>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [isInviting, setIsInviting] = useState(false);
 
-  // Auto-scroll to bottom when new messages arrive
+  // 🎯 스크롤 관리: 맨 아래에 있을 때만 새 메시지로 자동 스크롤
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [hasRestoredScroll, setHasRestoredScroll] = useState(false);
+
+  // Auto-scroll to bottom only if user is at bottom
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && isAtBottom) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, isAtBottom]);
+
+  // 🎯 마지막 읽은 메시지를 중앙 상단에 위치시키기
+  useEffect(() => {
+    if (messagesContainerRef.current && lastReadMessageRef.current && !hasRestoredScroll && messages.length > 0) {
+      setTimeout(() => {
+        if (messagesContainerRef.current && lastReadMessageRef.current) {
+          const container = messagesContainerRef.current;
+          const lastReadElement = lastReadMessageRef.current;
+          
+          // 마지막 읽은 메시지를 컨테이너 중앙 상단에 위치
+          const containerHeight = container.clientHeight;
+          const elementTop = lastReadElement.offsetTop;
+          const targetScrollTop = elementTop - (containerHeight * 0.25); // 상단 25% 위치
+          
+          container.scrollTop = Math.max(0, targetScrollTop);
+          setHasRestoredScroll(true);
+          
+          // Check if we're at bottom after positioning
+          const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 50;
+          setIsAtBottom(isNearBottom);
+          
+          console.log(`🎯 Positioned last read message for room ${roomId} at center-top`);
+        }
+      }, 200); // message rendering delay
+    } else if (messagesContainerRef.current && !lastReadTimestamp && !hasRestoredScroll && messages.length > 0) {
+      // lastReadTimestamp not set, position at bottom
+      setTimeout(() => {
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'instant' });
+          setHasRestoredScroll(true);
+          setIsAtBottom(true);
+          console.log(`📜 No lastReadTimestamp for room ${roomId}, positioning at bottom`);
+        }
+      }, 200);
+    }
+
+    return () => {
+      if (messagesContainerRef.current) {
+        const currentScrollTop = messagesContainerRef.current.scrollTop;
+        sessionStorage.setItem(`chatScroll_${roomId}`, currentScrollTop.toString());
+        console.log(`📜 Saved scroll position for room ${roomId}: ${currentScrollTop}`);
+      }
+    };
+  }, [roomId, hasRestoredScroll, messages.length, lastReadTimestamp]);
+
+  // reset scroll state when room changes
+  useEffect(() => {
+    console.log(`🔄 Room changed to ${roomId}, resetting scroll state`);
+    setHasRestoredScroll(false);
+    setIsAtBottom(true);
+  }, [roomId]);
+
+  // scroll event detection
+  const handleScroll = () => {
+    if (messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 50;
+      setIsAtBottom(isNearBottom);
+    }
+  };
 
   const handleSendMessage = (content: string) => {
     console.log('🔍 ChatRoom handleSendMessage called:', {
@@ -61,11 +128,21 @@ export const ChatRoom = ({
       return;
     }
 
+    // Debug authentication state
+    // console.log('🔍 ChatRoom - Authentication check before invite:');
+    // console.log('🔍 Current user:', user);
+    // console.log('🔍 User ID:', user?.id);
+    // console.log('🔍 User name:', user?.name);
+    // console.log('🔍 Is user logged in:', !!user);
+
     setIsInviting(true);
     try {
       const selectedFriendNames = friends
         .filter(friend => selectedFriends.includes(friend.id))
         .map(friend => friend.name);
+
+      console.log('🔍 Inviting friends:', selectedFriendNames);
+      console.log('🔍 Room ID:', roomId);
 
       const response = await roomAPI.inviteUsersToRoom(roomId, selectedFriendNames);
       
@@ -74,13 +151,14 @@ export const ChatRoom = ({
       }
       
       if (response.failed.length > 0) {
-        const failedNames = response.failed.map(f => f.name).join(', ');
-        toast.error(`Failed to invite: ${failedNames}`);
+        const failedMessages = response.failed.map(f => `${f.name} (${f.reason})`).join(', ');
+        toast.error(`Failed to invite: ${failedMessages}`);
       }
-      
+    
       setShowInviteModal(false);
       setSelectedFriends([]);
     } catch (error) {
+      console.error('❌ Invite error:', error);
       toast.error('Failed to invite friends. Please try again.');
     } finally {
       setIsInviting(false);
@@ -110,6 +188,13 @@ export const ChatRoom = ({
   const availableFriends = friends.filter((friend: Friend) => 
     !members.some(member => member.userId === friend.id)
   );
+
+  // Debug filtering
+  // console.log('🔍 ChatRoom - Friends filtering debug:');
+  // console.log('🔍 All friends:', friends.map(f => ({ id: f.id, name: f.name })));
+  // console.log('🔍 Room members:', members.map(m => ({ userId: m.userId, name: m.name })));
+  // console.log('🔍 Available friends:', availableFriends.map(f => ({ id: f.id, name: f.name })));
+  // console.log('🔍 Selected friends:', selectedFriends);
 
   return (
     <div className="flex h-full bg-gradient-to-t from-darkOrange to-background dark:from-darkBlue dark:to-darkOrange">
@@ -148,20 +233,40 @@ export const ChatRoom = ({
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4" ref={messagesContainerRef}>
+        <div className="flex-1 overflow-y-auto p-4" ref={messagesContainerRef} onScroll={handleScroll}>
           {messages.length === 0 ? (
             <div className="text-center text-darkOrange/50 dark:text-background/50 font-body">
               No messages yet. Start the conversation!
             </div>
           ) : (
             <div className="space-y-4">
-              {messages.map((message) => (
-                <ChatMessageComponent
-                  key={message.id}
-                  message={message}
-                  isOwnMessage={message.payload.userId === currentUserId}
-                />
-              ))}
+              {messages
+                .sort((a, b) => a.timestamp - b.timestamp)
+                .slice(-1000) // only keep the most recent 1000 messages
+                .map((message, index, sortedMessages) => {
+                  const prevMessage = index > 0 ? sortedMessages[index - 1] : null;
+                  const showSender = !prevMessage || 
+                    prevMessage.payload.userId !== message.payload.userId ||
+                    message.timestamp - prevMessage.timestamp > 300000; //show sender if 5 minutes passed
+                  
+                  //the closest message to the lastReadTimestamp
+                  const isLastReadMessage = lastReadTimestamp && 
+                    message.timestamp > lastReadTimestamp &&
+                    (!prevMessage || prevMessage.timestamp <= lastReadTimestamp);
+                  
+                  return (
+                    <div 
+                      key={`${message.id}-${index}`}
+                      ref={isLastReadMessage ? lastReadMessageRef : undefined}
+                    >
+                      <ChatMessageComponent
+                        message={message}
+                        isOwnMessage={message.payload.userId === currentUserId}
+                        showSender={showSender}
+                      />
+                    </div>
+                  );
+                })}
             </div>
           )}
           <div ref={messagesEndRef} />
@@ -287,4 +392,4 @@ export const ChatRoom = ({
       )}
     </div>
   );
-}; 
+};
