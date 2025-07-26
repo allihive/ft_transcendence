@@ -10,14 +10,14 @@ return (
 
 	<div className=" flex flex-col flex-1 items-center mt-8 ">
 		<div className="flex space-x-4 mb-8">
-		<NavLink to="/users/friends" 
+		{/* <NavLink to="/users/friends" 
 				className={({ isActive }) =>
 					`px-4 py-2 font-title rounded-lg border 
 						${isActive ? "bg-lightOrange text-black border-black"
 						: "text-black dark:text-background border-black dark:border-background"
 						}` }>
 				{t('friends')}
-			</NavLink>
+			</NavLink> */}
 			<NavLink to="/users/profile" 
 				className={({ isActive }) =>
 					`px-4 py-2 font-title rounded-lg border 

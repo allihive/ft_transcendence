@@ -26,8 +26,9 @@ export default function Login() {
 			
 			if (user) {
 				navigate("/");
+				toast.success(t('loginSuccess'));
 			} else {
-				toast.error("Invalid email or password");
+				toast.error(t('formErrors.invalidLogin'));
 			}
 		} catch (error) {
 			toast.error((error as Error).message);

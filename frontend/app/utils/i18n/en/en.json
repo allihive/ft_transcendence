@@ -1,6 +1,7 @@
 {
 	"googleSignIn": "Sign in with Google",
 	"login": "Login",
+	"loginSuccess": "Login successful",
 	"madeBy": "Made By",
 	"formErrors": {
 		"nameRequired":"Name is required",
@@ -15,7 +16,8 @@
 		"confirmPassword": "Please confirm your password",
 		"mismatchPassword": "The passwords do not match",
 		"currentPassRequired": "Current password is required",
-		"newPassRequired": "New password required"
+		"newPassRequired": "New password required",
+		"invalidLogin": "Invalid email or password"
 	},
 	"name": "Name",
 	"username": "Username",
@@ -38,7 +40,7 @@
 	"players": "Players",
 	"playerMode": "Player Mode",
 	"playerModes": "Player Modes",
-	"playInstructions": "Player 1: use a & q to move Player 2: use p & l to move",
+	"playInstructions": "Player 1: use A & D to move Player 2: use <- & -> to move",
 	"totalGames": "Total Games",
 	"latestMatches": "Latest Matches",
 	"gameHistory": "Game History",

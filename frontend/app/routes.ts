@@ -23,7 +23,7 @@ export default [
 		...prefix("users", [
 			layout("./routes/users/UsersLayout.tsx", [
 				route("profile", "./routes/users/profile.tsx"),
-				route("friends", "./routes/users/UserFriends.tsx"),
+				// route("friends", "./routes/users/UserFriends.tsx"),
 				route("stats", "./routes/users/UserStats.tsx"),
 			]),
 		])

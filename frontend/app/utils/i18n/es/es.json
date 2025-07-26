@@ -1,6 +1,7 @@
 {
 	"googleSignIn": "Iniciar sesión con Google",
 	"login":"Inicie Sesión",
+	"loginSuccess": "Inicio de sesión exitoso",
 	"madeBy": "Hecho por",
 	"formErrors": {
 		"nameRequired": "El nombre es requerido",
@@ -15,7 +16,8 @@
 		"confirmPassword": "Por favor confirmar su contraseña",
 		"mismatchPassword": "Las contraseñas no coinciden",
 		"currentPassRequired": "Se requiere contraseña actual",
-		"newPassRequired": "Se rrequiere nueva contraseña"
+		"newPassRequired": "Se rrequiere nueva contraseña",
+		"invalidLogin": "Correo electrónico o contraseña no válidos"
 	},
 	"name": "Nombre",
 	"username": "Nombre de usuario",
@@ -38,7 +40,7 @@
 	"players":"Jugadores",
 	"playerMode": "Modo de jugar",
 	"playModes": "Modos de jugardoes",
-	"playInstructions": "Jugador/a 1: usa A & Q para moverte Jugador/a 2: usa P & L para moverte",
+	"playInstructions": "Jugador/a 1: usa A & D para moverte Jugador/a 2: usa <- & -> para moverte",
 	"totalGames": "Juegos Totales",
 	"gameHistory": "Historia del Juego",
 	"latestMatches": "Últimos Partidos",
