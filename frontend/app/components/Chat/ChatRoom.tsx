@@ -5,6 +5,7 @@ import type { ChatMessage, RoomMember, Friend } from '../../types/realtime.types
 import { roomAPI } from '../../api/room';
 import toast from 'react-hot-toast';
 import { useFriends } from '../../stores/useFriends';
+import { useTranslation } from 'react-i18next';
 
 interface ChatRoomProps {
   roomId: string;
@@ -38,6 +39,7 @@ export const ChatRoom = ({
   // 🎯 스크롤 관리: 맨 아래에 있을 때만 새 메시지로 자동 스크롤
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [hasRestoredScroll, setHasRestoredScroll] = useState(false);
+  const { t } = useTranslation();
 
   // Auto-scroll to bottom only if user is at bottom
   useEffect(() => {
@@ -115,7 +117,7 @@ export const ChatRoom = ({
     });
     
     if (!isConnected) {
-      toast.error('Not connected to chat server. Please wait...');
+      toast.error(t('chatError.chatServerFailure'));
       return;
     }
     
@@ -124,7 +126,7 @@ export const ChatRoom = ({
 
   const handleInviteFriends = async () => {
     if (selectedFriends.length === 0) {
-      toast.error('Please select at least one friend to invite.');
+      toast.error(t('chatError.selectFriend'));
       return;
     }
 
@@ -147,19 +149,19 @@ export const ChatRoom = ({
       const response = await roomAPI.inviteUsersToRoom(roomId, selectedFriendNames);
       
       if (response.success.length > 0) {
-        toast.success(`Successfully invited ${response.success.length} friend(s)!`);
+        toast.success(t('chat.inviteSucccess', {name: response.success.length}));
       }
       
       if (response.failed.length > 0) {
         const failedMessages = response.failed.map(f => `${f.name} (${f.reason})`).join(', ');
-        toast.error(`Failed to invite: ${failedMessages}`);
+        toast.error(t('chatError.inviteFailure', {name: failedMessages}));
       }
     
       setShowInviteModal(false);
       setSelectedFriends([]);
     } catch (error) {
       console.error('❌ Invite error:', error);
-      toast.error('Failed to invite friends. Please try again.');
+      toast.error(t('chatError.invite'));
     } finally {
       setIsInviting(false);
     }
@@ -206,7 +208,7 @@ export const ChatRoom = ({
             <div>
               <h2 className="text-lg font-semibold text-darkOrange dark:text-background font-title">{roomName}</h2>
               <p className="text-sm text-darkOrange/70 dark:text-background/70 font-body">
-                {members.length} members • {onlineMembers.length} online
+                {members.length} {t('chat.members')} • {onlineMembers.length} {t('online')}
               </p>
             </div>
             
@@ -216,7 +218,7 @@ export const ChatRoom = ({
                 onClick={() => setShowInviteModal(true)}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-body"
               >
-                Invite Friends
+                {t('chat.invite')}
               </button>
               
               {/* Connection Status */}
@@ -236,7 +238,7 @@ export const ChatRoom = ({
         <div className="flex-1 overflow-y-auto p-4" ref={messagesContainerRef} onScroll={handleScroll}>
           {messages.length === 0 ? (
             <div className="text-center text-darkOrange/50 dark:text-background/50 font-body">
-              No messages yet. Start the conversation!
+              {t('noMessages')}
             </div>
           ) : (
             <div className="space-y-4">
@@ -287,14 +289,14 @@ export const ChatRoom = ({
       {/* Members Sidebar */}
       <div className="w-64 bg-lightOrange dark:bg-darkBlue border-l border-darkOrange dark:border-background">
         <div className="p-4 border-b border-darkOrange dark:border-background">
-          <h3 className="text-sm font-medium text-darkOrange dark:text-background font-body">Members</h3>
+          <h3 className="text-sm font-medium text-darkOrange dark:text-background font-body">{t('chat.members')}</h3>
         </div>
         
         <div className="p-4">
           {/* Online Members */}
           {onlineMembers.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-xs font-medium text-green-600 mb-2 font-body">Online ({onlineMembers.length})</h4>
+              <h4 className="text-xs font-medium text-green-600 mb-2 font-body">{t('Online')} ({onlineMembers.length})</h4>
               <div className="space-y-1">
                 {onlineMembers.map((member: RoomMember) => (
                   <div key={member.userId} className="flex items-center space-x-2">
@@ -309,7 +311,7 @@ export const ChatRoom = ({
           {/* Offline Members */}
           {offlineMembers.length > 0 && (
             <div>
-              <h4 className="text-xs font-medium text-gray-500 mb-2 font-body">Offline ({offlineMembers.length})</h4>
+              <h4 className="text-xs font-medium text-gray-500 mb-2 font-body">{t('Offline')} ({offlineMembers.length})</h4>
               <div className="space-y-1">
                 {offlineMembers.map((member: RoomMember) => (
                   <div key={member.userId} className="flex items-center space-x-2">
@@ -328,7 +330,7 @@ export const ChatRoom = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-lightOrange dark:bg-darkBlue border border-darkOrange dark:border-background rounded-lg p-6 w-96 max-h-96 overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium text-darkOrange dark:text-background font-title">Invite Friends</h3>
+              <h3 className="text-lg font-medium text-darkOrange dark:text-background font-title">{t('chat.invite')}</h3>
               <button
                 onClick={() => {
                   setShowInviteModal(false);
@@ -344,7 +346,7 @@ export const ChatRoom = ({
             
             {availableFriends.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-darkOrange/60 dark:text-background/60 font-body">All your friends are already in this room!</p>
+                <p className="text-darkOrange/60 dark:text-background/60 font-body">{t('chat.allFriends')}</p>
               </div>
             ) : (
               <>
@@ -375,7 +377,7 @@ export const ChatRoom = ({
                     }}
                     className="flex-1 py-2 px-4 text-darkOrange dark:text-background bg-background/50 dark:bg-darkOrange/50 border border-darkOrange/30 dark:border-background/30 rounded-lg hover:bg-background/70 dark:hover:bg-darkOrange/70 transition-colors font-body"
                   >
-                    Cancel
+                    {t('cancel')}
                   </button>
                   <button
                     onClick={handleInviteFriends}

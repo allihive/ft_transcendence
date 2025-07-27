@@ -1,12 +1,14 @@
 import { useState, useRef, type KeyboardEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface MessageInputProps {
   onSendMessage: (content: string) => void;
   disabled?: boolean;
   placeholder?: string;
 }
+const {t} = useTranslation();
 
-export const MessageInput = ({ onSendMessage, disabled = false, placeholder = "Type a message..." }: MessageInputProps) => {
+export const MessageInput = ({ onSendMessage, disabled = false, placeholder = t('typeMessasge') }: MessageInputProps) => {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isComposingRef = useRef(false);
@@ -92,7 +94,7 @@ export const MessageInput = ({ onSendMessage, disabled = false, placeholder = "T
       </div>
       
       <div className="mt-2 text-xs text-darkOrange/60 dark:text-background/60 font-body">
-        Press Enter to send, Shift+Enter for new line
+       {t('chat.sendMessage')}
       </div>
     </div>
   );

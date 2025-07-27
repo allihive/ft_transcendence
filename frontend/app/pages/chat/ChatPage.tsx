@@ -6,7 +6,7 @@ import { useChat } from '../../stores/useChat';
 import { useFriends } from '../../stores/useFriends';
 import { useAuth } from '../../stores/useAuth';
 import { websocketService } from '../../services/websocket.service';
-
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 
@@ -15,6 +15,7 @@ const ChatPage = () => {
   const { user, isLoggingIn } = useAuth();
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
+  const { t } = useTranslation();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -74,10 +75,10 @@ const ChatPage = () => {
       await chat.createRoom(newRoomName.trim());
       setShowCreateRoomModal(false);
       setNewRoomName('');
-      toast.success(`Room "${newRoomName.trim()}" created successfully!`);
+      toast.success(t('chat.roomSuccess',{name: newRoomName.trim()}));
     } catch (error) {
       console.error('Failed to create room:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create room';
+      const errorMessage = error instanceof Error ? error.message : t('chatError.roomFailure');
       toast.error(errorMessage);
     }
   };
@@ -97,7 +98,7 @@ const ChatPage = () => {
               await chat.setCurrentRoom(roomId);
             } catch (error) {
               console.error('Failed to select room:', error);
-              toast.error('Failed to join room. Please try again.');
+              toast.error(t('charError.joinRoomFailure'));
             }
           }}
           onCreateRoom={() => setShowCreateRoomModal(true)}
@@ -133,8 +134,8 @@ const ChatPage = () => {
                 <svg className="w-16 h-16 mx-auto mb-4 text-darkOrange/50 dark:text-background/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                <h3 className="text-xl font-medium mb-2 font-title">Select a chat room</h3>
-                <p className="text-sm font-body">Select a chat room from the left or create a new one.</p>
+                <h3 className="text-xl font-medium mb-2 font-title">{t('chat.selectChatRoom')}</h3>
+                <p className="text-sm font-body">{t('chat.selectOrCreate')}.</p>
               </div>
             </div>
           )}
@@ -145,19 +146,19 @@ const ChatPage = () => {
       {showCreateRoomModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-lightOrange dark:bg-darkBlue border border-darkOrange dark:border-background rounded-lg p-6 w-96">
-            <h3 className="text-lg font-medium text-darkOrange dark:text-background mb-4 font-title">Create New Room</h3>
+            <h3 className="text-lg font-medium text-darkOrange dark:text-background mb-4 font-title">{t('chat.createRoom')}</h3>
             
             <div className="space-y-4">
               <div>
                 <label htmlFor="roomName" className="block text-sm font-medium text-darkOrange dark:text-background mb-2 font-body">
-                  Room Name
+                  {t('chat.roomName')}
                 </label>
                 <input
                   type="text"
                   id="roomName"
                   value={newRoomName}
                   onChange={(e) => setNewRoomName(e.target.value)}
-                  placeholder="Enter room name"
+                  placeholder={t('chat.roomName')}
                   className="w-full px-3 py-2 border border-darkOrange/30 dark:border-background/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-darkOrange dark:focus:ring-background focus:border-transparent bg-background dark:bg-darkOrange text-darkOrange dark:text-background placeholder-darkOrange/50 dark:placeholder-background/50 font-body"
                 />
               </div>
@@ -170,14 +171,14 @@ const ChatPage = () => {
                   }}
                   className="flex-1 py-2 px-4 text-darkOrange dark:text-background bg-background/50 dark:bg-darkOrange/50 border border-darkOrange/30 dark:border-background/30 rounded-lg hover:bg-background/70 dark:hover:bg-darkOrange/70 transition-colors font-body"
                 >
-                  Cancel
+                  {t('cancel')}
                 </button>
                 <button
                   onClick={handleCreateRoom}
                   disabled={!newRoomName.trim()}
                   className="flex-1 py-2 px-4 bg-darkOrange dark:bg-background text-background dark:text-darkOrange rounded-lg hover:bg-darkOrange/90 dark:hover:bg-background/90 disabled:bg-darkOrange/50 dark:disabled:bg-background/50 disabled:cursor-not-allowed transition-colors font-body"
                 >
-                  Create
+                  {t('create')}
                 </button>
               </div>
             </div>
@@ -190,25 +191,25 @@ const ChatPage = () => {
         {chat.connectionStatus === 'connecting' && (
           <div className="bg-yellow-500 text-white px-3 py-2 rounded-lg shadow-lg text-sm font-body flex items-center space-x-2">
             <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
-            <span>Connecting to chat...</span>
+            <span>{t('connecting')}...</span>
           </div>
         )}
         
         {chat.connectionStatus === 'error' && (
           <div className="bg-red-500 text-white px-3 py-2 rounded-lg shadow-lg text-sm font-body flex items-center space-x-2">
-            <span>⚠️ Connection failed</span>
+            <span>{t('connectionFailure')}</span>
             <button
               onClick={() => websocketService.connect()}
               className="text-white hover:text-gray-200 underline"
             >
-              Retry
+              {t('retry')}
             </button>
           </div>
         )}
         
         {friends.error && (
           <div className="bg-orange-500 text-white px-3 py-2 rounded-lg shadow-lg text-sm font-body flex items-center space-x-2 mt-2">
-            <span>Failed to load friends list</span>
+            <span>{t('chatError.friendList')}</span>
             <button
               onClick={() => friends.clearError()}
               className="text-white hover:text-gray-200"

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Friend } from '../../types/realtime.types';
+import { useTranslation } from 'react-i18next';
 
 interface FriendsListProps {
   friends: Friend[];
@@ -17,6 +18,7 @@ export const FriendsList = ({
   loading 
 }: FriendsListProps) => {
   const [expandedFriend, setExpandedFriend] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const formatLastSeen = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -63,8 +65,8 @@ export const FriendsList = ({
         <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
-        <p className="text-lg font-medium font-title">No friends yet</p>
-        <p className="text-sm mt-1 font-body">Add some friends to get started!</p>
+        <p className="text-lg font-medium font-title">{t('chat.noFriends')}</p>
+        <p className="text-sm mt-1 font-body">{t('addFriendMsg')}</p>
       </div>
     );
   }
@@ -104,12 +106,12 @@ export const FriendsList = ({
                     {friend.name}
                   </h3>
                   {friend.isOnline && (
-                    <span className="text-xs text-green-600 font-medium font-body">online</span>
+                    <span className="text-xs text-green-600 font-medium font-body">{t('online')}</span>
                   )}
                 </div>
                 {!friend.isOnline && friend.lastSeen && (
                   <p className="text-xs text-gray-400 font-body">
-                    Last seen: {formatLastSeen(friend.lastSeen)}
+                    {t('lastSeen')} {formatLastSeen(friend.lastSeen)}
                   </p>
                 )}
               </div>
@@ -121,7 +123,7 @@ export const FriendsList = ({
               <button
                 onClick={() => onStartChat(friend.id, friend.name)}
                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                title="Start chat"
+                title={t('chat.startChat')}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -132,7 +134,7 @@ export const FriendsList = ({
               <button
                 onClick={() => handleActionClick(friend.id)}
                 className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors"
-                title="More actions"
+                title={t('moreActions')}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -152,7 +154,7 @@ export const FriendsList = ({
                   }}
                   className="px-3 py-1 text-xs text-red-600 hover:bg-red-50 rounded border border-red-200 transition-colors font-body"
                 >
-                  Remove Friend
+                  {t('removeFriend')}
                 </button>
                 <button
                   onClick={() => {
@@ -161,7 +163,7 @@ export const FriendsList = ({
                   }}
                   className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 rounded border border-gray-200 transition-colors font-body"
                 >
-                  Block User
+                  {t('blockUser')}
                 </button>
               </div>
             </div>

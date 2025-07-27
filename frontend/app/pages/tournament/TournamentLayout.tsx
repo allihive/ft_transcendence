@@ -75,7 +75,7 @@ export function TournamentPage(): JSX.Element {
 			setNewTournamentName('');
 		} catch (error) {
 			console.error('Failed to create tournament:', error);
-			toast.error('Failed to create tournament.');
+			toast.error(t('tournamentError.creationFailure'));
 		}
 	};
 
@@ -113,11 +113,11 @@ export function TournamentPage(): JSX.Element {
 			if (updatedTournament) {
 				toast.success(`${user.username} joined "${updatedTournament.name}"!`);
 			} else {
-				toast.error('Failed to join tournament. It might be full or no longer available.');
+				toast.error(t('tournamentError.failureToJoinReason'));
 			}
 		} catch (error) {
 			console.error('Failed to join tournament:', error);
-			toast.error('Failed to join tournament.');
+			toast.error(t('tournamentError.failureToJoin'));
 		}
 	};
 
@@ -127,15 +127,15 @@ export function TournamentPage(): JSX.Element {
 			const updatedTournament = await startTournament(tournamentId);
 			
 			if (updatedTournament) {
-				toast.success(`Tournament "${updatedTournament.name}" started! Bracket generated.`);
+				toast.success(t('tournamentStarted', {name: updatedTournament.name}));
 				// Navigate to the bracket page
 				navigate(`/tournament/${tournamentId}/bracket`);
 			} else {
-				toast.error('Failed to start tournament. Make sure it is full and ready to start.');
+				toast.error(t('tournamentError.failureToStartReason'));
 			}
 		} catch (error) {
 			console.error('Failed to start tournament:', error);
-			toast.error('Failed to start tournament.');
+			toast.error(t('tournamentError.failureToStart'));
 			toast.error(`${t('tournamentError.creationFailure')}`);
 		}
 	};
@@ -259,7 +259,7 @@ export function TournamentPage(): JSX.Element {
 									<div className="flex justify-between items-start mb-4">
 										<div>
 											<h3 className="text-xl font-title font-bold">{tournament.name}</h3>
-											<p className="text-sm text-gray-600">Created by {tournament.creator}</p>
+											<p className="text-sm text-gray-600">{t('createdBy')} {tournament.creator}</p>
 										</div>
 										<div className="text-right">
 											<span className="inline-block px-3 py-1 bg-lightOrange text-black text-sm font-bold rounded border-2 border-black">
@@ -289,12 +289,12 @@ export function TournamentPage(): JSX.Element {
 												}}
 												className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-black font-title rounded border-2 border-black transition-colors"
 											>
-												View Players
+												{t('viewPlayers')}
 											</button>
 											{tournament.players && tournament.players.length > 0 && (
 												<div className="text-xs text-gray-600">
-													<span className="font-bold">Creator:</span> {tournament.players[0]?.username} 
-													({tournament.players[0]?.stats?.winRate || 0}% win rate)
+													<span className="font-bold">{t('creator')}:</span> {tournament.players[0]?.username} 
+													({tournament.players[0]?.stats?.winRate || 0}% {t('winRate')})
 												</div>
 											)}
 										</div>
@@ -305,7 +305,7 @@ export function TournamentPage(): JSX.Element {
 													onClick={() => navigate(`/tournament/${tournament.id}/bracket`)}
 													className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-title rounded border-2 border-black transition-colors"
 												>
-													View Bracket
+													{t('viewBracket')}
 												</button>
 											)}
 											
@@ -314,7 +314,7 @@ export function TournamentPage(): JSX.Element {
 													onClick={() => handleStartTournament(tournament.id)}
 													className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-title rounded border-2 border-black transition-colors"
 												>
-													START TOURNAMENT
+													{t('startTournament')}
 												</button>
 											)}
 										</div>
@@ -330,7 +330,7 @@ export function TournamentPage(): JSX.Element {
 												disabled={tournament.status !== 'waiting'}
 												className="px-4 py-2 bg-lightOrange hover:bg-darkOrange text-black font-title rounded border-2 border-black transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
 												>
-												Join Tournament
+												{t('joinTournament')}
 												</button>
 											</JoinTournamentPopover>
 											)}
@@ -339,8 +339,8 @@ export function TournamentPage(): JSX.Element {
 							))
 						) : (
 							<div className="text-center py-8">
-								<p className="text-gray-600">No tournaments available to join</p>
-								<p className="text-sm text-gray-500 mt-2">Create a tournament to start playing!</p>
+								<p className="text-black dark:text-background font-body">{t('noAvailableTournaments')}</p>
+								<p className="text-sm text-black dark:text-background font-body mt-2">{t('createToStart')}!</p>
 							</div>
 						)}
 					</div>
@@ -421,7 +421,7 @@ export function TournamentPage(): JSX.Element {
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
 					<div className="bg-pop border-4 border-black rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
 						<h3 className="text-xl font-title font-bold mb-4 text-center">
-							Players in "{selectedTournamentForPlayers.name}"
+							{t('playersIn')} "{selectedTournamentForPlayers.name}"
 						</h3>
 						
 						{selectedTournamentForPlayers.players && selectedTournamentForPlayers.players.length > 0 ? (
@@ -446,23 +446,23 @@ export function TournamentPage(): JSX.Element {
 											<div className="text-sm text-gray-600">@{player.username}</div>
 											{player.stats && (
 												<div className="text-xs text-blue-600 font-semibold">
-													Rating: {player.stats.rating} | W/L: {player.stats.matchesWon}/{player.stats.matchesLost}
+													{t('rating')}: {player.stats.rating} | W/L: {player.stats.matchesWon}/{player.stats.matchesLost}
 												</div>
 											)}
 											<div className="text-xs text-gray-500">
-												Joined: {new Date(player.joinedAt).toLocaleDateString()}
+												{t('joined')}: {new Date(player.joinedAt).toLocaleDateString()}
 											</div>
 										</div>
 										{index === 0 && (
 											<span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-bold rounded">
-												Creator
+												{t('creator')}
 											</span>
 										)}
 									</div>
 								))}
 							</div>
 						) : (
-							<p className="text-center text-gray-600">No players joined yet</p>
+							<p className="text-center text-gray-600">{t('noPlayersJoined')}</p>
 						)}
 
 						<div className="mt-6 text-center">
@@ -473,7 +473,7 @@ export function TournamentPage(): JSX.Element {
 								}}
 								className="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-black font-title rounded border-2 border-black transition-colors"
 							>
-								Close
+								{t('close')}
 							</button>
 						</div>
 					</div>

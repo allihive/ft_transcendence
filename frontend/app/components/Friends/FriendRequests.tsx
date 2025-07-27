@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { FriendRequest } from '../../types/realtime.types';
+import { useTranslation } from 'react-i18next';
 
 interface FriendRequestsProps {
   requests: FriendRequest[];
@@ -15,6 +16,7 @@ export const FriendRequests = ({
   loading 
 }: FriendRequestsProps) => {
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const handleAccept = async (requestId: string) => {
     setProcessingRequest(requestId);
@@ -82,8 +84,8 @@ export const FriendRequests = ({
         <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
         </svg>
-        <p className="text-lg font-medium font-title">No friend requests</p>
-        <p className="text-sm mt-1 font-body">Waiting for new friend requests</p>
+        <p className="text-lg font-medium font-title">{t('chat.noFriendReq')}</p>
+        <p className="text-sm mt-1 font-body">{t('chat.waitingForFriend')}</p>
       </div>
     );
   }
@@ -107,7 +109,7 @@ export const FriendRequests = ({
                   {request.requesterName}
                 </h3>
                 <p className="text-xs text-blue-600 font-body">
-                  Sent friend request {formatRequestTime(request.createdAt)}
+                  {t('chat.sendFriend')} {formatRequestTime(request.createdAt)}
                 </p>
               </div>
             </div>
@@ -135,11 +137,11 @@ export const FriendRequests = ({
           <div className="mt-3 flex items-center">
             <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
             <span className="text-xs text-blue-700 font-medium font-body">
-              Pending friend request
+              {t('chat.pending')}
             </span>
           </div>
         </div>
       ))}
     </div>
   );
-}; 
+}; }

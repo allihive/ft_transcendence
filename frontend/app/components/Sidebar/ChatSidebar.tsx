@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Friend, Room, FriendRequest } from '../../types/realtime.types';
 import { AddFriendForm } from '../Friends/AddFriendForm';
+import { useTranslation } from 'react-i18next';
 
 interface ChatSidebarProps {
   // Rooms
@@ -50,6 +51,7 @@ export const ChatSidebar = ({
   const [expandedRoom, setExpandedRoom] = useState<string | null>(null);
   const [expandedFriend, setExpandedFriend] = useState<string | null>(null);
   const [showBlockedFriends, setShowBlockedFriends] = useState(true);
+  const { t } = useTranslation();
 
   const handleRoomClick = async (roomId: string) => {
     if (roomId === currentRoomId) {
@@ -109,7 +111,7 @@ export const ChatSidebar = ({
                 : 'text-darkOrange/80 dark:text-background/80 hover:text-darkOrange dark:hover:text-background'
             }`}
           >
-            Rooms
+            {t('rooms')}
           </button>
           <button
             onClick={() => setActiveTab('friends')}
@@ -119,7 +121,7 @@ export const ChatSidebar = ({
                 : 'text-darkOrange/80 dark:text-background/80 hover:text-darkOrange dark:hover:text-background'
             }`}
           >
-            Friends
+            {t('friends')}
             {onlineFriends.length > 0 && (
               <span className="ml-2 bg-green-500 text-white text-xs rounded-full px-2 py-0.5">
                 {onlineFriends.length}
@@ -134,7 +136,7 @@ export const ChatSidebar = ({
                 : 'text-darkOrange/80 dark:text-background/80 hover:text-darkOrange dark:hover:text-background'
             }`}
           >
-            Requests
+            {t('requests')}
             {pendingRequests.length > 0 && (
               <span className="ml-2 bg-blue-500 text-white text-xs rounded-full px-2 py-0.5">
                 {pendingRequests.length}
@@ -155,7 +157,7 @@ export const ChatSidebar = ({
                 onClick={onCreateRoom}
                 className="w-full py-2 px-4 bg-darkOrange dark:bg-background text-background dark:text-darkOrange rounded-lg hover:bg-darkOrange/90 dark:hover:bg-background/90 transition-colors font-body"
               >
-                + Create Room
+                + {t('chat.createRoom')}
               </button>
             </div>
 
@@ -180,7 +182,7 @@ export const ChatSidebar = ({
                         )}
                       </div>
                       <p className="text-xs text-darkOrange/60 dark:text-background/60 font-body">
-                        {room.memberCount} members
+                        {room.memberCount} {t('chat.members')}
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -211,7 +213,7 @@ export const ChatSidebar = ({
             <div className="p-4 border-b border-darkOrange/20 dark:border-background/20">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-medium text-darkOrange dark:text-background font-body">
-                  Blocked Friends ({blockedFriends.length})
+                  {t('chat.blockedFriends')} ({blockedFriends.length})
                 </h3>
                 <button
                   onClick={() => setShowBlockedFriends(!showBlockedFriends)}
@@ -225,7 +227,7 @@ export const ChatSidebar = ({
                 <div className="space-y-2">
                   {blockedFriends.length === 0 ? (
                     <div className="text-center py-2">
-                      <p className="text-xs text-gray-500 font-body">No blocked friends</p>
+                      <p className="text-xs text-gray-500 font-body">{t('chat.notBlocked')}</p>
                     </div>
                   ) : (
                     blockedFriends.map(friend => (
@@ -252,7 +254,7 @@ export const ChatSidebar = ({
                           onClick={() => onUnblockFriend(friend.id)}
                           className="text-xs text-green-600 hover:text-green-700 font-body"
                         >
-                          Unblock
+                          {t('chat.unblock')}
                         </button>
                       </div>
                     ))
@@ -265,7 +267,7 @@ export const ChatSidebar = ({
             <div className="divide-y divide-darkOrange/20 dark:divide-background/20">
               {friends.length === 0 ? (
                 <div className="p-4 text-center text-darkOrange/60 dark:text-background/60">
-                  <p className="font-body">No friends yet</p>
+                  <p className="font-body">{t('chat.noFriends')}</p>
                 </div>
               ) : (
                 friends.map(friend => (
@@ -301,12 +303,12 @@ export const ChatSidebar = ({
                               {friend.name}
                             </h3>
                             {friend.isOnline && (
-                              <span className="text-xs text-green-600 font-medium font-body">online</span>
+                              <span className="text-xs text-green-600 font-medium font-body">{t('online')}</span>
                             )}
                           </div>
                           {!friend.isOnline && friend.lastSeen && (
                             <p className="text-xs text-darkOrange/60 dark:text-background/60 font-body">
-                              Last seen: {formatLastSeen(friend.lastSeen)}
+                              {t('lastSeen')} {formatLastSeen(friend.lastSeen)}
                             </p>
                           )}
                         </div>
@@ -349,7 +351,7 @@ export const ChatSidebar = ({
                             }}
                             className="px-3 py-1 text-xs text-red-600 hover:bg-red-50 rounded border border-red-200 transition-colors font-body"
                           >
-                            Remove
+                            {t('remove')}
                           </button>
                           <button
                             onClick={() => {
@@ -358,7 +360,7 @@ export const ChatSidebar = ({
                             }}
                             className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-50 rounded border border-gray-200 transition-colors font-body"
                           >
-                            Block
+                            {t('block')}
                           </button>
                         </div>
                       </div>
@@ -375,7 +377,7 @@ export const ChatSidebar = ({
             {/* Add Friend Form */}
             <div className="p-4 border-b border-darkOrange/20 dark:border-background/20">
               <h3 className="text-sm font-medium text-darkOrange dark:text-background mb-3 font-body">
-                Add Friend
+                {t('chat.addFriend')}
               </h3>
               <AddFriendForm onSendRequest={onSendFriendRequest} loading={false} />
             </div>
@@ -384,7 +386,7 @@ export const ChatSidebar = ({
             <div className="divide-y divide-darkOrange/20 dark:divide-background/20">
               {pendingRequests.length === 0 ? (
                 <div className="p-4 text-center text-darkOrange/60 dark:text-background/60">
-                  <p className="font-body">No pending requests</p>
+                  <p className="font-body">{t('chat.noRequests')}</p>
                 </div>
               ) : (
                 pendingRequests.map(request => (
@@ -404,7 +406,7 @@ export const ChatSidebar = ({
                             {request.requesterName}
                           </h3>
                           <p className="text-xs text-darkOrange/60 dark:text-background/60 font-body">
-                            Wants to be your friend
+                            {t('chat.requested')}
                           </p>
                         </div>
                       </div>
@@ -415,13 +417,13 @@ export const ChatSidebar = ({
                           onClick={() => onAcceptRequest(request.id)}
                           className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600 transition-colors font-body"
                         >
-                          Accept
+                          {t('accept')}
                         </button>
                         <button
                           onClick={() => onRejectRequest(request.id)}
                           className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors font-body"
                         >
-                          Reject
+                          {t('reject')}
                         </button>
                       </div>
                     </div>

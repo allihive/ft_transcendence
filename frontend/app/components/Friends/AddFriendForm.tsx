@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface AddFriendFormProps {
   onSendRequest: (email: string) => Promise<void>;
@@ -9,19 +10,20 @@ interface AddFriendFormProps {
 export const AddFriendForm = ({ onSendRequest, loading }: AddFriendFormProps) => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const {t} = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email.trim()) {
-      toast.error('Please enter an email address.');
+      toast.error(t('formErrors.enterEmail'));
       return;
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      toast.error('Please enter a valid email format.');
+      toast.error(t('formErrors.validEmail'));
       return;
     }
 
@@ -40,12 +42,12 @@ export const AddFriendForm = ({ onSendRequest, loading }: AddFriendFormProps) =>
 
   return (
     <div className="p-4 border-b border-darkOrange dark:border-background bg-lightOrange dark:bg-darkBlue">
-      <h3 className="text-lg font-semibold text-darkOrange dark:text-background mb-4 font-title">Add Friend</h3>
+      <h3 className="text-lg font-semibold text-darkOrange dark:text-background mb-4 font-title">{t('chat.addFriend')}</h3>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-darkOrange dark:text-background mb-2 font-body">
-            Email Address
+            {t('email')}
           </label>
           <div className="flex gap-2">
             <input
@@ -68,13 +70,13 @@ export const AddFriendForm = ({ onSendRequest, loading }: AddFriendFormProps) =>
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span className="hidden sm:inline">Sending...</span>
+                  <span className="hidden sm:inline">{t('sending')}...</span>
                   <span className="sm:hidden">...</span>
                 </div>
               ) : (
                 <>
-                  <span className="hidden sm:inline">Send Request</span>
-                  <span className="sm:hidden">Send</span>
+                  <span className="hidden sm:inline">{t('chat.sendRequest')}</span>
+                  <span className="sm:hidden">{t('send')}</span>
                 </>
               )}
             </button>
@@ -83,8 +85,8 @@ export const AddFriendForm = ({ onSendRequest, loading }: AddFriendFormProps) =>
 
         {/* Help text */}
         <div className="text-xs text-darkOrange/60 dark:text-background/60 font-body">
-          <p>💡 Please enter the exact email address of the person.</p>
-          <p className="mt-1">They will become your friend once they accept the request.</p>
+          <p>{t('chat.enterEmail')}</p>
+          <p className="mt-1">{t('chat.acceptedMessage')}</p>
         </div>
       </form>
     </div>
