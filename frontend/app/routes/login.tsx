@@ -3,10 +3,8 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "~/stores/useAuth";
 import { CreditsBanner } from "~/components/credits-banner/CreditsBanner";
 import { UserLoginForm } from "~/components/forms/user/login/UserLoginForm";
-import { GoogleLoginButton } from "~/components/buttons/google-login/GoogleLoginButton";
-import type { LoginHandler } from "~/components/forms/user/login/types";
-import type { GoogleLoginHandler } from "~/components/buttons/google-login/types";
 import { useTranslation } from "react-i18next";
+import type { SuccessHandler } from "~/components/forms/user/login/types";
 
 export async function clientLoader(): Promise<void> {
 	if (useAuth.getState().user) {
@@ -15,48 +13,27 @@ export async function clientLoader(): Promise<void> {
 }
 
 export default function Login() {
+	const { t } = useTranslation();
 	const navigate = useNavigate();
-	const login = useAuth((state) => state.login);
-	const loginWithGoogle = useAuth((state) => state.loginWithGoogle);
-	const {t} = useTranslation();
+	const setUser = useAuth((state) => state.setUser);
 
-	const loginHandler: LoginHandler = async (data) => {
-		try {
-			const user = await login(data.email, data.password);
-			
-			if (user) {
-				navigate("/");
-				toast.success(t('loginSuccess'));
-			} else {
-				toast.error(t('formErrors.invalidLogin'));
-			}
-		} catch (error) {
-			toast.error((error as Error).message);
-		}
-	};
+	const successHandler: SuccessHandler = (user) => {
+		setUser(user);
 
-	const googleLoginHandler: GoogleLoginHandler = async (credential) => {
-		try {
-			const user = await loginWithGoogle(credential);
+		if (user) {
 			navigate("/");
-		} catch (error) {
-			toast.error((error as Error).message);
 		}
 	};
 
 	return (
 		<div className="flex flex-col justify-center items-center w-full pb-16 pt-8">
 			<div className="w-[600px] h-[420px] relative bg-pop border-4 border-black rounded-md shadow-md justify-center items-center pb-16 space-y-4">
-				<UserLoginForm onLogin={loginHandler} />
+				<UserLoginForm
+					onSuccess={successHandler}
+					onFailure={(error) => toast.error(error.message)}
+				/>
 
 				<div className="border-t pt-2"></div>
-
-				<div className="flex flex-grow justify-center items-center mx-8 mt-4 border-black">
-					<GoogleLoginButton
-						clientId={`${import.meta.env.VITE_GOOGLE_CLIENT_ID}`}
-						onLogin={googleLoginHandler}
-					/>
-				</div>
 
 				<div className="flex flex-grow justify-center items-center mx-8 mt-2 ">
 					<NavLink

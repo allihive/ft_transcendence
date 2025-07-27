@@ -1,27 +1,16 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { redirect, useNavigate } from "react-router";
+import { useState, type JSX } from "react";
 import { toast } from "react-hot-toast";
-import { UserUpdateForm } from "~/components/forms/user/update/UserUpdateForm";
-import { useAuth } from "~/stores/useAuth";
+import { upload } from "~/api/media/file-upload";
 import { updateUser } from "~/api/users/updateUser";
 import { GoogleUserUpdateForm } from "~/components/forms/user/update/GoogleUserUpdateForm";
-import type { UpdateHandler } from "~/components/forms/user/update/types";
+import { UserUpdateForm } from "~/components/forms/user/update/UserUpdateForm";
+import { useAuth } from "~/stores/useAuth";
 import type { UserUpdateData } from "~/api/types";
-import { upload } from "~/api/media/file-upload";
+import type { UpdateHandler } from "~/components/forms/user/update/types";
 
-export function clientLoader(): void {
-	const { isLoggingIn, user } = useAuth.getState();
-
-	if (!isLoggingIn && !user) {
-		throw redirect("/login");
-	}
-}
-
-export default function Profile(): ReactNode {
-	const navigate = useNavigate();
+export default function Profile(): JSX.Element {
 	const user = useAuth((state) => state.user);
 	const setUser = useAuth((state) => state.setUser);
-	const isLoggingIn = useAuth((state) => state.isLoggingIn);
 	const [isUpdating, setUpdating] = useState<boolean>(false);
 
 	const updateHandler: UpdateHandler = async (data) => {
@@ -34,9 +23,8 @@ export default function Profile(): ReactNode {
 				const fileUpload = await upload(avatar);
 				userUpdateData.avatarUrl = fileUpload.url;
 			}
-			console.log("userUpdateData = ", userUpdateData);
+
 			const updatedUser = await updateUser(userUpdateData);
-			console.log("updateUser = ", updatedUser);
 			setUser(updatedUser);
 		} catch (error) {
 			toast.error((error as Error).message);
@@ -45,25 +33,11 @@ export default function Profile(): ReactNode {
 		}
 	};
 
-	useEffect(() => {
-		if (!isLoggingIn && !user) {
-			navigate("/login");
-		}
-	}, [isLoggingIn, user, navigate]);
-
-	if (isLoggingIn) {
-		return <>Loading user ...</>;
-	}
-
-	if (!user) {
-		return null;
-	}
-
 	return (
 		<div className="max-w-[600px] mx-auto p-8">
-			{user.authMethod === "password"
+			{user?.authMethod === "password"
 				?	<UserUpdateForm user={user} onUpdate={updateHandler} isProcessing={isUpdating} />
-				:	<GoogleUserUpdateForm user={user} onUpdate={updateHandler} isProcessing={isUpdating} />
+				:	<GoogleUserUpdateForm user={user!} onUpdate={updateHandler} isProcessing={isUpdating} />
 			}
 		</div>
 	);

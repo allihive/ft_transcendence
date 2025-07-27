@@ -1,7 +1,7 @@
 import { type JSX } from "react";
 import type { SwitchProps } from "./types";
 
-export function Switch({ label, inputProps }: SwitchProps): JSX.Element {
+export function Switch({ label, inputProps}: SwitchProps): JSX.Element {
 	return (
 		<div className="flex flex-row items-center">
 			<div>
@@ -24,7 +24,7 @@ export function Switch({ label, inputProps }: SwitchProps): JSX.Element {
 					<span className="sr-only">Enable</span>
 				</label>
 			</div>
-			{ label ? <span className="ms-3 text-sm font-medium font-title text-gray-900 dark:text-background">{label}</span> : null }
+			{label ? <span className="ms-3 text-sm font-medium font-title text-gray-900 dark:text-background">{label}</span> : null}
 		</div>
 	);
 }

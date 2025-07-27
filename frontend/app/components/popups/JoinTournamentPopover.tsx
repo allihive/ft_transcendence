@@ -1,54 +1,34 @@
 import { useState, type JSX } from "react";
-import { Popover } from "react-tiny-popover";
 import { toast } from "react-hot-toast";
-import { GoogleLoginButton } from "~/components/buttons/google-login/GoogleLoginButton";
-import { UserLoginForm } from "~/components/forms/user/login/UserLoginForm";
-import { verifyCredentials, verifyGoogle } from "~/api/auth/verify";
-import type { GoogleLoginHandler } from "~/components/buttons/google-login/types";
-import type { LoginHandler } from "~/components/forms/user/login/types";
+import { Popover } from "react-tiny-popover";
+import { UserVerificationForm } from "../forms/user/login/UserVerificationForm";
 import type { User } from "~/api/types";
+import type { SuccessHandler } from "~/components/forms/user/login/types";
 
 type JoinTournamentPopoverProps = {
 	isOpen: boolean;
 	onClickOutside: () => void;
 	onUserJoin: (user: User) => void;
-	children: React.ReactNode;
+	children: JSX.Element;
 };
 
-export function JoinTournamentPopover({ 
-	isOpen, 
-	onClickOutside, 
-	onUserJoin, 
-	children 
+export function JoinTournamentPopover({
+	isOpen,
+	onClickOutside,
+	onUserJoin,
+	children
 }: JoinTournamentPopoverProps): JSX.Element {
-	const [isLoading, setIsLoading] = useState(false);
+	const [isLoading, setIsLoading] = useState<boolean>(false);
 
-	const handleUserVerification = async (verify: () => Promise<User | null>) => {
-		setIsLoading(true);
-		try {
-			const user = await verify();
-
-			if (!user) {
-				toast.error(`User not found in database`);
-			} else {
-				toast.success(`Welcome ${user.username}!`);
-				onUserJoin(user);
-				onClickOutside(); // Close popup after successful join
-			}
-		} catch (error) {
-			toast.error((error as Error).message);
-		} finally {
-			setIsLoading(false);
+	const successHandler: SuccessHandler = (user) => {
+		if (!user) {
+			toast.error(`User not found in database`);
+		} else {
+			toast.success(`Welcome ${user.username}!`);
+			onUserJoin(user);
+			onClickOutside(); // Close popup after successful join
 		}
-	};
-
-	const loginHandler: LoginHandler = async (data) => {
-		await handleUserVerification(() => verifyCredentials(data.email, data.password));
-	};
-
-	const googleLoginHandler: GoogleLoginHandler = async (credential) => {
-		await handleUserVerification(() => verifyGoogle(credential));
-	};
+	}
 
 	return (
 		<Popover
@@ -64,20 +44,13 @@ export function JoinTournamentPopover({
 						<p className="text-sm text-gray-600 text-center">
 							Login to join this tournament
 						</p>
-						
-						<UserLoginForm 
-							onLogin={loginHandler}
-							disabled={isLoading}
+
+						<UserVerificationForm
+							onSubmitStateChange={setIsLoading}
+							onSuccess={successHandler}
+							onFailure={(error) => toast.error(error.message)}
 						/>
-						
-						<div className="text-center text-sm text-gray-500">or</div>
-						
-						<GoogleLoginButton
-							clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}
-							onLogin={googleLoginHandler}
-							disabled={isLoading}
-						/>
-						
+
 						{isLoading && (
 							<div className="text-center text-sm text-gray-500">
 								Verifying user...
@@ -90,4 +63,4 @@ export function JoinTournamentPopover({
 			{children}
 		</Popover>
 	);
-} 
+}

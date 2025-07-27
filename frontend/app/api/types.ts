@@ -52,7 +52,7 @@ export type FetchError = {
 	message: string;
 };
 
-export type TwoFactorAuth = {
+export type SetupTwoFactorAuth = {
 	message: string;
 	qrCode: string;
 	secret: string;

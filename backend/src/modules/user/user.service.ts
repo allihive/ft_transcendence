@@ -75,6 +75,7 @@ export class UserService {
 		if (isTwoFactorEnabled !== undefined) userData.isTwoFactorEnabled = isTwoFactorEnabled;
 		if (newPassword) userData.passwordHash = this.cryptoService.hash(newPassword);
 
+		console.log("user.services::updateUser with userData = ", userData);
 		return this.userRepository.updateUser(em, user, userData);
 	}
 

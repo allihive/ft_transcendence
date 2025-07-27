@@ -2,7 +2,6 @@ import { CookieSerializeOptions } from "@fastify/cookie";
 
 export const cookieConfig: CookieSerializeOptions = {
 	path: "/",
-	signed: true,
 	httpOnly: true,
 	secure: process.env.NODE_ENV === "production",	// Enable https in production mode.
 	sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",	// Prevent CSRF attacks in production

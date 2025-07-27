@@ -10,7 +10,7 @@ type AvatarProps = {
 
 export function Avatar({ url, avatarInputProps, error }: AvatarProps): JSX.Element {
 	const { t } = useTranslation();
-	const [imageSource, setImageSource] = useState<string>(url);
+	const [imageSource, setImageSource] = useState<string>(new URL(url, import.meta.env.VITE_API_BASE_URL).toString());
 
 	const changeHandler: ChangeEventHandler<HTMLInputElement> = (event) => {
 		const file = event.target.files?.[0];
@@ -19,7 +19,7 @@ export function Avatar({ url, avatarInputProps, error }: AvatarProps): JSX.Eleme
 			const newImageSource = URL.createObjectURL(file);
 			setImageSource(newImageSource);
 		}
-		
+
 		avatarInputProps.onChange?.(event);
 	};
 

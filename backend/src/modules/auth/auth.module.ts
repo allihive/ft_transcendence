@@ -4,6 +4,7 @@ import { OAuth2Client } from "google-auth-library";
 import { authController } from "./auth.controller";
 import { AuthRepository } from "./auth.repository";
 import { AuthService } from "./auth.service";
+import { twoFactorAuthController } from "./auth.2fa.controller";
 
 declare module "fastify" {
 	interface FastifyInstance {
@@ -19,6 +20,7 @@ const authPlugin: FastifyPluginAsync = async (app, opts) => {
 	app.decorate("authService", authService);
 
 	await app.register(authController, opts);
+	await app.register(twoFactorAuthController, opts);
 };
 
 export const authModule = fp(authPlugin, {

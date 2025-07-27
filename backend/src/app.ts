@@ -55,13 +55,12 @@ const installFastifyPlugins = async (app: FastifyInstance): Promise<void> => {
 	});
 
 	await app.register(fastifyCookie, {
-		secret: process.env.COOKIE_SECRET!,
 		parseOptions: cookieConfig
 	});
 
 	await app.register(fastifyJWT, {
 		secret: process.env.JWT_SECRET!,
-		cookie: { cookieName: "accessToken", signed: true }
+		cookie: { cookieName: "accessToken", signed: false }
 	});
 };
 
@@ -95,7 +94,7 @@ const registerHooks = async (app: FastifyInstance): Promise<void> => {
 		if (request.headers.upgrade === "websocket") {
 			return;
 		}
-		
+
 		try {
 			await request.jwtVerify();
 		} catch (error) {

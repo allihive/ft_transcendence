@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from "react";
+import type { ChangeEventHandler, InputHTMLAttributes } from "react";
 
 export type SwitchProps = {
 	label: string;

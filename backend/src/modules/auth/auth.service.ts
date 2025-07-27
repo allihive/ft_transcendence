@@ -9,6 +9,8 @@ import { CreateUserDto } from "../user/user.dto";
 import { UserService } from "../user/user.service";
 import { LoginDto } from "./auth.dto";
 import { AuthRepository } from "./auth.repository";
+import { toDataURL } from "qrcode";
+import speakeasy from "speakeasy";
 
 const getPayload = async (authClient: OAuth2Client, googleIdToken: string): Promise<{
 	providerUserId: string,
@@ -53,8 +55,7 @@ export class AuthService {
 		private readonly authClient: OAuth2Client
 	) { }
 
-	async login(em: EntityManager, loginDto: LoginDto): Promise<User | null> {
-		const { email, password } = loginDto;
+	async login(em: EntityManager, email: string, password: string): Promise<User | null> {
 		const user = await this.userService.findUserByCredentials(em, email, password);
 
 		if (!user) {
@@ -98,17 +99,15 @@ export class AuthService {
 		return this.userService.createUser(em, createUserDto);
 	}
 
-	async verify(em: EntityManager, userId: string, totpCode: number): Promise<User | null> {
+	async verifyTotp(em: EntityManager, userId: string, totpCode: number): Promise<User | null> {
 		const user = await this.userService.findUser(em, { id: userId });
 
 		if (!user)
-			return null;
+			throw new NotFoundException("User not found");
 		if (user.authMethod === AuthMethod.GOOGLE)
 			throw new BadRequestException("Two-factor auth is not applicable to users authenticated via Google");
-		if (!user.isTwoFactorEnabled)
-			throw new BadRequestException("Two-factor auth is not enabled for this user");
 		if (!user.totpSecret)
-			throw new BadRequestException("TOPT code is not set for this user");
+			throw new BadRequestException("TOPT code not found for this user");
 
 		const isVerified = totp.verify({
 			secret: user.totpSecret,
@@ -123,16 +122,43 @@ export class AuthService {
 		return user;
 	}
 
-	async setupTwoFactorAuth(em: EntityManager, userId: string, secret: string): Promise<void> {
+	async setupTwoFactorAuth(em: EntityManager, userId: string): Promise<{ secret: string, qrCode: string }> {
 		const user = await this.userService.findUser(em, { id: userId });
 
-		if (!user)
-			throw new NotFoundException(`User with id ${userId} not found`);
+		if (!user) {
+			throw new NotFoundException("User not found");
+		}
 
-		await this.userService.updateUser(em, user, {
-			totpSecret: secret,
-			isTwoFactorEnabled: true
-		});
+		let secret = user.totpSecret;
+		let qrCode: string | undefined = undefined;
+
+		if (!secret) {
+			const generateSecret = speakeasy.generateSecret({
+				name: "transcendence",
+				issuer: "hoang.tran.fin@gmail.com"
+			});
+
+			secret = generateSecret.base32;
+			await this.userService.updateUser(em, user, { totpSecret: secret });
+			qrCode = await toDataURL(generateSecret.otpauth_url!);
+		} else {
+			qrCode = await toDataURL(speakeasy.otpauthURL({
+				secret,
+				label: user.username,
+				issuer: "hoang.tran.fin@gmail.com",
+				encoding: "base32"
+			}));
+		}
+
+		return { secret, qrCode };
+	}
+
+	async activateTwoFactorAuth(em: EntityManager, userId: string, totpCode: number): Promise<User | null> {
+		const user = await this.verifyTotp(em, userId, totpCode);
+
+		return user
+			? this.userService.updateUser(em, user, { isTwoFactorEnabled: true })
+			: null;
 	}
 }
 

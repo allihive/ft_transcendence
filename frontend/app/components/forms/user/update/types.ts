@@ -7,7 +7,6 @@ export type UserUpdateFormValues = {
 	username?: string;
 	avatars: FileList | null;
 	password?: string;
-	isTwoFactorEnabled?: boolean;
 	newPassword?: string;
 	confirmPassword?: string;
 };
