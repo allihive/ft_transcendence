@@ -8,9 +8,9 @@ export const statsController: FastifyPluginAsync = async (app) => {
 	app.get("/users/:userId", {
 		schema: { params: GetUserStatsParamsDtoSchema },
 		handler: async (request, reply) => {
-			// if (!request.user) {
-			// 	throw new UnauthorizedException("Authentication required to process your request.");
-			// }
+			if (!request.user) {
+				throw new UnauthorizedException("Authentication required to process your request.");
+			}
 			const { userId } = request.params as GetUserStatsParamsDto;
 			const em = request.entityManager;
 			const userStats = await userStatsService.find(em, userId);
@@ -22,13 +22,12 @@ export const statsController: FastifyPluginAsync = async (app) => {
 		}
 	});
 
-	app.post("/users/", {
+	app.post("/users", {
 		schema: { body: UpsertUserStatsDtoSchema },
 		handler: async (request, reply) => {
-			// if (!request.user) {
-			// 	throw new UnauthorizedException("Authentication required to process your request.");
-			// }
-
+			if (!request.user) {
+				throw new UnauthorizedException("Authentication required to process your request.");
+			}
 			const em = request.entityManager;
 			const userStats = await userStatsService.upsert(em, request.body as UpsertUserStatsDto);
 			const payload = getUserStatsResponseDto(userStats);
@@ -38,11 +37,13 @@ export const statsController: FastifyPluginAsync = async (app) => {
 				.send(payload);
 		}
 	});
-	
-	//added 21.7 - Update user stats based on match result
+
 	app.post("/update-rating", {
 		schema: { body: MatchResultDtoSchema },
 		handler: async (request, reply) => {
+			if (!request.user) {
+				throw new UnauthorizedException("Authentication required to process your request.");
+			}
 			const em = request.entityManager;
 			const response = await userStatsService.updateUserRating(em, request.body as MatchResultDto);
 			return reply

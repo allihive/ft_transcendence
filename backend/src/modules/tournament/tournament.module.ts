@@ -14,7 +14,8 @@ declare module "fastify" {
 const tournamentGamePlugin: FastifyPluginAsync<RegisterOptions> = async (app, opts) => {
 	const tournamentGameRepository = new TournamentGameRepository();
 	const gameHistoryService = app.gameHistoryService; // Assumes gameHistoryService is decorated on app
-	const tournamentGameService = new TournamentGameService(tournamentGameRepository, gameHistoryService);
+	const userStatsService = app.statsService.getUserStatsService();
+	const tournamentGameService = new TournamentGameService(tournamentGameRepository, gameHistoryService, userStatsService);
 	app.decorate("tournamentGameService", tournamentGameService);
 	await app.register(tournamentGameController, opts);
 };

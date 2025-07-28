@@ -39,7 +39,8 @@ export type UserStats = {
 	matchesPlayed: number,
 	matchesWon: number,
 	matchesLost: number,
-	winRate: number
+	winRate: number,
+	rating: number // added 25.7 joseph
 };
 
 export type FileUpload = {

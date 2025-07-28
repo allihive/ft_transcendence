@@ -238,7 +238,7 @@ export const ChatRoom = ({
         <div className="flex-1 overflow-y-auto p-4" ref={messagesContainerRef} onScroll={handleScroll}>
           {messages.length === 0 ? (
             <div className="text-center text-darkOrange/50 dark:text-background/50 font-body">
-              {t('noMessages')}
+              {t('chat.noMessages')}
             </div>
           ) : (
             <div className="space-y-4">

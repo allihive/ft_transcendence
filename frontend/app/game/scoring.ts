@@ -83,16 +83,29 @@ export function score(
           } else {
             console.error('endGame function not available');
           }
-          const gameOverTimeout = setTimeout(() => {
-            console.log('Calling setGameOverState with winner:', winner);
-            const finalScores = {
-              player1Score: Math.floor(updatedPlayers[0].score),
-              player2Score: Math.floor(updatedPlayers[1].score)
-            };
-            console.log('Final scores:', finalScores);
-            (window as any).setGameOverState?.(winner, finalScores);
-          }, 500);
-          timeoutIds.push(gameOverTimeout);
+          
+          // Call setGameOverState immediately instead of with delay
+          console.log('Calling setGameOverState with winner:', winner);
+          console.log('setGameOverState function exists?', typeof (window as any).setGameOverState);
+          const finalScores = {
+            player1Score: Math.floor(updatedPlayers[0].score),
+            player2Score: Math.floor(updatedPlayers[1].score)
+          };
+          console.log('Final scores:', finalScores);
+          (window as any).setGameOverState?.(winner, finalScores);
+          console.log('setGameOverState called, should see BabylonScene logs now');
+          
+          // Original delayed version (commented out to fix game freeze)
+          // const gameOverTimeout = setTimeout(() => {
+          //   console.log('Calling setGameOverState with winner:', winner);
+          //   const finalScores = {
+          //     player1Score: Math.floor(updatedPlayers[0].score),
+          //     player2Score: Math.floor(updatedPlayers[1].score)
+          //   };
+          //   console.log('Final scores:', finalScores);
+          //   (window as any).setGameOverState?.(winner, finalScores);
+          // }, 500);
+          // timeoutIds.push(gameOverTimeout);
         } else {
           // Start countdown from 3 to 1
           let countdown = 3;

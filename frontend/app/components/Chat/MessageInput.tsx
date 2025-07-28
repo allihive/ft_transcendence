@@ -6,9 +6,10 @@ interface MessageInputProps {
   disabled?: boolean;
   placeholder?: string;
 }
-const {t} = useTranslation();
 
-export const MessageInput = ({ onSendMessage, disabled = false, placeholder = t('typeMessasge') }: MessageInputProps) => {
+export const MessageInput = ({ onSendMessage, disabled = false, placeholder = 'Type Message' }: MessageInputProps) => {
+  const {t} = useTranslation();
+  placeholder = t('typeMessasge');
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isComposingRef = useRef(false);

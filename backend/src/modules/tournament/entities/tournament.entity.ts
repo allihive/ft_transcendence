@@ -33,7 +33,7 @@ export class TournamentGame {
   @Property({ type: () => TournamentStatus, default: TournamentStatus.OPEN })
   tournamentStatus!: TournamentStatus;
 
-  @Property({})
+  @Property({ type: "uuid", nullable: true, name: "winnerId" })
   winnerId?: string;
 
   @Property({ type: () => TournamentSize })

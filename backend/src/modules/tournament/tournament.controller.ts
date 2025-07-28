@@ -1,7 +1,7 @@
 // src/module/tournament/tournament.controller.ts
 import { FastifyPluginAsync } from "fastify";
 import { CreateTournamentDto, createTournamentDtoSchema, JoinTournamentDto, joinTournamentDtoSchema, LeaveTournamentDto, leaveTournamentDtoSchema, StartTournamentDto, startTournamentDtoSchema, RecordTournamentResultsDto, recordTournamentResultsSchema } from "./tournament.dto";
-import { TournamentStatus } from "./entities/tournament.entity";
+
 
 export const tournamentGameController: FastifyPluginAsync = async (app) => {
 	app.post("/", {

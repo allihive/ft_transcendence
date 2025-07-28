@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { Tournament, CreateTournamentDto } from '~/api/tournament/types';
+import type { Tournament, CreateTournamentDto, RecordTournamentResultsDto } from '~/api/tournament/types';
+import { recordTournamentResults } from '~/api/tournament/tournament';
 
 interface TournamentPlayer {
 	id: string;
@@ -46,21 +47,21 @@ interface TournamentWithPlayers extends Tournament {
 	bracket?: TournamentBracket;
 }
 
-// Backend schema interface for tournament results
-interface TournamentResultsPayload {
-	tournamentId: string;
-	winnerId: string;
-	matches: {
-		player1Id: string;
-		player2Id: string;
-		winnerId: string;
-		loserId: string;
-		winnerScore: number;
-		loserScore: number;
-		round: number;
-		matchNumber: number;
-	}[];
-}
+// // Backend schema interface for tournament results
+// interface TournamentResultsPayload {
+// 	tournamentId: string;
+// 	winnerId: string;
+// 	matches: {
+// 		player1Id: string;
+// 		player2Id: string;
+// 		winnerId: string;
+// 		loserId: string;
+// 		winnerScore: number;
+// 		loserScore: number;
+// 		round: number;
+// 		matchNumber: number;
+// 	}[];
+// }
 
 interface TournamentStore {
 	tournaments: TournamentWithPlayers[];
@@ -77,7 +78,7 @@ interface TournamentStore {
 // Bracket generation functions
 const generateBracketForFourPlayers = (players: TournamentPlayer[], bestOf: number): BracketMatch[] => {
 	const shuffled = [...players].sort(() => Math.random() - 0.5);
-	
+
 	const matches: BracketMatch[] = [
 		// Semifinals
 		{
@@ -117,21 +118,21 @@ const generateBracketForFourPlayers = (players: TournamentPlayer[], bestOf: numb
 			requiredWins: Math.ceil(bestOf / 2) // Calculate required wins from bestOf
 		}
 	];
-	
+
 	return matches;
 };
 
 const generateBracketWithBaskets = (players: TournamentPlayer[], bestOf: number): BracketMatch[] => {
 	const playerCount = players.length;
 	const isEightPlayers = playerCount === 8;
-	
+
 	// Sort players by rating (highest first)
 	const sortedPlayers = [...players].sort((a, b) => {
 		const aRating = a.stats?.rating || 0;
 		const bRating = b.stats?.rating || 0;
 		return bRating - aRating;
 	});
-	
+
 	// Create 4 baskets
 	const basketSize = Math.floor(playerCount / 4);
 	const baskets: TournamentPlayer[][] = [
@@ -140,10 +141,10 @@ const generateBracketWithBaskets = (players: TournamentPlayer[], bestOf: number)
 		sortedPlayers.slice(basketSize * 2, basketSize * 3), // Third tier
 		sortedPlayers.slice(basketSize * 3) // Bottom players
 	];
-	
+
 	const matches: BracketMatch[] = [];
 	let matchId = 1;
-	
+
 	if (isEightPlayers) {
 		// For 8 players: 4 matches, 2 groups of 4
 		for (let group = 0; group < 2; group++) {
@@ -304,10 +305,10 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 
 	createTournament: async (tournamentData: CreateTournamentDto, creator: string, creatorPlayer?: TournamentPlayer) => {
 		set({ loading: true });
-		
+
 		// Simulate API delay
 		await new Promise(resolve => setTimeout(resolve, 500));
-		
+
 		// Use provided creator player or create a default one
 		const finalCreatorPlayer: TournamentPlayer = creatorPlayer || {
 			id: creator.toLowerCase().replace(/\s+/g, ''), // Use creator name as ID for now
@@ -324,7 +325,7 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 				rating: 50 // Default rating for new users
 			}
 		};
-		
+
 		const newTournament: TournamentWithPlayers = {
 			id: Date.now().toString(),
 			name: tournamentData.name,
@@ -347,13 +348,13 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 
 	joinTournament: async (tournamentId: string, player: TournamentPlayer) => {
 		set({ loading: true });
-		
+
 		// Simulate API delay
 		await new Promise(resolve => setTimeout(resolve, 300));
-		
+
 		const { tournaments } = get();
 		const tournamentIndex = tournaments.findIndex(t => t.id === tournamentId);
-		
+
 		if (tournamentIndex === -1) {
 			set({ loading: false });
 			return null;
@@ -362,7 +363,7 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 		// Check if player is already in the tournament
 		const tournament = tournaments[tournamentIndex];
 		const isAlreadyJoined = tournament.players.some(p => p.id === player.id);
-		
+
 		if (isAlreadyJoined) {
 			set({ loading: false });
 			return tournament; // Already joined
@@ -391,30 +392,30 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 
 	startTournament: async (tournamentId: string) => {
 		set({ loading: true });
-		
+
 		// Simulate API delay
 		await new Promise(resolve => setTimeout(resolve, 500));
-		
+
 		const { tournaments } = get();
 		const tournamentIndex = tournaments.findIndex(t => t.id === tournamentId);
-		
+
 		if (tournamentIndex === -1) {
 			set({ loading: false });
 			return null;
 		}
-		
+
 		const tournament = tournaments[tournamentIndex];
-		
+
 		// Check if tournament is ready to start
 		if (tournament.participants < tournament.maxParticipants || tournament.status !== 'waiting') {
 			set({ loading: false });
 			return null;
 		}
-		
+
 		// Generate bracket based on player count
 		let matches: BracketMatch[] = [];
 		let rounds = 0;
-		
+
 		if (tournament.players.length === 4) {
 			matches = generateBracketForFourPlayers(tournament.players, tournament.bestOf);
 			rounds = 2; // Semifinals + Final
@@ -425,26 +426,26 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 			matches = generateBracketWithBaskets(tournament.players, tournament.bestOf);
 			rounds = 4; // Round of 16 + Quarterfinals + Semifinals + Final
 		}
-		
+
 		const bracket: TournamentBracket = {
 			tournamentId,
 			matches,
 			rounds,
 			isGenerated: true
 		};
-		
+
 		const updatedTournaments = [...tournaments];
 		updatedTournaments[tournamentIndex] = {
 			...updatedTournaments[tournamentIndex],
 			status: 'in-progress',
 			bracket
 		};
-		
+
 		set({
 			tournaments: updatedTournaments,
 			loading: false
 		});
-		
+
 		return updatedTournaments[tournamentIndex];
 	},
 
@@ -460,49 +461,49 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 	updateMatchResult: (tournamentId: string, matchId: string, winner: TournamentPlayer, finalScore?: string) => {
 		const { tournaments } = get();
 		const tournamentIndex = tournaments.findIndex(t => t.id === tournamentId);
-		
+
 		if (tournamentIndex === -1) {
 			console.error('Tournament not found');
 			return null;
 		}
-		
+
 		const tournament = tournaments[tournamentIndex];
-		
+
 		if (!tournament.bracket) {
 			console.error('Tournament has no bracket');
 			return null;
 		}
-		
+
 		const updatedTournaments = [...tournaments];
 		const updatedTournament = { ...updatedTournaments[tournamentIndex] };
-		const updatedBracket: TournamentBracket = { 
+		const updatedBracket: TournamentBracket = {
 			...updatedTournament.bracket!,
 			matches: updatedTournament.bracket!.matches || [],
 		};
 		const updatedMatches = [...updatedBracket.matches];
-		
+
 		// Find the match to update
 		const matchIndex = updatedMatches.findIndex(m => m.id === matchId);
-		
+
 		if (matchIndex === -1) {
 			console.error('Match not found in bracket');
 			return null;
 		}
-		
+
 		const match = { ...updatedMatches[matchIndex] };
-		
+
 		// Update games won for the winner
 		if (winner.id === match.player1?.id) {
 			match.gamesWon.player1++;
 		} else if (winner.id === match.player2?.id) {
 			match.gamesWon.player2++;
 		}
-		
+
 		// Check if series is complete
 		const p1Wins = match.gamesWon.player1;
 		const p2Wins = match.gamesWon.player2;
 		const requiredWins = match.requiredWins;
-		
+
 		if (p1Wins >= requiredWins || p2Wins >= requiredWins) {
 			// Series is complete
 			const seriesWinner = p1Wins >= requiredWins ? match.player1! : match.player2!;
@@ -511,19 +512,19 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 			if (finalScore) {
 				match.finalScore = finalScore;
 			}
-			
+
 			// Advance winner to next round if there is a next match
 			if (match.nextMatchId) {
 				const nextMatchIndex = updatedMatches.findIndex(m => m.id === match.nextMatchId);
 				if (nextMatchIndex !== -1) {
 					const nextMatch = { ...updatedMatches[nextMatchIndex] };
-					
+
 					// Find the complete player data from the tournament's players list
 					const fullWinnerData = updatedTournament.players.find(p => p.id === seriesWinner.id) || seriesWinner;
-					
+
 					// Determine which slot the winner should fill based on bracket structure
 					let targetSlot: 'player1' | 'player2' = 'player1';
-					
+
 					// 8-player tournament bracket logic
 					if (match.nextMatchId === 'match-5') {
 						targetSlot = (match.id === 'match-1') ? 'player1' : 'player2';
@@ -550,7 +551,7 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 					} else {
 						targetSlot = !nextMatch.player1 ? 'player1' : 'player2';
 					}
-					
+
 					nextMatch[targetSlot] = fullWinnerData;
 					updatedMatches[nextMatchIndex] = nextMatch;
 				}
@@ -559,17 +560,17 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 			// Series continues
 			match.status = 'in_progress';
 		}
-		
+
 		// Update the match in the array first
 		updatedMatches[matchIndex] = match;
-		
+
 		// Check if tournament is complete (final match completed) - moved outside series logic
 		const finalMatches = updatedMatches.filter(m => !m.nextMatchId);
 		const allFinalsComplete = finalMatches.every(m => m.status === 'completed');
-		
+
 		if (allFinalsComplete) {
 			updatedTournament.status = 'completed';
-			
+
 			// Automatically submit tournament results to backend when tournament completes
 			setTimeout(async () => {
 				try {
@@ -579,20 +580,20 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 				}
 			}, 2000);
 		}
-		
+
 		updatedBracket.matches = updatedMatches;
 		updatedTournament.bracket = updatedBracket;
 		updatedTournaments[tournamentIndex] = updatedTournament;
-		
+
 		set({ tournaments: updatedTournaments });
-		
+
 		return updatedTournament;
 	},
 
 	submitTournamentResults: async (tournamentId: string) => {
 		const { tournaments } = get();
 		const tournament = tournaments.find(t => t.id === tournamentId);
-		
+
 		if (!tournament || !tournament.bracket || tournament.status !== 'completed') {
 			console.error('Tournament not found or not completed');
 			return;
@@ -600,7 +601,7 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 
 		// Get all completed matches
 		const completedMatches = tournament.bracket.matches.filter(m => m.status === 'completed');
-		
+
 		if (completedMatches.length === 0) {
 			console.error('No completed matches found');
 			return;
@@ -609,7 +610,7 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 		// Find overall tournament winner (winner of final match)
 		const finalMatches = completedMatches.filter(m => !m.nextMatchId);
 		const tournamentWinner = finalMatches[0]?.winner;
-		
+
 		if (!tournamentWinner) {
 			console.error('Tournament winner not found');
 			return;
@@ -624,7 +625,7 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 			// Parse finalScore (e.g., "5-3" or "3-1")
 			let winnerScore = 5; // Default to max
 			let loserScore = 0;
-			
+
 			if (match.finalScore) {
 				const scores = match.finalScore.split('-').map(Number);
 				if (scores.length === 2 && !isNaN(scores[0]) && !isNaN(scores[1])) {
@@ -655,7 +656,7 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 		});
 
 		// Prepare payload for backend
-		const payload: TournamentResultsPayload = {
+		const payload: RecordTournamentResultsDto = {
 			tournamentId,
 			winnerId: tournamentWinner.id,
 			matches: matchResults
@@ -668,13 +669,15 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 			//   headers: { 'Content-Type': 'application/json' },
 			//   body: JSON.stringify(payload)
 			// });
-			
+
 			// Simulate API delay
-			await new Promise(resolve => setTimeout(resolve, 1000));
-			
-	} catch (error) {
-		console.error('❌ Failed to submit tournament results:', error);
-		throw error;
-	}
+			// added 25.7 - Use the dedicated API function instead of direct fetch
+			const result = await recordTournamentResults(payload);
+			console.log('✅ Tournament results submitted successfully:', result);
+
+		} catch (error) {
+			console.error('❌ Failed to submit tournament results:', error);
+			throw error;
+		}
 	}
 })); 

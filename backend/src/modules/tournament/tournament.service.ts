@@ -7,6 +7,7 @@ import { TournamentGameRepository } from "./tournament.repository";
 import { TournamentStatus, TournamentSize, TournamentGame } from "./entities/tournament.entity";
 import { CreateTournamentDto, JoinTournamentDto, LeaveTournamentDto, RecordTournamentResultsDto } from "./tournament.dto";
 import { GameHistoryService } from "../gameHistory/gameHistory.service";
+import { UserStatsService } from "../stats/services/user-stats.service";
 
 /**
  * will help create the tournament populate the first round of the matches based on rating calculation and then send it frontend
@@ -15,7 +16,8 @@ import { GameHistoryService } from "../gameHistory/gameHistory.service";
 export class TournamentGameService {
 	constructor(
 		private readonly tournamentGameRepository: TournamentGameRepository,
-		private readonly gameHistoryService: GameHistoryService
+		private readonly gameHistoryService: GameHistoryService,
+		private readonly userStatsService: UserStatsService
 	) { }
 
 	async findTournamentById(em: EntityManager, tournamentId: string): Promise<TournamentGame | null> {
@@ -153,6 +155,25 @@ async joinTournamentGame(em: EntityManager, tournamentId: string, joinTournament
 				winnerScore: match.winnerScore,
 				loserScore: match.loserScore,
 				local: false // Tournament games are not local
+			});
+
+			// Update user stats for both winner and loser
+			await this.userStatsService.upsert(em, {
+				userId: match.winnerId,
+				won: true
+			});
+
+			await this.userStatsService.upsert(em, {
+				userId: match.loserId,
+				won: false
+			});
+
+			// Update user ratings based on match result
+			await this.userStatsService.updateUserRating(em, {
+				winnerId: match.winnerId,
+				loserId: match.loserId,
+				winnerScore: match.winnerScore,
+				loserScore: match.loserScore
 			});
 		}
 

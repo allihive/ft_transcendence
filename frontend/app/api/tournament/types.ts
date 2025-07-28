@@ -30,4 +30,20 @@ export interface TournamentsResponse {
 	success: boolean;
 	data?: Tournament[];
 	message?: string;
-} 
+}
+
+//25.7 added this. I know you had the interface in useTournament page already but I thought this would be cleaner?
+export interface RecordTournamentResultsDto {
+	tournamentId: string;
+	winnerId: string;
+	matches: {
+		player1Id: string;
+		player2Id: string;
+		winnerId: string;
+		loserId: string;
+		winnerScore: number;
+		loserScore: number;
+		round: number;
+		matchNumber: number;
+	}[];
+}

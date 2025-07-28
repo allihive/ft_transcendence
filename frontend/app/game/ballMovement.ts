@@ -259,10 +259,17 @@ const observer = scene.onBeforeRenderObservable.add(() => {
     // === SCORING LOGIC ===
     const zLimit = 6;
     if (ball.position.z < -zLimit || ball.position.z > zLimit) {
-      const scoringCleanup = score(ball, topwall1, topwall2, angle, direction, speed, zLimit, playersRef.current, setPlayers);
-      if (scoringCleanup && typeof scoringCleanup === 'function') {
-        timeoutCleanups.push(scoringCleanup);
+      if (playersRef.current) {
+        const scoringCleanup = score(ball, topwall1, topwall2, angle, direction, speed, zLimit, playersRef.current, setPlayers);
+        if (scoringCleanup && typeof scoringCleanup === 'function') {
+          timeoutCleanups.push(scoringCleanup);
+        }
       }
+      // Original code (commented out due to TypeScript null check requirement)
+      // const scoringCleanup = score(ball, topwall1, topwall2, angle, direction, speed, zLimit, playersRef.current, setPlayers);
+      // if (scoringCleanup && typeof scoringCleanup === 'function') {
+      //   timeoutCleanups.push(scoringCleanup);
+      // }
     }
   }
 

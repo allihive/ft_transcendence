@@ -29,25 +29,25 @@ echo ""
 # Create User A (Alice)
 echo -e "${YELLOW}Creating User A (Alice)${NC}"
 USER_A_ID=$(uuidgen)
-sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_A_ID', 'alice@example.com', 'Alice Johnson', 'alice_j', '\$2b\$10\$hashedpassword123', 'password', 'https://example.com/avatar1.jpg', datetime('now'), datetime('now'));"
+sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_A_ID', 'alice@example.com', 'Alice Johnson', 'alice_j', '!Asdf1asdf', 'password', 'https://example.com/avatar1.jpg', datetime('now'), datetime('now'));"
 echo -e "${GREEN}✓ User A created with ID: ${USER_A_ID}${NC}\n"
 
 # Create User B (Bob)
 echo -e "${YELLOW}Creating User B (Bob)${NC}"
 USER_B_ID=$(uuidgen)
-sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_B_ID', 'bob@example.com', 'Bob Smith', 'bob_s', '\$2b\$10\$hashedpassword123', 'password', 'https://example.com/avatar2.jpg', datetime('now'), datetime('now'));"
+sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_B_ID', 'bob@example.com', 'Bob Smith', 'bob_s', '!Asdf1asdf', 'password', 'https://example.com/avatar2.jpg', datetime('now'), datetime('now'));"
 echo -e "${GREEN}✓ User B created with ID: ${USER_B_ID}${NC}\n"
 
 # Create User C (Charlie)
 echo -e "${YELLOW}Creating User C (Charlie)${NC}"
 USER_C_ID=$(uuidgen)
-sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_C_ID', 'charlie@example.com', 'Charlie Brown', 'charlie_b', '\$2b\$10\$hashedpassword123', 'password', 'https://example.com/avatar3.jpg', datetime('now'), datetime('now'));"
+sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_C_ID', 'charlie@example.com', 'Charlie Brown', 'charlie_b', '!Asdf1asdf', 'password', 'https://example.com/avatar3.jpg', datetime('now'), datetime('now'));"
 echo -e "${GREEN}✓ User C created with ID: ${USER_C_ID}${NC}\n"
 
 # Create User D (Diana)
 echo -e "${YELLOW}Creating User D (Diana)${NC}"
 USER_D_ID=$(uuidgen)
-sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_D_ID', 'diana@example.com', 'Diana Prince', 'diana_p', '\$2b\$10\$hashedpassword123', 'password', 'https://example.com/avatar4.jpg', datetime('now'), datetime('now'));"
+sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_D_ID', 'diana@example.com', 'Diana Prince', 'diana_p', '!Asdf1asdf', 'password', 'https://example.com/avatar4.jpg', datetime('now'), datetime('now'));"
 echo -e "${GREEN}✓ User D created with ID: ${USER_D_ID}${NC}\n"
 
 echo -e "${CYAN}Created Users Summary:${NC}"

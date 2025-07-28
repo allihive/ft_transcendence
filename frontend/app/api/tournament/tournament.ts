@@ -1,11 +1,12 @@
 import { fetchJson } from '../client';
-import type { CreateTournamentDto, JoinTournamentDto, TournamentResponse, TournamentsResponse } from './types';
+import type { CreateTournamentDto, JoinTournamentDto, TournamentResponse, TournamentsResponse, RecordTournamentResultsDto } from './types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
-export async function createTournament(tournamentData: CreateTournamentDto): Promise<TournamentResponse> {
+//25.7
+export async function createTournament(tournamentData: CreateTournamentDto): Promise<TournamentResponse | null> {
 	try {
-		const response = await fetchJson(`${API_BASE_URL}/tournaments`, {
+		const response = await fetchJson<TournamentResponse>(`${API_BASE_URL}/tournaments`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -53,4 +54,16 @@ export async function getTournament(tournamentId: string): Promise<TournamentRes
 		console.error('Failed to get tournament:', error);
 		throw error;
 	}
+}
+
+export async function recordTournamentResults(resultsData: RecordTournamentResultsDto): Promise<TournamentResponse> {
+// dont need try and catch and fetchJson already do.
+	const response = await fetchJson<TournamentResponse>(`${API_BASE_URL}/tournament/record-tournament`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(resultsData),
+	});
+	return response || { success: false, message: 'No response received' };
 } 
