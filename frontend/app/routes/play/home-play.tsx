@@ -10,7 +10,7 @@ export default function Play() {
 		<>
 			<div className="flex items-center justify-center w-full px-8 my-8">
 				<div className="flex-grow max-w-xl mx-8 border-t border-black dark:border-white"></div>
-				<span className="px-4 text-black dark:text-background font-title">{t("playModes")}</span>
+				<span className="px-4 text-black dark:text-background font-title">{t("playerMode")}</span>
 				<div className="flex-grow max-w-2xl mx-8 border-t border-black dark:border-white"></div>
 			</div>
 			<div className="grid auto-rows-auto grid-cols-[max-content] gap-y-6 mt-8 mx-auto font-title">

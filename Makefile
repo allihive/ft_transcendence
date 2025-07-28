@@ -14,7 +14,7 @@ clean:
 	@docker compose -p $(NAME) down --rmi all -v
 
 fclean: clean
-	@sudo rm -rf $(DATA_DIR)
+	@rm -rf $(DATA_DIR)
 
 re: fclean $(NAME)
 

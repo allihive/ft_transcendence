@@ -33,7 +33,6 @@ export default function Login() {
 					onFailure={(error) => toast.error(error.message)}
 				/>
 
-				<div className="border-t pt-2"></div>
 
 				<div className="flex flex-grow justify-center items-center mx-8 mt-2 ">
 					<NavLink

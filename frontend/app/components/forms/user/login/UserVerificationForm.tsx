@@ -46,7 +46,11 @@ export function UserVerificationForm({ onSuccess, onFailure, onSubmitStateChange
 	return (
 		<div className="flex flex-col items-center">
 			<CredentialsForm disabled={isProcessing} onSumit={submitHandler} />
-			<div className="text-center text-sm text-gray-500">or</div>
+			<div className="flex items-center justify-center w-full px-8 my-4">
+				<div className="flex-grow max-w-xl mx-8 border-t border-black"></div>
+				<span className="px-4 text-black font-title">OR</span>
+				<div className="flex-grow max-w-2xl mx-8 border-t border-black"></div>
+			</div>
 			<GoogleLoginButton clientId={`${import.meta.env.VITE_GOOGLE_CLIENT_ID}`} onLogin={googleLoginHandler} />
 		</div>
 	);
