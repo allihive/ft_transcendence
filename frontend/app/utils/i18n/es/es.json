@@ -118,6 +118,8 @@
 	"opponent": "Adversario/a",
 	"winOrLoss": "Ganar/Peder",
 	"winRate": "Tasa de Ganancia",
+	"win": "ganar",
+	"loss": "peder",
 	"chats": "Charlas",
 	"close": "Cerca",
 	"noData": "No hay datos disponibles",

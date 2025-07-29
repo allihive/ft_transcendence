@@ -56,6 +56,7 @@ export async function clientLoader(): Promise<{
 	  const userMatchHistory = await getUserMatches(user?.id);
 	  
 	  console.log(user.id);
+	  console.log(userStat?.winRate);
 	  if (!userStat || !userMatchHistory) {
 		return {
 		  userStats: [],
@@ -65,8 +66,8 @@ export async function clientLoader(): Promise<{
 	
 	  return {
 		userStats: [
-		  { name: "win", matchesPlayed: 100, percentage: userStat.winRate },
-		  { name: "loss", matchesPlayed: 100, percentage: 100 - userStat.winRate },
+		  { name: "win", matchesPlayed: userStat.matchesPlayed, percentage: userStat.winRate },
+		  { name: "loss", matchesPlayed: userStat.matchesPlayed, percentage: 100 - userStat.winRate },
 		],
 		userMatchHistory: userMatchHistory, // This is now an array of matches
 	  };
@@ -82,6 +83,8 @@ export async function clientLoader(): Promise<{
 
 export default function Users() {
   const { userStats, userMatchHistory } = useLoaderData();
+	console.log(userStats);
+
   return (
     <UsersStats userStats={userStats} userMatchHistory={userMatchHistory} />
   );

@@ -38,12 +38,14 @@ export type MyChartProps = {
 
 const CustomPieToolTip = ({ active, payload }: CustomTooltipProps) => {
 	const { t } = useTranslation();
+	console.log("CustomPieToolTip::payload=", payload);
+	//  console.log(payload[0].payload);
 
 	if (active && payload && payload.length) {
 		const data = payload[0].payload;
 		return (
 			<div className="custom-tooltip p-2 bg-white border rounded shadow text-black">
-				<p>{`${t('win')}: ${data.percentage}%`}</p>
+				<p>{`${t(data.name)}: ${data.percentage}%`}</p>
 				<p>{t('totalGames')}: {data.matchesPlayed}</p>
 			</div>
 		);

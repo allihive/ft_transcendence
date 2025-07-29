@@ -117,6 +117,8 @@
 	"opponent": "Opponent",
 	"winOrLoss": "Win/Loss",
 	"winRate": "Win Rate",
+	"win": "win",
+	"loss": "loss",
 	"chats": "Chats",
 	"close": "Close",
 	"noData": "No data available",
