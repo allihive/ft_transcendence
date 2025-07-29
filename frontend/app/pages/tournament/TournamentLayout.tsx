@@ -68,7 +68,7 @@ export function TournamentPage(): JSX.Element {
 				}
 			};
 
-			const creator = user.name || user.username || user.email || 'Unknown';
+			const creator = user.id || user.username || user.email || 'Unknown';
 			const newTournament = await createTournament(tournamentData, creator, creatorPlayer);
 			
 			toast.success(`${t('tournamentCreated')} "${newTournamentName}"!`);

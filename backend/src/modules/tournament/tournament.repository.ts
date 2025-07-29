@@ -26,6 +26,10 @@ export class TournamentGameRepository {
 		return await em.findOne(TournamentGame, { id: tournamentId });
 	}
 
+	async findTournamentByCreator(em: EntityManager, CreatorId: string): Promise<TournamentGame | null> {
+		return await em.findOne(TournamentGame, { creatorId: CreatorId });
+	}
+
 	async findAllTournaments(em: EntityManager, where: Partial<TournamentGame> = {}): Promise<TournamentGame[]> {
 		return await em.find(TournamentGame, where, { orderBy: { createdAt: 'DESC' } });
 	}

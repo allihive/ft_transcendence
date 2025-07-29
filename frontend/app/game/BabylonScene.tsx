@@ -64,7 +64,7 @@ export function BabylonScene({ player1, player2, updateStats = true }: BabylonSc
 			(window as any).setGameOverState = async (winner: string, scores?: { player1Score: number; player2Score: number }) => {
 				console.log('🎮 Game over called! Winner:', winner, 'Scores:', scores);
 				console.log('🎮 Before setting states - gameEnded:', gameEnded, 'winnerName:', winnerName);
-				
+
 				setGameEnded(true);
 				setWinnerName(winner);
 				console.log('🎮 State setters called with setTimeout, should trigger re-render now');
@@ -74,12 +74,12 @@ export function BabylonScene({ player1, player2, updateStats = true }: BabylonSc
 					// Find winner and loser players
 					const winnerPlayer = [player1, player2].find(p => p.username === winner);
 					const loserPlayer = [player1, player2].find(p => p.username !== winner);
-					
+
 					// Check if both players have UUID-like IDs (not just usernames)
 					const isValidUUID = (id: string) => {
 						return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 					};
-					
+
 					// check if the BOTH winner and loserPlayer are uuid or else it will just go through
 					if (winnerPlayer && loserPlayer && isValidUUID(winnerPlayer.id) && isValidUUID(loserPlayer.id)) {
 						// Update basic stats (wins/losses)

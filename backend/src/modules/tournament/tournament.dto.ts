@@ -26,8 +26,10 @@ export const startTournamentDtoSchema = Type.Object({
 
 // Record tournament results DTO
 export const recordTournamentResultsSchema = Type.Object({
-  tournamentId: Type.String({ format: "uuid" }),
   winnerId: Type.String({ format: "uuid" }),
+  creatorId: Type.String({ format: "uuid" }),
+  tournamentSize: Type.Enum(TournamentSize),
+  name: Type.Optional(Type.String({ minLength: 1, maxLength: 100 })),
   matches: Type.Array(Type.Object({
     player1Id: Type.String({ format: "uuid" }),
     player2Id: Type.String({ format: "uuid" }),

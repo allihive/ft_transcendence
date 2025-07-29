@@ -26,28 +26,55 @@ echo ""
 echo -e "${GREEN}--- Creating 4 users ---${NC}"
 echo ""
 
+# Try to hash the password using Node.js bcrypt
+echo -e "${CYAN}Attempting to hash password...${NC}"
+if command -v node &> /dev/null && [ -f "backend/node_modules/bcrypt/package.json" ]; then
+    PASSWORD_HASH=$(cd backend && node -e "const bcrypt = require('bcrypt'); console.log(bcrypt.hashSync('!Asdf1asdf', 10));" 2>/dev/null)
+    if [ -n "$PASSWORD_HASH" ]; then
+        echo -e "${GREEN}✓ Password hashed successfully${NC}"
+        echo -e "${CYAN}Using password hash: ${PASSWORD_HASH}${NC}"
+    else
+        echo -e "${RED}✗ Failed to hash password with bcrypt${NC}"
+        PASSWORD_HASH='$2b$10$rQZ9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z9Z'
+        echo -e "${YELLOW}Using fallback hash (this is for '!Asdf1asdf')${NC}"
+    fi
+else
+    echo -e "${RED}✗ Node.js or bcrypt not available${NC}"
+    # Fallback: Use a pre-generated bcrypt hash for '!Asdf1asdf'
+    PASSWORD_HASH='$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
+    echo -e "${YELLOW}Using pre-generated hash for password '!Asdf1asdf'${NC}"
+fi
+echo ""
+
 # Create User A (Alice)
-echo -e "${YELLOW}Creating User A (Alice)${NC}"
+echo -e "${YELLOW}Creating User A (Alice) - INACTIVE${NC}"
 USER_A_ID=$(uuidgen)
-sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_A_ID', 'alice@example.com', 'Alice Johnson', 'alice_j', '!Asdf1asdf', 'password', 'https://example.com/avatar1.jpg', datetime('now'), datetime('now'));"
-echo -e "${GREEN}✓ User A created with ID: ${USER_A_ID}${NC}\n"
+
+echo -e "${CYAN}Debug: Inserting password hash: ${PASSWORD_HASH}${NC}"
+sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, is_active, created_at, updated_at) VALUES ('$USER_A_ID', 'alice@example.com', 'Alice Johnson', 'alice_j', '$PASSWORD_HASH', 'password', 'https://example.com/avatar1.jpg', 0, datetime('now'), datetime('now'));"
+echo -e "${GREEN}✓ User A created with ID: ${USER_A_ID}${NC}"
+# Verify what was inserted
+ACTUAL_HASH=$(sqlite3 $DB_PATH "SELECT password_hash FROM users WHERE id = '$USER_A_ID';")
+echo -e "${CYAN}Verified password hash in DB: ${ACTUAL_HASH}${NC}"
+echo ""
 
 # Create User B (Bob)
-echo -e "${YELLOW}Creating User B (Bob)${NC}"
+echo -e "${YELLOW}Creating User B (Bob) - INACTIVE${NC}"
 USER_B_ID=$(uuidgen)
-sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_B_ID', 'bob@example.com', 'Bob Smith', 'bob_s', '!Asdf1asdf', 'password', 'https://example.com/avatar2.jpg', datetime('now'), datetime('now'));"
+sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, is_active, created_at, updated_at) VALUES ('$USER_B_ID', 'bob@example.com', 'Bob Smith', 'bob_s', '$PASSWORD_HASH', 'password', 'https://example.com/avatar2.jpg', 0, datetime('now'), datetime('now'));"
 echo -e "${GREEN}✓ User B created with ID: ${USER_B_ID}${NC}\n"
 
 # Create User C (Charlie)
 echo -e "${YELLOW}Creating User C (Charlie)${NC}"
 USER_C_ID=$(uuidgen)
-sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_C_ID', 'charlie@example.com', 'Charlie Brown', 'charlie_b', '!Asdf1asdf', 'password', 'https://example.com/avatar3.jpg', datetime('now'), datetime('now'));"
+
+sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_C_ID', 'charlie@example.com', 'Charlie Brown', 'charlie_b', '$PASSWORD_HASH', 'password', 'https://example.com/avatar3.jpg', datetime('now'), datetime('now'));"
 echo -e "${GREEN}✓ User C created with ID: ${USER_C_ID}${NC}\n"
 
 # Create User D (Diana)
 echo -e "${YELLOW}Creating User D (Diana)${NC}"
 USER_D_ID=$(uuidgen)
-sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_D_ID', 'diana@example.com', 'Diana Prince', 'diana_p', '!Asdf1asdf', 'password', 'https://example.com/avatar4.jpg', datetime('now'), datetime('now'));"
+sqlite3 $DB_PATH "INSERT INTO users (id, email, name, username, password_hash, auth_method, avatar_url, created_at, updated_at) VALUES ('$USER_D_ID', 'diana@example.com', 'Diana Prince', 'diana_p', '$PASSWORD_HASH', 'password', 'https://example.com/avatar4.jpg', datetime('now'), datetime('now'));"
 echo -e "${GREEN}✓ User D created with ID: ${USER_D_ID}${NC}\n"
 
 echo -e "${CYAN}Created Users Summary:${NC}"

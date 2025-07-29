@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import type { Tournament, CreateTournamentDto, RecordTournamentResultsDto } from '~/api/tournament/types';
-import { recordTournamentResults } from '~/api/tournament/tournament';
+
+import type { Tournament, CreateTournamentDto, RecordTournamentResultsDto } from '../api/tournament/types';
+import { recordTournamentResults } from '../api/tournament/tournament';
 
 interface TournamentPlayer {
 	id: string;
@@ -46,22 +47,6 @@ interface TournamentWithPlayers extends Tournament {
 	players: TournamentPlayer[];
 	bracket?: TournamentBracket;
 }
-
-// // Backend schema interface for tournament results
-// interface TournamentResultsPayload {
-// 	tournamentId: string;
-// 	winnerId: string;
-// 	matches: {
-// 		player1Id: string;
-// 		player2Id: string;
-// 		winnerId: string;
-// 		loserId: string;
-// 		winnerScore: number;
-// 		loserScore: number;
-// 		round: number;
-// 		matchNumber: number;
-// 	}[];
-// }
 
 interface TournamentStore {
 	tournaments: TournamentWithPlayers[];
@@ -305,8 +290,7 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 
 	createTournament: async (tournamentData: CreateTournamentDto, creator: string, creatorPlayer?: TournamentPlayer) => {
 		set({ loading: true });
-
-		// Simulate API delay
+		// Simulate API delay - original 
 		await new Promise(resolve => setTimeout(resolve, 500));
 
 		// Use provided creator player or create a default one
@@ -657,7 +641,10 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 
 		// Prepare payload for backend
 		const payload: RecordTournamentResultsDto = {
-			tournamentId,
+			// tournamentId,
+			creatorId: tournament.creator,
+			name: tournament.name,
+			tournamentSize: tournament.maxParticipants,
 			winnerId: tournamentWinner.id,
 			matches: matchResults
 		};
@@ -672,6 +659,9 @@ export const useTournament = create<TournamentStore>((set, get) => ({
 
 			// Simulate API delay
 			// added 25.7 - Use the dedicated API function instead of direct fetch
+
+			console.log ("PAYLOAD=", payload);
+
 			const result = await recordTournamentResults(payload);
 			console.log('✅ Tournament results submitted successfully:', result);
 

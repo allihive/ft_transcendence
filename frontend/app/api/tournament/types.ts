@@ -32,9 +32,11 @@ export interface TournamentsResponse {
 	message?: string;
 }
 
-//25.7 added this. I know you had the interface in useTournament page already but I thought this would be cleaner?
+//29.7 
 export interface RecordTournamentResultsDto {
-	tournamentId: string;
+	creatorId: string;
+	name: string;
+	tournamentSize: number;
 	winnerId: string;
 	matches: {
 		player1Id: string;

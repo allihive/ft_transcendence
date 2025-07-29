@@ -10,3 +10,4 @@ export const updateUser = async (userUpdateData: UserUpdateData): Promise<User> 
 
 	return user!;
 }
+

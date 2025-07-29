@@ -24,6 +24,10 @@ export class TournamentGameService {
 		return this.tournamentGameRepository.findTournamentById(em, tournamentId)
 	}
 
+	async findTournamentByCreator(em: EntityManager, creatorId: string): Promise<TournamentGame | null> {
+		return this.tournamentGameRepository.findTournamentByCreator(em, creatorId)
+	}
+
 	async findAllTournamentGames(em: EntityManager, where: Partial<TournamentGame>): Promise<TournamentGame[] | null> {
 		return this.tournamentGameRepository.findAllTournaments(em, where);
 	}
@@ -130,23 +134,18 @@ async joinTournamentGame(em: EntityManager, tournamentId: string, joinTournament
 		return tournament;
 	}
 	async recordTournamentResults(em: EntityManager, recordTournamentDto: RecordTournamentResultsDto): Promise<TournamentGame> {
-		const { tournamentId, winnerId, matches } = recordTournamentDto;
+		const { winnerId, creatorId, tournamentSize, name, matches } = recordTournamentDto;
 		
-		const tournament = await this.tournamentGameRepository.findTournamentById(em, tournamentId);
+		let tournament = await this.tournamentGameRepository.findTournamentByCreator(em, creatorId);
 		if (!tournament) {
-			throw new NotFoundException("Tournament not found");
+			// Create tournament if it doesn't exist using the provided data
+			const createTournamentData: CreateTournamentDto = {
+				creatorId,
+				tournamentSize,
+				name // This can be undefined since it's optional
+			};
+			tournament = await this.createTournamentGame(em, createTournamentData);
 		}
-
-		// Check if tournament is in progress
-		if (tournament.tournamentStatus !== TournamentStatus.IN_PROGRESS) {
-			throw new ConflictException("Tournament is not in progress");
-		}
-
-		// Validate that winner is one of the tournament players
-		if (!tournament.players.includes(winnerId)) {
-			throw new ConflictException("Winner must be a tournament participant");
-		}
-
 		// Record each match in game history
 		for (const match of matches) {
 			await this.gameHistoryService.createGameHistory(em, {
