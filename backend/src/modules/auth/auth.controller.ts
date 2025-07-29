@@ -1,9 +1,8 @@
 import { FastifyPluginAsync } from "fastify";
 import { BadRequestException } from "../../common/exceptions/BadRequestException";
 import { ForbiddenException } from "../../common/exceptions/ForbiddenException";
-import { UnauthorizedException } from "../../common/exceptions/UnauthorizedException";
 import { cookieConfig } from "../../config/cookie.config";
-import { CreateUserDto, CreateUserDtoSchema, getUserResponseDto, UserResponseTwoFactorAuthDto, UserResponseDto } from "../user/user.dto";
+import { CreateUserDto, CreateUserDtoSchema, getUserResponseDto, UserResponseTwoFactorAuthDto } from "../user/user.dto";
 import {
 	GoogleLoginDto,
 	GoogleLoginDtoSchema,
@@ -61,7 +60,7 @@ export const authController: FastifyPluginAsync = async (app) => {
 
 			if (user.isTwoFactorEnabled) {
 				const payload: UserResponseTwoFactorAuthDto = { id: user.id, twoFactorAuthRequired: true };
-				const token = app.jwt.sign(payload);
+				const token = app.jwt.sign(payload, { expiresIn: "5m" });
 
 				return reply
 					.setCookie("twoFactorAuthToken", token, { maxAge: 1000 * 60 * 5 })
@@ -131,5 +130,3 @@ export const authController: FastifyPluginAsync = async (app) => {
 			.send();
 	});
 };
-
-
