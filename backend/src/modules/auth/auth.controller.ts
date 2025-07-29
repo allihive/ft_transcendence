@@ -3,7 +3,7 @@ import { BadRequestException } from "../../common/exceptions/BadRequestException
 import { ForbiddenException } from "../../common/exceptions/ForbiddenException";
 import { UnauthorizedException } from "../../common/exceptions/UnauthorizedException";
 import { cookieConfig } from "../../config/cookie.config";
-import { CreateUserDto, CreateUserDtoSchema, getUserResponseDto, UserResponseTwoFactorAuthDto, UserResponseDto} from "../user/user.dto";
+import { CreateUserDto, CreateUserDtoSchema, getUserResponseDto, UserResponseTwoFactorAuthDto, UserResponseDto } from "../user/user.dto";
 import {
 	GoogleLoginDto,
 	GoogleLoginDtoSchema,
@@ -15,7 +15,10 @@ export const authController: FastifyPluginAsync = async (app) => {
 	app.get("/whoami", {
 		onRequest: async (request, reply) => {
 			if (!request.user) {
-				return reply.code(204).send();
+				return reply.code(200).send({
+					user: null,
+					...(request.jwtTokenExpiredError ? { message: "Your session has timed out" } : {})
+				});
 			}
 		},
 		handler: async (request, reply) => {
@@ -23,7 +26,7 @@ export const authController: FastifyPluginAsync = async (app) => {
 			const user = await app.userService.findUser(em, { id: request.user.id });
 
 			if (!user) {
-				return reply.code(204).send();
+				return reply.code(200).send({ user: request.user });
 			}
 
 			const payload = getUserResponseDto(user);
@@ -32,7 +35,7 @@ export const authController: FastifyPluginAsync = async (app) => {
 			return reply
 				.setCookie("accessToken", token)
 				.code(200)
-				.send(payload);
+				.send({ user: payload });
 		}
 	});
 
@@ -40,7 +43,7 @@ export const authController: FastifyPluginAsync = async (app) => {
 		schema: { body: LoginDtoSchema },
 		handler: async (request, reply) => {
 			const { email, password, verifyOnly } = request.body as LoginDto;
-			
+
 			if (request.user && !verifyOnly) {
 				throw new BadRequestException("Authenticated user can't login again");
 			}
@@ -67,7 +70,7 @@ export const authController: FastifyPluginAsync = async (app) => {
 			}
 
 			const payload = getUserResponseDto(user);
-			const token = app.jwt.sign(payload, { expiresIn: "1h" });
+			const token = app.jwt.sign(payload);
 
 			return reply
 				.setCookie("accessToken", token)
@@ -121,20 +124,14 @@ export const authController: FastifyPluginAsync = async (app) => {
 		}
 	});
 
-	app.post("/logout", {
-		handler: async (request, reply) => {
-			if (!request.user) {
-				throw new BadRequestException("You haven't signed in yet");
-			}
-
-			return reply
-				.clearCookie("accessToken", cookieConfig)
-				.code(204)
-				.send();
-		}
+	app.post("/logout", async (request, reply) => {
+		return reply
+			.clearCookie("accessToken", cookieConfig)
+			.code(204)
+			.send();
 	});
 
-// WebSocket dedicated api for sending signed token
+	// WebSocket dedicated api for sending signed token
 	app.get('/ws-token', {
 		handler: async (request, reply) => {
 			try {

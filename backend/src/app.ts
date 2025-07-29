@@ -16,7 +16,6 @@ import { existsSync, mkdirSync } from "fs";
 import { realtimeModule } from "./modules/realtime/realtime.module";
 import type { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { gameHistoryModule } from "./modules/gameHistory/gameHistory.module";
-// import { remoteGameModule } from "./modules/remote/remote.module";
 import { tournamentGameModule } from "./modules/tournament/tournament.module";
 import { statsModule } from "./modules/stats/stats.module";
 import { getErrorResponseDto } from "./common/utils/getErrorResponseDto";
@@ -26,6 +25,10 @@ import { Server } from "https";
 declare module "fastify" {
 	interface FastifyInstance {
 		cryptoService: CryptoService,
+	}
+
+	interface FastifyRequest {
+		jwtTokenExpiredError: unknown
 	}
 }
 
@@ -60,7 +63,10 @@ const installFastifyPlugins = async (app: FastifyInstance): Promise<void> => {
 
 	await app.register(fastifyJWT, {
 		secret: process.env.JWT_SECRET!,
-		cookie: { cookieName: "accessToken", signed: false }
+		cookie: { cookieName: "accessToken", signed: false },
+		sign: {
+			expiresIn: "1m"
+		}
 	});
 };
 
@@ -72,9 +78,8 @@ const installPlugins = async (app: FastifyInstance): Promise<void> => {
 	await app.register(databaseModule);
 	await app.register(userModule, { prefix: "/api/users" });
 	await app.register(authModule, { prefix: "/api/auth" });
-	await app.register(statsModule, { prefix: "/api/stats"});
-	await app.register(gameHistoryModule, { prefix: "/api/history"});
-	// await app.register(remoteGameModule, { prefix: "/api/remote"});
+	await app.register(statsModule, { prefix: "/api/stats" });
+	await app.register(gameHistoryModule, { prefix: "/api/history" });
 	await app.register(mediaModule);
 	await app.register(realtimeModule, { prefix: "/api/realtime" });
 	await app.register(tournamentGameModule, { prefix: "/api/tournament" });
@@ -98,7 +103,12 @@ const registerHooks = async (app: FastifyInstance): Promise<void> => {
 		try {
 			await request.jwtVerify();
 		} catch (error) {
-			console.log((error as Record<string, any>)?.message ?? "Unauthorized");
+			const err = error as { code?: string };
+			reply.clearCookie("accessToken", cookieConfig);
+
+			if (err.code === "FST_JWT_AUTHORIZATION_TOKEN_EXPIRED") {
+				request.jwtTokenExpiredError = err;
+			}
 		}
 	});
 }

@@ -10,14 +10,28 @@ import {
 
 import "./app.css";
 import "./utils/i18n";
-import { Toaster } from "react-hot-toast";
+import { Toaster, toast } from "react-hot-toast";
 import { whoami } from "./api/auth/whoami";
 import { useAuth } from "./stores/useAuth";
 import type { Route } from "./+types/root";
 
 export async function clientLoader(): Promise<void> {
-	const me = await whoami();
-	useAuth.setState({ user: me });
+	try {
+		const { message, user } = await whoami();
+		useAuth.setState({ user });
+
+		if (message) {
+			toast(message, {
+				icon: 'ℹ️',
+				style: {
+					background: '#e0f2fe',
+					color: '#0369a1',
+				},
+			});
+		}
+	} catch (error) {
+		toast.error((error as Error).message);
+	}
 }
 
 export function HydrateFallback() {

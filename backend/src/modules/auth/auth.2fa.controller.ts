@@ -59,7 +59,7 @@ export const twoFactorAuthController: FastifyPluginAsync = async (app) => {
 			}
 
 			const payload = getUserResponseDto(user);
-			const token = app.jwt.sign(payload, { expiresIn: "1h" });
+			const token = app.jwt.sign(payload);
 
 			return reply
 				.setCookie("accessToken", token)
@@ -84,7 +84,7 @@ export const twoFactorAuthController: FastifyPluginAsync = async (app) => {
 			}
 
 			const payload = getUserResponseDto(user);
-			const token = app.jwt.sign(payload, { expiresIn: "1h" });
+			const token = app.jwt.sign(payload);
 
 			return reply
 				.clearCookie("twoFactorAuthToken", { maxAge: 1000 * 60 * 5 })

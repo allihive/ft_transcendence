@@ -1,10 +1,14 @@
 import { HttpError } from "~/exceptions/HttpError";
 import type { FetchError } from "./types";
+import { useAuth } from "~/stores/useAuth";
 
 export const fetchJson = async<T> (url: string, options?: RequestInit): Promise<T | null> => {
 	try {
 		const response = await fetch(url, { credentials: "include" , ...options });
 
+		if (response.status === 401) {
+			useAuth.setState({ user: null });
+		}
 
 		if (!response.ok) {
 			const err: FetchError = await response.json();
