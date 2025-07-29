@@ -61,7 +61,7 @@ export const authController: FastifyPluginAsync = async (app) => {
 
 			if (user.isTwoFactorEnabled) {
 				const payload: UserResponseTwoFactorAuthDto = { id: user.id, twoFactorAuthRequired: true };
-				const token = app.jwt.sign(payload, { expiresIn: "5m" });
+				const token = app.jwt.sign(payload);
 
 				return reply
 					.setCookie("twoFactorAuthToken", token, { maxAge: 1000 * 60 * 5 })
@@ -129,28 +129,6 @@ export const authController: FastifyPluginAsync = async (app) => {
 			.clearCookie("accessToken", cookieConfig)
 			.code(204)
 			.send();
-	});
-
-	// WebSocket dedicated api for sending signed token
-	app.get('/ws-token', {
-		handler: async (request, reply) => {
-			try {
-				if (!request.user) {
-					throw new UnauthorizedException("Unauthorized user is not allowed");
-				}
-				const user = request.user as UserResponseDto;
-				const wsPayload = {
-					...user,
-					avatarUrl: user.avatarUrl ? Buffer.from(user.avatarUrl).toString('base64') : undefined
-				};
-
-				const wsToken = app.jwt.sign(wsPayload, { expiresIn: "1h" });
-				return reply.send({ accessToken: wsToken });
-			} catch (error) {
-				console.error('JWT verification failed:', error);
-				return reply.code(401).send({ error: 'Invalid token' });
-			}
-		}
 	});
 };
 

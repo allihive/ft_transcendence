@@ -1,4 +1,5 @@
 import type { Room } from '../types/realtime.types';
+import { fetchJson } from './client';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -32,115 +33,76 @@ export interface InviteUsersResponse {
 class RoomAPI {
   // Create a new room
   async createRoom(roomData: CreateRoomRequest): Promise<Room> {
-    const response = await fetch(`${API_BASE}/api/realtime/rooms`, {
+    const response = await fetchJson<Room>(`${API_BASE}/api/realtime/rooms`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include',
       body: JSON.stringify(roomData)
     });
     
-    if (!response.ok) {
-      try {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Failed to create room: ${response.status}`);
-      } catch (parseError) {
-        // If error response is not JSON, use generic error
-        throw new Error(`Failed to create room: ${response.status}`);
-      }
+    if (!response) {
+      throw new Error('Failed to create room');
     }
     
-    return response.json();
+    return response;
   }
 
   // Get room by ID
   async getRoom(roomId: string): Promise<Room> {
-    const response = await fetch(`${API_BASE}/api/realtime/rooms/${roomId}`, {
-      credentials: 'include'
-    });
+    const response = await fetchJson<Room>(`${API_BASE}/api/realtime/rooms/${roomId}`);
     
-    if (!response.ok) {
-      try {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Failed to fetch room: ${response.status}`);
-      } catch (parseError) {
-        throw new Error(`Failed to fetch room: ${response.status}`);
-      }
+    if (!response) {
+      throw new Error('Failed to fetch room');
     }
     
-    return response.json();
+    return response;
   }
 
   // Get room members
   async getRoomMembers(roomId: string): Promise<RoomMember[]> {
-    const response = await fetch(`${API_BASE}/api/realtime/rooms/${roomId}/members`, {
-      credentials: 'include'
-    });
+    const response = await fetchJson<RoomMember[]>(`${API_BASE}/api/realtime/rooms/${roomId}/members`);
     
-    if (!response.ok) {
-      try {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Failed to fetch room members: ${response.status}`);
-      } catch (parseError) {
-        throw new Error(`Failed to fetch room members: ${response.status}`);
-      }
+    if (!response) {
+      throw new Error('Failed to fetch room members');
     }
     
-    return response.json();
+    return response;
   }
 
   // Invite users to room
   async inviteUsersToRoom(roomId: string, inviteeNames: string[]): Promise<InviteUsersResponse> {
-    const response = await fetch(`${API_BASE}/api/realtime/rooms/${roomId}/invite`, {
+    const response = await fetchJson<InviteUsersResponse>(`${API_BASE}/api/realtime/rooms/${roomId}/invite`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include',
       body: JSON.stringify({ inviteeNames })
     });
     
-    if (!response.ok) {
-      try {
-        const errorData = await response.json();
-        console.error(`❌ Error response:`, errorData);
-        throw new Error(errorData.message || `Failed to invite users: ${response.status}`);
-      } catch (parseError) {
-        console.error(`❌ Parse error:`, parseError);
-        throw new Error(`Failed to invite users: ${response.status}`);
-      }
+    if (!response) {
+      throw new Error('Failed to invite users');
     }
     
-    const result = await response.json();
-    console.log(`✅ Invite success:`, result);
-    return result;
+    console.log(`✅ Invite success:`, response);
+    return response;
   }
 
   // Leave room
   async leaveRoom(roomId: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE}/api/realtime/rooms/${roomId}/leave`, {
-      method: 'POST',
-      credentials: 'include'
+    const response = await fetchJson<{ success: boolean; message: string }>(`${API_BASE}/api/realtime/rooms/${roomId}/leave`, {
+      method: 'POST'
     });
     
     // console.log(`📡 Response status: ${response.status}`);
     // console.log(`📡 Response headers:`, Object.fromEntries(response.headers.entries()));
     
-    if (!response.ok) {
-      try {
-        const errorData = await response.json();
-        console.error(`❌ Error response:`, errorData);
-        throw new Error(errorData.message || `Failed to leave room: ${response.status}`);
-      } catch (parseError) {
-        console.error(`❌ Parse error:`, parseError);
-        throw new Error(`Failed to leave room: ${response.status}`);
-      }
+    if (!response) {
+      throw new Error('Failed to leave room');
     }
     
-    const result = await response.json();
-    console.log(`✅ Leave room success:`, result);
-    return result;
+    console.log(`✅ Leave room success:`, response);
+    return response;
   }
 
   // Get user's room list
@@ -148,20 +110,16 @@ class RoomAPI {
     roomList: (Room & { unreadCount: number })[];
     onlineMembers: number;
   }> {
-    const response = await fetch(`${API_BASE}/api/realtime/rooms/${userId}/roomlist`, {
-      credentials: 'include'
-    });
+    const response = await fetchJson<{
+      roomList: (Room & { unreadCount: number })[];
+      onlineMembers: number;
+    }>(`${API_BASE}/api/realtime/rooms/${userId}/roomlist`);
     
-    if (!response.ok) {
-      try {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Failed to fetch user rooms: ${response.status}`);
-      } catch (parseError) {
-        throw new Error(`Failed to fetch user rooms: ${response.status}`);
-      }
+    if (!response) {
+      throw new Error('Failed to fetch user rooms');
     }
     
-    return response.json();
+    return response;
   }
 }
 

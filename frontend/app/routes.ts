@@ -18,7 +18,6 @@ export default [
 		route("tournament/:tournamentId/bracket", "./routes/TournamentBracket.tsx"),
 		route("tournament-game", "./routes/TournamentGame.tsx"),
 		route("chat", "./pages/chat/ChatPage.tsx"),
-
 		layout("./routes/AuthGuardLayout.tsx", [
 			...prefix("users", [
 				layout("./routes/users/UsersLayout.tsx", [

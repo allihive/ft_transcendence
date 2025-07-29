@@ -1,4 +1,5 @@
 import type { Friend, FriendRequest } from '../types/realtime.types';
+import { fetchJson } from './client';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
@@ -29,144 +30,124 @@ export interface OnlineFriendsResponse {
 class FriendshipAPI {
   // Get friends list
   async getFriends(): Promise<FriendsListResponse> {
-    const response = await fetch(`${API_BASE}/api/realtime/friends`, {
-      credentials: 'include'
-    });
+    const response = await fetchJson<FriendsListResponse>(`${API_BASE}/api/realtime/friends`);
     
-    if (!response.ok) {
-      throw new Error(`Failed to fetch friends: ${response.status}`);
+    if (!response) {
+      throw new Error('Failed to fetch friends');
     }
     
-    return response.json();
+    return response;
   }
 
   // Get pending friend requests
   async getPendingRequests(): Promise<FriendRequest[]> {
-    const response = await fetch(`${API_BASE}/api/realtime/friends/requests`, {
-      credentials: 'include'
-    });
+    const response = await fetchJson<FriendRequest[]>(`${API_BASE}/api/realtime/friends/requests`);
     
-    if (!response.ok) {
-      throw new Error(`Failed to fetch pending requests: ${response.status}`);
+    if (!response) {
+      throw new Error('Failed to fetch pending requests');
     }
     
-    return response.json();
+    return response;
   }
 
   // Send friend request
   async sendFriendRequest(email: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE}/api/realtime/friends/requests/${encodeURIComponent(email)}`, {
-      method: 'POST',
-      credentials: 'include'
+    const response = await fetchJson<{ success: boolean; message: string }>(`${API_BASE}/api/realtime/friends/requests/${encodeURIComponent(email)}`, {
+      method: 'POST'
     });
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-      throw new Error(errorData.message || `Failed to send friend request: ${response.status}`);
+    if (!response) {
+      throw new Error('Failed to send friend request');
     }
     
-    return response.json();
+    return response;
   }
 
   // Accept friend request
   async acceptFriendRequest(requestId: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE}/api/realtime/friends/requests/${requestId}/accept`, {
-      method: 'POST',
-      credentials: 'include'
+    const response = await fetchJson<{ success: boolean; message: string }>(`${API_BASE}/api/realtime/friends/requests/${requestId}/accept`, {
+      method: 'POST'
     });
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-      throw new Error(errorData.message || `Failed to accept friend request: ${response.status}`);
+    if (!response) {
+      throw new Error('Failed to accept friend request');
     }
     
-    return response.json();
+    return response;
   }
 
   // Reject friend request
   async rejectFriendRequest(requestId: string): Promise<{ message: string; requestId: string }> {
-    const response = await fetch(`${API_BASE}/api/realtime/friends/requests/${requestId}/reject`, {
-      method: 'POST',
-      credentials: 'include'
+    const response = await fetchJson<{ message: string; requestId: string }>(`${API_BASE}/api/realtime/friends/requests/${requestId}/reject`, {
+      method: 'POST'
     });
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-      throw new Error(errorData.message || `Failed to reject friend request: ${response.status}`);
+    if (!response) {
+      throw new Error('Failed to reject friend request');
     }
     
-    return response.json();
+    return response;
   }
 
   // Remove friend
   async removeFriend(friendId: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE}/api/realtime/friends/${friendId}`, {
-      method: 'DELETE',
-      credentials: 'include'
+    const response = await fetchJson<{ success: boolean; message: string }>(`${API_BASE}/api/realtime/friends/${friendId}`, {
+      method: 'DELETE'
     });
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-      throw new Error(errorData.message || `Failed to remove friend: ${response.status}`);
+    if (!response) {
+      throw new Error('Failed to remove friend');
     }
     
-    return response.json();
+    return response;
   }
 
   // Block friend
   async blockFriend(friendId: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE}/api/realtime/friends/${friendId}/block`, {
-      method: 'POST',
-      credentials: 'include'
+    const response = await fetchJson<{ success: boolean; message: string }>(`${API_BASE}/api/realtime/friends/${friendId}/block`, {
+      method: 'POST'
     });
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-      throw new Error(errorData.message || `Failed to block friend: ${response.status}`);
+    if (!response) {
+      throw new Error('Failed to block friend');
     }
     
-    return response.json();
+    return response;
   }
 
   // Unblock friend
   async unblockFriend(friendId: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE}/api/realtime/friends/${friendId}/unblock`, {
-      method: 'POST',
-      credentials: 'include'
+    const response = await fetchJson<{ success: boolean; message: string }>(`${API_BASE}/api/realtime/friends/${friendId}/unblock`, {
+      method: 'POST'
     });
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-      throw new Error(errorData.message || `Failed to unblock friend: ${response.status}`);
+    if (!response) {
+      throw new Error('Failed to unblock friend');
     }
     
-    return response.json();
+    return response;
   }
 
   // Get blocked friends
   async getBlockedFriends(): Promise<FriendsListResponse> {
-    const response = await fetch(`${API_BASE}/api/realtime/friends/blocked`, {
-      credentials: 'include'
-    });
+    const response = await fetchJson<FriendsListResponse>(`${API_BASE}/api/realtime/friends/blocked`);
     
-    if (!response.ok) {
-      throw new Error(`Failed to fetch blocked friends: ${response.status}`);
+    if (!response) {
+      throw new Error('Failed to fetch blocked friends');
     }
     
-    return response.json();
+    return response;
   }
 
   // Get online friends
   async getOnlineFriends(): Promise<OnlineFriendsResponse> {
-    const response = await fetch(`${API_BASE}/api/realtime/friends/online`, {
-      credentials: 'include'
-    });
+    const response = await fetchJson<OnlineFriendsResponse>(`${API_BASE}/api/realtime/friends/online`);
     
-    if (!response.ok) {
-      throw new Error(`Failed to fetch online friends: ${response.status}`);
+    if (!response) {
+      throw new Error('Failed to fetch online friends');
     }
     
-    return response.json();
+    return response;
   }
 }
 

@@ -99,7 +99,7 @@ const registerHooks = async (app: FastifyInstance): Promise<void> => {
 		if (request.headers.upgrade === "websocket") {
 			return;
 		}
-
+		
 		try {
 			await request.jwtVerify();
 		} catch (error) {

@@ -242,7 +242,7 @@ class WebSocketTester {
 
       this.ws.on("open", () => {
         this.logSuccess("WebSocket connection established");
-        console.log("✅ WebSocket readyState:", this.ws.readyState);
+        // console.log("✅ WebSocket readyState:", this.ws.readyState);
         this.setupMessageHandlers();
         resolve(true);
       });

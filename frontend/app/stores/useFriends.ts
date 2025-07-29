@@ -12,6 +12,7 @@ import type {
 } from '../types/realtime.types';
 import { websocketService } from '../services/websocket.service';
 import toast from 'react-hot-toast';
+import { useAuth } from './useAuth';
 
 
 
@@ -50,11 +51,25 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
     error: null
   });
 
+  // Get current user from auth store
+  const { user } = useAuth();
+
   // Load friends list
   const loadFriends = useCallback(async () => {
+    if (!user && !useAuth.getState().isLoggingIn) {
+      console.error('❌ User not authenticated, cannot load friends');
+      return;
+    }
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
       const response: FriendsListResponse = await friendshipAPI.getFriends();
+      
+      // Check if API call returned null (user not logged in)
+      if (!response) {
+        console.log('🔐 User not logged in, skipping friends loading');
+        setState(prev => ({ ...prev, loading: false }));
+        return;
+      }
       setState(prev => ({
         ...prev,
         friends: response.payload.friends,
@@ -73,9 +88,14 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
 
   // Load pending friend requests
   const loadPendingRequests = useCallback(async () => {
+    if (!user && !useAuth.getState().isLoggingIn) {
+      console.error('❌ User not authenticated, cannot load pending requests');
+      return;
+    }
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
       const requests = await friendshipAPI.getPendingRequests();
+      
       setState(prev => ({
         ...prev,
         pendingRequests: requests,
@@ -124,6 +144,10 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
 
   // Send friend request
   const sendFriendRequest = useCallback(async (email: string) => {
+    if (!user && !useAuth.getState().isLoggingIn) {
+      console.error('❌ User not authenticated, cannot send friend request');
+      return;
+    }
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
       await friendshipAPI.sendFriendRequest(email);
@@ -164,6 +188,10 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
 
   // Accept friend request
   const acceptFriendRequest = useCallback(async (requestId: string) => {
+    if (!user && !useAuth.getState().isLoggingIn) {
+      console.error('❌ User not authenticated, cannot accept friend request');
+      return;
+    }
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
       await friendshipAPI.acceptFriendRequest(requestId);
@@ -183,6 +211,10 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
 
   // Reject friend request
   const rejectFriendRequest = useCallback(async (requestId: string) => {
+    if (!user && !useAuth.getState().isLoggingIn) {
+      console.error('❌ User not authenticated, cannot reject friend request');
+      return;
+    }
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
       await friendshipAPI.rejectFriendRequest(requestId);
@@ -225,9 +257,14 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
 
   // Load blocked friends
   const loadBlockedFriends = useCallback(async () => {
+    if (!user && !useAuth.getState().isLoggingIn) {
+      console.error('❌ User not authenticated, cannot load blocked friends');
+      return;
+    }
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
       const response: FriendsListResponse = await friendshipAPI.getBlockedFriends();
+      
       setState(prev => ({
         ...prev,
         blockedFriends: response.payload.friends,
@@ -283,6 +320,10 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
 
   // Handle real-time friend list updates from WebSocket
   const handleFriendListUpdate = useCallback((message: FriendListResponseMessage) => {
+    if (!user && !useAuth.getState().isLoggingIn) {
+      console.error('❌ User not authenticated, cannot handle friend list update');
+      return;
+    }
     setState(prev => ({
       ...prev,
       friends: message.payload.friends
@@ -291,8 +332,11 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
 
   // Handle friend list update errors from WebSocket
   const handleFriendListError = useCallback((errorMessage: any) => {
-    console.error('Friend list update error:', errorMessage);
-    
+    if (!user && !useAuth.getState().isLoggingIn) {
+      console.error('❌ User not authenticated, cannot handle friend list error');
+      return;
+    }
+    // console.error('Friend list update error:', errorMessage);
     // show error message to user
     setState(prev => ({
       ...prev,
@@ -305,25 +349,31 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
     setState(prev => ({ ...prev, error: null }));
   }, []);
 
-  // Load initial data
-  useEffect(() => {
-    loadFriends();
-    loadBlockedFriends();
-    loadPendingRequests();
-  }, [loadFriends, loadBlockedFriends, loadPendingRequests]);
+  // // Load initial data
+  // useEffect(() => {
+  //   if (!user) {
+  //     console.log('🔐 User not logged in, skipping friends auto-load');
+  //     return;
+  //   }
+    
+  //   console.log('🔄 Auto-loading friends data for user:', user.name);
+  //   loadFriends();
+  //   loadBlockedFriends();
+  //   loadPendingRequests();
+  // }, [user, loadFriends, loadBlockedFriends, loadPendingRequests]);
 
   // WebSocket event handlers
   useEffect(() => {
       const handlers: Partial<WebSocketEventHandlers> = {
         onUserStatus: (message: UserStatusMessage) => {
-          console.log('🟢 useFriends onUserStatus received:', message);
+          // console.log('🟢 useFriends onUserStatus received:', message);
           
           // Update friends state with optimization
           setState(prev => {
             // Check if update is needed
             const targetFriend = prev.friends.find(friend => friend.id === message.payload.userId);
             if (!targetFriend || targetFriend.isOnline === message.payload.isOnline) {
-              console.log('🟢 Skipping duplicate status update for:', message.payload.userId);
+              // console.log('🟢 Skipping duplicate status update for:', message.payload.userId);
               return prev; // No change needed
             }
             
@@ -343,6 +393,7 @@ export const useFriends = (): UseFriendsState & UseFriendsActions => {
             }
           }));
         },
+        
       onFriendRequest: (message: FriendRequestMessage) => {
         console.log('Friend request received:', message);
         loadPendingRequests();

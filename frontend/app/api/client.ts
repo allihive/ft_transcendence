@@ -3,6 +3,15 @@ import type { FetchError } from "./types";
 import { useAuth } from "~/stores/useAuth";
 
 export const fetchJson = async<T> (url: string, options?: RequestInit): Promise<T | null> => {
+	// Check if user is logged in before making realtime API calls
+	const user = useAuth.getState().user;
+	const isRealtimeAPI = url.includes('/api/realtime/');
+	
+	if (!user && isRealtimeAPI) {
+		console.log('🔐 User not logged in, skipping realtime API call:', url);
+		return null;
+	}
+
 	try {
 		const response = await fetch(url, { credentials: "include" , ...options });
 

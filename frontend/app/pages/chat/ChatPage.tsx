@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { ChatSidebar } from '../../components/Sidebar/ChatSidebar';
 import { ChatRoom } from '../../components/Chat/ChatRoom';
 import { useChat } from '../../stores/useChat';
 import { useFriends } from '../../stores/useFriends';
 import { useAuth } from '../../stores/useAuth';
-import { websocketService } from '../../services/websocket.service';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-
+import { useNavigate } from 'react-router' ;
+import { websocketService } from '~/services/websocket.service';
 
 const ChatPage = () => {
   const navigate = useNavigate();
@@ -19,53 +18,62 @@ const ChatPage = () => {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    console.log('🔍 ChatPage redirect check:', { isLoggingIn, user: user ? 'exists' : 'null' });
     if (!isLoggingIn && !user) {
       console.log('🚨 Redirecting to login - user is null');
       navigate('/login');
     }
   }, [isLoggingIn, user, navigate]);
 
-  if (!user) {
-    return null;
-  }
-  // Chat state + connect to WebSocket
-  const chat = useChat(user.id, user.name);
+  // Chat state + connect to WebSocket (only when authenticated)
+  const chat = useChat();
   
   // Friends state
   const friends = useFriends();
 
-  // Load initial data
+  // Use refs to store latest function references
+  const chatRef = useRef(chat);
+  const friendsRef = useRef(friends);
+  const userRef = useRef(user);
+
+  // Update refs when values change
   useEffect(() => {
-    // once user is logged in, initialize chat
-    if (!user) {
+    chatRef.current = chat;
+    friendsRef.current = friends;
+    userRef.current = user;
+  });
+
+  // Initialize chat function
+  const initializeChat = useCallback(async () => {
+    if (!userRef.current && !isLoggingIn) {
       console.log('⏳ User not logged in, skipping chat initialization');
+      
       return;
     }
 
-    const initializeChat = async () => {
-      try {
-        console.log('🔄 Initializing chat for user:', user.name);
-        
-        // Load user's room list
-        await chat.loadUserRooms();
-        
-        // Load friend data
-        await friends.loadFriends();
-        await friends.loadPendingRequests();
-        
-        console.log('✅ Chat initialized successfully');
-      } catch (error) {
-        console.error('❌ Failed to initialize chat:', error);
-      }
-    };
+    try {
+      // console.log('🔄 Initializing chat for user:', userRef.current.name);
+      
+      // Load user's room list
+      await chatRef.current.loadUserRooms();
+      
+      // Load friend data
+      await friendsRef.current.loadFriends();
+      await friendsRef.current.loadPendingRequests();
+      
+      // console.log('✅ Chat initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize chat:', error);
+    }
+  }, []); // Empty dependency array - no infinite loop!
 
+  // Load initial data
+  useEffect(() => {
     initializeChat();
   
     return () => {
-      console.log('🛑 ChatPage unmounting, WebSocket connection maintained globally');
+      // console.log('🛑 ChatPage unmounting, WebSocket connection maintained globally');
     };
-  }, [user]);
+  }, [initializeChat]);
 
 
   const handleCreateRoom = async () => {
@@ -118,16 +126,18 @@ const ChatPage = () => {
         {/* Chat Area */}
         <div className="flex-1">
           {currentRoom ? (
-            <ChatRoom
-              roomId={currentRoom.id}
-              roomName={currentRoom.name}
-              messages={currentRoom.messages}
-              members={currentRoom.members}
-              currentUserId={user.id}
-              onSendMessage={chat.sendMessage}
-              isConnected={chat.connectionStatus === 'connected'}
-              lastReadTimestamp={currentRoom.lastReadTimestamp}
-            />
+            <>
+              <ChatRoom
+                roomId={currentRoom.id}
+                roomName={currentRoom.name}
+                messages={currentRoom.messages}
+                members={currentRoom.members}
+                currentUserId={user?.id || ''}
+                onSendMessage={chat.sendMessage}
+                isConnected={chat.connectionStatus === 'connected'}
+                lastReadTimestamp={currentRoom.lastReadTimestamp}
+              />
+            </>
           ) : (
             <div className="h-full flex items-center justify-center bg-background/50 dark:bg-darkBlue/50">
               <div className="text-center text-darkOrange/70 dark:text-background/70">

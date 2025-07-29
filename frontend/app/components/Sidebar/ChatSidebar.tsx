@@ -83,6 +83,7 @@ export const ChatSidebar = ({
 
   const onlineFriends = friends.filter(friend => friend.isOnline);
   
+  
   // // Debug: Log friends and online friends
   // console.log('🔍 ChatSidebar friends:', friends.map(f => ({ id: f.id, name: f.name, isOnline: f.isOnline })));
   // console.log('🔍 ChatSidebar onlineFriends count:', onlineFriends.length);

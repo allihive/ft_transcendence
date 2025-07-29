@@ -39,5 +39,10 @@ The backend, powered by [Fastify](https://fastify.dev/), built with TypeScript, 
 - Simplify user sign-in through Google provider.
 - Enhanced security with Two-Factor Authentication (2FA) support.
 - File upload
+- Real-time communication
+	- WebSocket-based chat system with rooms and direct messaging
+	- Real-time friend status updates and notifications
+	- Live chat with message history and read receipts
+	- Room management with member invitations and moderation
 
 ### Modular Monolith Architecture (MMA)

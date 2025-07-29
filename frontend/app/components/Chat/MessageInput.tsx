@@ -16,7 +16,7 @@ export const MessageInput = ({ onSendMessage, disabled = false, placeholder = 'T
   const isSendingRef = useRef(false);
 
   const handleSend = () => {
-    console.log('🔍 MessageInput handleSend called:', { message, trimmed: message.trim(), disabled, isSending: isSendingRef.current });
+    // console.log('🔍 MessageInput handleSend called:', { message, trimmed: message.trim(), disabled, isSending: isSendingRef.current });
     if (message.trim() && !disabled && !isSendingRef.current) {
       isSendingRef.current = true;
       onSendMessage(message.trim());

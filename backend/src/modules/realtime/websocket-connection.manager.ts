@@ -75,8 +75,7 @@ export class WebSocketConnectionManager {
 
     //log user status update
     this.eventService.emitUserStatusUpdate({ userId, isOnline: true });
-    //log user status update
-    this.eventService.emitUserStatusUpdate({ userId, isOnline: true });
+
     // Initialize connection
     await this.initializeConnection(wsConnection);
 
@@ -205,7 +204,6 @@ export class WebSocketConnectionManager {
     if (!wsConnection) return;
 
     console.log(`WebSocket connection closed: ${socketId} for user: ${wsConnection.userId}`);
-    await this.eventService.emitUserStatusUpdate({ userId: wsConnection.userId, isOnline: false });
     await this.eventService.emitUserStatusUpdate({ userId: wsConnection.userId, isOnline: false });
     // Clear ping interval
     const pingInterval = this.pingIntervals.get(socketId);

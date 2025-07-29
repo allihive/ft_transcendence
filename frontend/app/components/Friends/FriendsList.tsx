@@ -82,7 +82,7 @@ export const FriendsList = ({
                 <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
                   {friend.avatarUrl && friend.avatarUrl !== '' ? (
                     <img 
-                      src={friend.avatarUrl} 
+                      src={friend.avatarUrl.startsWith('/files/') ? `/api${friend.avatarUrl}` : friend.avatarUrl} 
                       alt={friend.name}
                       className="w-10 h-10 rounded-full object-cover"
                     />

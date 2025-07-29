@@ -28,7 +28,9 @@ export const ChatRoom = ({
   isConnected,
   lastReadTimestamp
 }: ChatRoomProps) => {
-  const { friends } = useFriends();
+
+  const friendsStore = useFriends();
+  const { friends } = friendsStore;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const lastReadMessageRef = useRef<HTMLDivElement>(null);
@@ -36,92 +38,103 @@ export const ChatRoom = ({
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [isInviting, setIsInviting] = useState(false);
 
-  // 🎯 스크롤 관리: 맨 아래에 있을 때만 새 메시지로 자동 스크롤
-  const [isAtBottom, setIsAtBottom] = useState(true);
+  // const [isAtBottom, setIsAtBottom] = useState(true);
   const [hasRestoredScroll, setHasRestoredScroll] = useState(false);
   const { t } = useTranslation();
 
-  // Auto-scroll to bottom only if user is at bottom
+  // Auto-scroll to bottom for new messages
   useEffect(() => {
-    if (messagesEndRef.current && isAtBottom) {
+    if (messagesEndRef.current && messages.length > 0) {
+      // Always scroll to bottom for new messages, regardless of current position
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // setIsAtBottom(true);
     }
-  }, [messages, isAtBottom]);
+  }, [messages]);
 
-  // 🎯 마지막 읽은 메시지를 중앙 상단에 위치시키기
+  //let the last read message to the center-top of the container
   useEffect(() => {
     if (messagesContainerRef.current && lastReadMessageRef.current && !hasRestoredScroll && messages.length > 0) {
-      setTimeout(() => {
-        if (messagesContainerRef.current && lastReadMessageRef.current) {
-          const container = messagesContainerRef.current;
-          const lastReadElement = lastReadMessageRef.current;
-          
-          // 마지막 읽은 메시지를 컨테이너 중앙 상단에 위치
-          const containerHeight = container.clientHeight;
-          const elementTop = lastReadElement.offsetTop;
-          const targetScrollTop = elementTop - (containerHeight * 0.25); // 상단 25% 위치
-          
-          container.scrollTop = Math.max(0, targetScrollTop);
-          setHasRestoredScroll(true);
-          
-          // Check if we're at bottom after positioning
-          const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 50;
-          setIsAtBottom(isNearBottom);
-          
-          console.log(`🎯 Positioned last read message for room ${roomId} at center-top`);
-        }
-      }, 200); // message rendering delay
+      // Use multiple requestAnimationFrame calls to ensure DOM is fully updated
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (messagesContainerRef.current && lastReadMessageRef.current) {
+              const container = messagesContainerRef.current;
+              const lastReadElement = lastReadMessageRef.current;
+              
+              //set the last read message to the center-top of the container
+              const containerHeight = container.clientHeight;
+              const elementTop = lastReadElement.offsetTop;
+              const targetScrollTop = elementTop - (containerHeight * 0.25); // up 25% of the container height
+              
+              container.scrollTop = Math.max(0, targetScrollTop);
+              setHasRestoredScroll(true);
+              
+              // Check if we're at bottom after positioning
+              // const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 50;
+              // setIsAtBottom(isNearBottom);
+              // console.log(`🎯 Positioned last read message for room ${roomId} at center-top`);
+            }
+          });
+        });
+      });
     } else if (messagesContainerRef.current && !lastReadTimestamp && !hasRestoredScroll && messages.length > 0) {
       // lastReadTimestamp not set, position at bottom
-      setTimeout(() => {
-        if (messagesEndRef.current) {
-          messagesEndRef.current.scrollIntoView({ behavior: 'instant' });
-          setHasRestoredScroll(true);
-          setIsAtBottom(true);
-          console.log(`📜 No lastReadTimestamp for room ${roomId}, positioning at bottom`);
-        }
-      }, 200);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'instant' });
+              setHasRestoredScroll(true);
+              // setIsAtBottom(true);
+              // console.log(`📜 No lastReadTimestamp for room ${roomId}, positioning at bottom`);
+            }
+          });
+        });
+      });
     }
 
     return () => {
       if (messagesContainerRef.current) {
         const currentScrollTop = messagesContainerRef.current.scrollTop;
         sessionStorage.setItem(`chatScroll_${roomId}`, currentScrollTop.toString());
-        console.log(`📜 Saved scroll position for room ${roomId}: ${currentScrollTop}`);
+        // console.log(`📜 Saved scroll position for room ${roomId}: ${currentScrollTop}`);
       }
     };
   }, [roomId, hasRestoredScroll, messages.length, lastReadTimestamp]);
 
   // reset scroll state when room changes
   useEffect(() => {
-    console.log(`🔄 Room changed to ${roomId}, resetting scroll state`);
+    // console.log(`🔄 Room changed to ${roomId}, resetting scroll state`);
     setHasRestoredScroll(false);
-    setIsAtBottom(true);
+    // setIsAtBottom(true);
   }, [roomId]);
 
   // scroll event detection
   const handleScroll = () => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
-      const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 50;
-      setIsAtBottom(isNearBottom);
+      // const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 50;
+      // setIsAtBottom(isNearBottom);
     }
   };
 
   const handleSendMessage = (content: string) => {
-    console.log('🔍 ChatRoom handleSendMessage called:', {
-      content,
-      roomId,
-      isConnected,
-      connectionStatus: isConnected ? 'connected' : 'disconnected'
-    });
-    
+
     if (!isConnected) {
       toast.error(t('chatError.chatServerFailure'));
       return;
     }
     
     onSendMessage(roomId, content);
+    
+    // Force scroll to bottom when sending message
+    setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        // setIsAtBottom(true);
+      }
+    }, 100);
   };
 
   const handleInviteFriends = async () => {
@@ -175,28 +188,18 @@ export const ChatRoom = ({
     );
   };
 
-  // members에서 필터링하되, friends에서 온라인 상태를 가져와서 사용
   const onlineMembers = members.filter(member => {
-    const friend = friends.find(f => f.id === member.userId);
-    return friend?.isOnline;
+    return member.isOnline;
   });
 
   const offlineMembers = members.filter(member => {
-    const friend = friends.find(f => f.id === member.userId);
-    return !friend?.isOnline;
+    return !member.isOnline;
   });
   
   // Filter out friends who are already in the room
   const availableFriends = friends.filter((friend: Friend) => 
     !members.some(member => member.userId === friend.id)
   );
-
-  // Debug filtering
-  // console.log('🔍 ChatRoom - Friends filtering debug:');
-  // console.log('🔍 All friends:', friends.map(f => ({ id: f.id, name: f.name })));
-  // console.log('🔍 Room members:', members.map(m => ({ userId: m.userId, name: m.name })));
-  // console.log('🔍 Available friends:', availableFriends.map(f => ({ id: f.id, name: f.name })));
-  // console.log('🔍 Selected friends:', selectedFriends);
 
   return (
     <div className="flex h-full bg-gradient-to-t from-darkOrange to-background dark:from-darkBlue dark:to-darkOrange">
@@ -215,7 +218,16 @@ export const ChatRoom = ({
             <div className="flex items-center space-x-4">
               {/* Invite Friends Button */}
               <button
-                onClick={() => setShowInviteModal(true)}
+                onClick={async () => {
+                  // Refresh friends list before opening invite modal
+                  try {
+                    await friendsStore.loadFriends();
+                    console.log('✅ Refreshed friends list for invite modal');
+                  } catch (error) {
+                    console.error('❌ Failed to refresh friends list:', error);
+                  }
+                  setShowInviteModal(true);
+                }}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-body"
               >
                 {t('chat.invite')}

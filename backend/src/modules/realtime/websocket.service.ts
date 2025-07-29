@@ -156,22 +156,33 @@ export class WebSocketService {
     let accessToken = '';
     let urlToken = '';
     
-    // 1. check token in url query parameter
-    if (request.url) {
-      const url = new URL(request.url, 'http://localhost');
-      urlToken = url.searchParams.get('token') || '';
-      if (urlToken) {
-        console.log('🔍 Found token in URL query parameter');
-        // use original token (no url decoding)
-        accessToken = urlToken;
-        console.log('🔍 Using original token from URL');
+    // // 1. check token in url query parameter
+    // if (request.url) {
+    //   const url = new URL(request.url, 'http://localhost');
+    //   urlToken = url.searchParams.get('token') || '';
+    //   if (urlToken) {
+    //     console.log('🔍 Found token in URL query parameter');
+    //     accessToken = urlToken;
+    //   }
+    // }
+    
+    // 2. check token in cookies
+    if (!accessToken && request.headers?.cookie) {
+      console.log('🔍 Checking cookies for accessToken');
+      const cookies = request.headers.cookie;
+      //extract the string until the first ; from cookies
+      const accessTokenMatch = cookies.match(/accessToken=([^;]+)/);
+      if (accessTokenMatch) {
+        console.log('🔍 Found token in cookies');
+        accessToken = accessTokenMatch[1];
       }
     }
+    
     // fail if no token
     if (!accessToken) {
       return {
         success: false,
-        error: 'No token found'
+        error: 'No token found in cookies'
       };
     }
     

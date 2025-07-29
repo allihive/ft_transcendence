@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { websocketService } from '../services/websocket.service';
 import { roomAPI } from '../api/room';
+import { useAuth } from './useAuth';
 import type { 
   ChatMessage, 
   Room,
@@ -9,7 +10,8 @@ import type {
   UnreadCountMessage,
   RoomMember,
   RoomStateMessage,
-  RoomJoinedMessage
+  RoomJoinedMessage,
+  UserStatusMessage
 } from '../types/realtime.types';
 
 interface ChatRoom extends Room {
@@ -36,11 +38,13 @@ interface UseChatActions {
   sendMessage: (roomId: string, content: string) => void;
   createRoom: (name: string, description?: string, isPrivate?: boolean) => Promise<Room>;
   inviteUsersToRoom: (roomId: string, userNames: string[]) => Promise<void>;
+  refreshRoomMembers: (roomId: string) => Promise<void>;
   setCurrentRoom: (roomId: string | null) => void;
   clearError: () => void;
 }
 
-export const useChat = (userId: string, userName: string): UseChatState & UseChatActions => {
+export const useChat = (): UseChatState & UseChatActions => {
+  const { user } = useAuth();
   const [state, setState] = useState<UseChatState>({
     rooms: [],
     currentRoomId: null,
@@ -50,19 +54,44 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
     error: null
   });
 
+  // useMemo is used to prevent infinite loops when currentRoomId or rooms change
+  // while using useState, it causes infinite look and it is following the object reference
+  // which means even the value is the same, it will rerender because the object reference is different 
+  // so if there is a setState()calling inside of useState, it will cause infinite loop
+  // but in useMemo, it will not cause infinite loop because it is following the value not the object reference
+  // so this state.rooms will get changed then this method will be called and return the currentRoomId
+  const currentRoom = useMemo(() => {
+    const room = state.rooms.find(room => room.id === state.currentRoomId);
 
-
+ ////Better to check what will be the less way to rerender the component
+ ////now it got affected by the state.rooms change so calling several times.   
+    // console.log(`🔍 useMemo currentRoom calculation:`, {
+    //   currentRoomId: state.currentRoomId,
+    //   roomsCount: state.rooms.length,
+    //   foundRoom: !!room,
+    //   messagesInRoom: room?.messages?.length || 0,
+    //   roomsArrayId: state.rooms.map(r => r.id).join(','),
+    //   roomObjectId: room?.id || 'none'
+    // });
+    return room;
+  }, [state.currentRoomId, state.rooms]);
+  
   const handlersRef = useRef<WebSocketEventHandlers>({
     onOpen: () => {
-      console.log('🎉 WebSocket onOpen event triggered (before setState)');
+      // console.log('🎉 WebSocket onOpen event triggered (before setState)');
       setState(prev => {
-        console.log('setState: connectionStatus changing from', prev.connectionStatus, 'to connected');
+        // Only update if not already connected
+        if (prev.connectionStatus === 'connected') {
+          // console.log('🔄 Already connected, skipping setState');
+          return prev;
+        }
+        // console.log('setState: connectionStatus changing from', prev.connectionStatus, 'to connected');
         return { ...prev, connectionStatus: 'connected' };
       });
     },
 
     onClose: () => {
-      console.log('🛑 WebSocket onClose event triggered (before setState)');
+      // console.log('🛑 WebSocket onClose event triggered (before setState)');
       setState(prev => {
         console.log('setState: connectionStatus changing from', prev.connectionStatus, 'to disconnected');
         return { ...prev, connectionStatus: 'disconnected' };
@@ -78,7 +107,7 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
     },
 
     onChatMessage: (message: ChatMessage) => {
-      console.log(`📨 Chat message received: ${message.payload.content} in room ${message.payload.roomId}`);
+      // console.log(`📨 Chat message received: ${message.payload.content} in room ${message.payload.roomId}`);
       
       setState(prev => {
         // Check if message already exists in the current state (ID 기반 중복 체크)
@@ -93,10 +122,10 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
         
         // handle auto-marking message as read when you are in the current room and not the own message
         const isCurrentRoom = message.payload.roomId && message.payload.roomId === prev.currentRoomId;
-        const isOwnMessage = message.payload.userId === userId;
+        const isOwnMessage = user && message.payload.userId === user.id;
         
         if (isCurrentRoom && !isOwnMessage) {
-          console.log(`📖 Auto-marking message as read (current room): ${message.id}`);
+          // console.log(`📖 Auto-marking message as read (current room): ${message.id}`);
           // send mark read request to backend
           if (websocketService.isConnected() && message.payload.roomId) {
             websocketService.markMessageAsRead(message.payload.roomId, message.timestamp);
@@ -107,6 +136,7 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
           ...prev,
           rooms: prev.rooms.map(room => {
             if (room.id === message.payload.roomId) {
+              // console.log(`📨 Adding message to room ${room.name}: "${message.payload.content}" (total: ${room.messages.length + 1})`);
               return {
                 ...room,
                 messages: [...room.messages, message]
@@ -122,11 +152,11 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
 
 
     onRoomState: (message: RoomStateMessage) => {
-      console.log(`🔄 onRoomState called for room: ${message.payload.room.name}`);
-      console.log(`🔄 Previous messages: ${message.payload.previousMessages.length}`);
-      console.log(`🔄 Unread messages: ${message.payload.unreadMessages.length}`);
-      console.log(`🔄 Total messages: ${message.payload.previousMessages.length + message.payload.unreadMessages.length}`);
-      console.log(`📊 Read state:`, message.payload.readState);
+      // console.log(`🔄 onRoomState called for room: ${message.payload.room.name}`);
+      // console.log(`🔄 Previous messages: ${message.payload.previousMessages.length}`);
+      // console.log(`🔄 Unread messages: ${message.payload.unreadMessages.length}`);
+      // console.log(`🔄 Total messages: ${message.payload.previousMessages.length + message.payload.unreadMessages.length}`);
+      // console.log(`📊 Read state:`, message.payload.readState);
       
       const { room, previousMessages, unreadMessages, members, readState } = message.payload;
       const allMessages = [...previousMessages, ...unreadMessages];
@@ -164,7 +194,7 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
         
         // If room exists but has no messages, load them
         if (existingRoom.messages.length === 0) {
-          console.log(`🔄 First time loading messages for room ${room.name}: ${allMessages.length} messages`);
+          // console.log(`🔄 First time loading messages for room ${room.name}: ${allMessages.length} messages`);
           return {
             ...prev,
             rooms: prev.rooms.map(r => 
@@ -193,7 +223,7 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
         }
         
         // need to replace the messages with the new messages other wise it will be duplicated everytime loading the room
-        console.log(`🔄 Room ${room.name} already has ${existingRoom.messages.length} messages, replacing with new messages`);
+        // console.log(`🔄 Room ${room.name} already has ${existingRoom.messages.length} messages, replacing with new messages`);
         const newMessages = allMessages.map(msg => ({
           id: msg.id,
           timestamp: typeof msg.timestamp === 'string' ? new Date(msg.timestamp).getTime() : msg.timestamp,
@@ -223,7 +253,6 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
         };
       });
     },
-
     onRoomJoined: (message: RoomJoinedMessage) => {
       console.log('🏠 Room joined:', message);
       const { roomId, newMemberName } = message.payload;
@@ -259,9 +288,10 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
       }));
     },
 
+    
     onUnreadCount: (message: UnreadCountMessage) => {
       const { roomId, unreadCount } = message.payload;
-      console.log(`📊 Unread count update: Room ${roomId} -> ${unreadCount}`);
+      // console.log(`📊 Unread count update: Room ${roomId} -> ${unreadCount}`);
       setState(prev => ({
         ...prev,
         rooms: prev.rooms.map(room =>
@@ -275,35 +305,46 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
 
   // WebSocket connection and event handlers setup
   useEffect(() => {
-    console.log('🔗 useChat: Setting up WebSocket event handlers');
+    // Only connect to WebSocket if user is logged in
+    if (!user) {
+      // console.log('🔐 User not logged in, skipping WebSocket connection');
+      return;
+    }
+
+    // console.log('🔗 useChat: Setting up WebSocket event handlers');
   
     if (websocketService.isConnected()) {
-      console.log('🔗 useChat: WebSocket already connected, just registering handlers');
+      // console.log('🔗 useChat: WebSocket already connected, just registering handlers');
       websocketService.addEventHandlers(handlersRef.current);
-      // update connection status to connected helps components to show the correct connection status
       setState(prev => ({ ...prev, connectionStatus: 'connected' }));
     } else {
-      console.log('🔗 useChat: Connecting to WebSocket and registering handlers');
+      // console.log('🔗 useChat: Connecting to WebSocket and registering handlers');
       websocketService.connect(handlersRef.current);
     }
 
     // Cleanup function - need to keep event handlers for other components (when you switch to another chat page)
     return () => {
-      console.log('🔗 useChat: Component unmounting, but keeping event handlers for other components');
+      // console.log('🔗 useChat: Component unmounting, but keeping event handlers for other components');
     };
-  }, []);
+  }, [user]);
 
-  // Update currentRoom when currentRoomId or rooms change
-  useEffect(() => {
-    const currentRoom = state.rooms.find(room => room.id === state.currentRoomId);
-    setState(prev => ({ ...prev, currentRoom }));
-  }, [state.currentRoomId, state.rooms]);
+//// Removed useEffect for currentRoom - now using useMemo instead
+  // // Update currentRoom when currentRoomId or rooms change
+  // useEffect(() => {
+  //   const currentRoom = state.rooms.find(room => room.id === state.currentRoomId);
+  //   // Only update if currentRoom actually changed to prevent infinite loop
+  //   setState(prev => {
+  //     if (prev.currentRoom?.id === currentRoom?.id) {
+  //       return prev; // No change needed
+  //     }
+  //     return { ...prev, currentRoom };
+  //   });
+  // }, [state.currentRoomId, state.rooms]);
 
   // Listen for user status updates from useFriends
   useEffect(() => {
     const handleUserStatusUpdate = (event: CustomEvent) => {
       const { userId, isOnline } = event.detail;
-      console.log('🟢 useChat received userStatusUpdate event:', { userId, isOnline });
       
       setState(prev => {
         // Check if any room has this user as a member
@@ -312,7 +353,6 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
         );
         
         if (!hasUserInAnyRoom) {
-          console.log('🟢 User not found in any room, skipping update:', userId);
           return prev; // No change needed
         }
         
@@ -339,19 +379,22 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
 
   // Load user's rooms
   const loadUserRooms = useCallback(async () => {
-    console.log('🔄 Starting to load user rooms for userId:', userId);
+    if (!user && !useAuth.getState().isLoggingIn) {
+      console.error('❌ User not authenticated, cannot load rooms');
+      return;
+    }
+    // console.log('🔄 Starting to load user rooms for userId:', user.id);
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
-      const roomsData = await roomAPI.getUserRooms(userId);
-      console.log('📋 Raw rooms data from API:', roomsData);
-      
+      const roomsData = await roomAPI.getUserRooms(user.id);
+
       // Load member information for each room
       const rooms: ChatRoom[] = await Promise.all(
         roomsData.roomList.map(async (room) => {
-          console.log(`🔄 Loading members for room: ${room.name} (${room.id}) with unreadCount: ${room.unreadCount}`);
+          // console.log(`🔄 Loading members for room: ${room.name} (${room.id}) with unreadCount: ${room.unreadCount}`);
           try {
             const members = await roomAPI.getRoomMembers(room.id);
-            console.log(`✅ Loaded ${members.length} members for room ${room.name}`);
+            // console.log(`✅ Loaded ${members.length} members for room ${room.name}`);
             return {
               ...room,
               messages: [],
@@ -375,9 +418,9 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
         })
       );
       
-      console.log(`✅ Final rooms data:`, rooms);
+      // console.log(`✅ Final rooms data:`, rooms);
       setState(prev => ({ ...prev, rooms, loading: false }));
-      console.log(`✅ Loaded ${rooms.length} rooms with member information for user`);
+      // console.log(`✅ Loaded ${rooms.length} rooms with member information for user`);
     } catch (error) {
       console.error('❌ Error loading user rooms:', error);
       setState(prev => ({
@@ -386,10 +429,15 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
         loading: false
       }));
     }
-  }, [userId]);
+  }, []); // Remove userId dependency to prevent infinite loop
 
   // Join a room
   const joinRoom = useCallback(async (roomId: string, requestSync: boolean = true) => {
+    if (!user) {
+      console.error('❌ User not authenticated, cannot join room');
+      return;
+    }
+    
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
       // Get room details from API
@@ -425,7 +473,10 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
         websocketService.requestRoomSync(roomId);
         console.log(`✅ Room sync request sent for room: ${roomId}`);
       } else if (requestSync) {
-        console.warn(`⚠️ WebSocket not connected, cannot request room sync for room: ${roomId}`);
+        console.warn(`⚠️ WebSocket not connected, cannot request room sync for room: ${roomId}`, {
+          requestSync,
+          isConnected: websocketService.isConnected()
+        });
       }
     } catch (error) {
       setState(prev => ({
@@ -458,9 +509,9 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
 
   // Send a message to a room
   const sendMessage = useCallback((roomId: string, content: string) => {
-    console.log('🔍 useChat sendMessage called:', { roomId, content, userId, userName });
-    console.log('🔍 Current connection status:', state.connectionStatus);
-    console.log('🔍 WebSocket connected:', websocketService.isConnected());
+    // console.log('🔍 useChat sendMessage called:', { roomId, content, userId, userName });
+    // console.log('🔍 Current connection status:', state.connectionStatus);
+    // console.log('🔍 WebSocket connected:', websocketService.isConnected());
     
     if (!content.trim()) {
       console.log('❌ Empty message, not sending');
@@ -471,21 +522,19 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
       console.error('❌ WebSocket not connected, cannot send message');
       return;
     }
-    console.log('🔍 websocketService.isConnected():', websocketService.isConnected());
-    console.log('🔍 websocketService.isConnected():', websocketService.isConnected());
     if (!websocketService.isConnected()) {
       console.error('❌ WebSocket service not connected');
       return;
     }
     
-    console.log(`📤 Sending message: "${content}" to room ${roomId}`);
+    // console.log(`📤 Sending message: "${content}" to room ${roomId}`);
     try {
-      websocketService.sendChatMessage(roomId, content.trim(), userId, userName);
+      websocketService.sendChatMessage(roomId, content.trim());
       console.log('✅ Message sent successfully');
     } catch (error) {
       console.error('❌ Error sending message:', error);
     }
-  }, [userId, userName, state.connectionStatus]);
+  }, [state.connectionStatus]); // Only depend on connection status now
 
   // Create a new room
   const createRoom = useCallback(async (name: string, description?: string, isPrivate: boolean = false): Promise<Room> => {
@@ -514,11 +563,81 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
     }
   }, [joinRoom]);
 
+  // // Refresh room members
+  // const refreshRoomMembers = useCallback(async (roomId: string) => {
+  //   if (!user) {
+  //     console.error('❌ User not authenticated, cannot refresh room members');
+  //     return;
+  //   }
+    
+  //   try {
+  //     const members = await roomAPI.getRoomMembers(roomId);
+      
+  //     setState(prev => ({
+  //       ...prev,
+  //       rooms: prev.rooms.map(room => 
+  //         room.id === roomId 
+  //           ? {
+  //               ...room,
+  //               members: members.map(m => ({
+  //                 userId: m.userId,
+  //                 name: m.name,
+  //                 joinedAt: Date.now(),
+  //                 isOnline: m.isOnline
+  //               }))
+  //             }
+  //           : room
+  //       )
+  //     }));
+      
+  //     console.log(`✅ Refreshed members for room: ${roomId}`);
+  //   } catch (error) {
+  //     console.error(`❌ Failed to refresh room members for room ${roomId}:`, error);
+  //   }
+  // }, []);
+
+  // Refresh room members
+  const refreshRoomMembers = useCallback(async (roomId: string) => {
+    if (!user) {
+      console.error('❌ User not authenticated, cannot refresh room members');
+      return;
+    }
+    
+    try {
+      const members = await roomAPI.getRoomMembers(roomId);
+      
+      setState(prev => ({
+        ...prev,
+        rooms: prev.rooms.map(room => 
+          room.id === roomId 
+            ? {
+                ...room,
+                members: members.map(m => ({
+                  userId: m.userId,
+                  name: m.name,
+                  joinedAt: Date.now(),
+                  isOnline: m.isOnline
+                }))
+              }
+            : room
+        )
+      }));
+      
+      console.log(`✅ Refreshed members for room: ${roomId}`);
+    } catch (error) {
+      console.error(`❌ Failed to refresh room members for room ${roomId}:`, error);
+    }
+  }, []);
+
   // Invite users to room
   const inviteUsersToRoom = useCallback(async (roomId: string, userNames: string[]) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
     try {
       await roomAPI.inviteUsersToRoom(roomId, userNames);
+      
+      // Refresh room members after successful invite
+      await refreshRoomMembers(roomId);
+      
       setState(prev => ({ ...prev, loading: false }));
     } catch (error) {
       setState(prev => ({
@@ -527,26 +646,24 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
         loading: false
       }));
     }
-  }, []);
+  }, [refreshRoomMembers]);
 
   // Set current room and join it
   const setCurrentRoom = useCallback(async (roomId: string | null) => {
     if (roomId && roomId !== state.currentRoomId) {
       try {
-        // 🎯 joinRoom은 호출하되 sync 요청은 하지 않음 (중복 방지)
-        await joinRoom(roomId, false);
+        // console.log(`🏠 Joining room ${roomId} with sync=true`);
+        // 🎯 사이드바든 어디든 항상 joinRoom으로 안전하게 처리
+        await joinRoom(roomId, true); 
         
-        // 🎯 현재 룸으로 설정한 후에만 sync 요청
+        // 🎯 이전 룸의 unreadCount 리셋 + 현재 룸 설정
         setState(prev => ({
           ...prev,
+          rooms: prev.rooms.map(room =>
+            room.id === state.currentRoomId ? { ...room, unreadCount: 0 } : room
+          ),
           currentRoomId: roomId
         }));
-        
-        // 🎯 룸 설정 후 sync 요청
-        if (websocketService.isConnected()) {
-          websocketService.requestRoomSync(roomId);
-          console.log(`✅ Room sync request sent for current room: ${roomId}`);
-        }
       } catch (error) {
         console.error('Failed to join room:', error);
         // Don't set current room if join fails
@@ -579,12 +696,14 @@ export const useChat = (userId: string, userName: string): UseChatState & UseCha
 
   return {
     ...state,
+    currentRoom,
     loadUserRooms,
     joinRoom,
     leaveRoom,
     sendMessage,
     createRoom,
     inviteUsersToRoom,
+    refreshRoomMembers,
     setCurrentRoom,
     clearError
   };

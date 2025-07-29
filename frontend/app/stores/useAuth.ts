@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { login as loginApi, loginWithGoogle as loginWithGoogleApi } from "~/api/auth/login";
 import { logout as logoutApi } from "~/api/auth/logout";
 import { register as registerApi } from "~/api/auth/register";
+import { websocketService } from "~/services/websocket.service";
 import type { User, UserRegisterData } from "~/api/types";
 
 type AuthState = {
@@ -69,6 +70,8 @@ export const useAuth = create<AuthState>((set) => ({
 		set({ isLoggingOut: true });
 
 		try {
+			websocketService.addEventHandlers({});
+			websocketService.disconnect();
 			await logoutApi();
 			set({ user: null, isLoggingIn: false, isRegistering: false });
 		} catch (error) {
