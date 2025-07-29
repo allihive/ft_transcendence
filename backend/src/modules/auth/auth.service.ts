@@ -99,7 +99,7 @@ export class AuthService {
 		return this.userService.createUser(em, createUserDto);
 	}
 
-	async verifyTotp(em: EntityManager, userId: string, totpCode: number): Promise<User | null> {
+	async verifyTotp(em: EntityManager, userId: string, totpCode: string): Promise<User | null> {
 		const user = await this.userService.findUser(em, { id: userId });
 
 		if (!user)
@@ -112,7 +112,7 @@ export class AuthService {
 		const isVerified = totp.verify({
 			secret: user.totpSecret,
 			encoding: "base32",
-			token: totpCode.toString()
+			token: totpCode
 		});
 
 		if (!isVerified) {
@@ -153,7 +153,7 @@ export class AuthService {
 		return { secret, qrCode };
 	}
 
-	async activateTwoFactorAuth(em: EntityManager, userId: string, totpCode: number): Promise<User | null> {
+	async activateTwoFactorAuth(em: EntityManager, userId: string, totpCode: string): Promise<User | null> {
 		const user = await this.verifyTotp(em, userId, totpCode);
 
 		return user

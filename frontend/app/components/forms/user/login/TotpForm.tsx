@@ -3,19 +3,20 @@ import type { TotpFormProps } from "./types";
 
 export function TotpForm({ onSubmit, submitTitle, disabled }: TotpFormProps): JSX.Element {
 	const submitHandler: FormEventHandler<HTMLFormElement> = async (event) => {
-		event.preventDefault();
+		const form = event.currentTarget;
 
-		const formData = new FormData(event.target as HTMLFormElement);
-		const code = formData.get("totpCode");
-
-		if (typeof code !== "string") {
-			throw new Error("TOTP code missing or invalid.");
+		if (!form.checkValidity()) {
+			form.reportValidity();
+			return;
 		}
 
-		const totpCode = Number(code.trim());
+		event.preventDefault();
 
-		if (!Number.isInteger(totpCode) || totpCode < 100000 || totpCode > 999999) {
-			throw new Error("TOTP code must be a 6-digit number.");
+		const formData = new FormData(form);
+		const totpCode = formData.get("totpCode");
+
+		if (typeof totpCode !== "string") {
+			throw new Error("Unexpected form data type for TOTP code");
 		}
 
 		onSubmit(totpCode, event);
@@ -24,10 +25,12 @@ export function TotpForm({ onSubmit, submitTitle, disabled }: TotpFormProps): JS
 	return (
 		<form onSubmit={submitHandler}>
 			<input
-				type="number"
+				type="text"
 				name="totpCode"
-				min={100000}
-				max={999999}
+				inputMode="numeric"
+				pattern="\d{6}"
+				minLength={6}
+				maxLength={6}
 				title="Enter a 6-digit code"
 				required
 				className="block w-full my-4 p-2 border-2 font-body border-black dark:border-background dark:text-background rounded-lg"

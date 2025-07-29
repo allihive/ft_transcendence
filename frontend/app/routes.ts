@@ -24,7 +24,7 @@ export default [
 					route("profile", "./routes/users/profile.tsx"),
 					// route("friends", "./routes/users/UserFriends.tsx"),
 					route("stats", "./routes/users/UserStats.tsx"),
-					route("2fa", "./routes/users/2fa/index.tsx")
+					route("2fa", "./routes/users/2fa.tsx")
 				]),
 			])
 		])

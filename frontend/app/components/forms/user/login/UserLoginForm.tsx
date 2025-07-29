@@ -60,7 +60,12 @@ export function UserLoginForm({ onSuccess, onFailure, onSubmitStateChange }: Use
 	};
 
 	if (isTwoFactorRequired) {
-		return <TotpForm disabled={isProcessing} submitTitle={t("send")} onSubmit={totpSubmitHandler} />;
+		return (
+			<>
+				<p>{t("2fa.instruction")}</p>
+				<TotpForm disabled={isProcessing} submitTitle={t("send")} onSubmit={totpSubmitHandler} />
+			</>
+		);
 	}
 
 	return (

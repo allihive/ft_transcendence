@@ -1,18 +1,11 @@
 import { FastifyPluginAsync } from "fastify";
-import { toDataURL } from "qrcode";
-import speakeasy from "speakeasy";
 import { BadRequestException } from "../../common/exceptions/BadRequestException";
-import { NotFoundException } from "../../common/exceptions/NotFoundException";
 import { UnauthorizedException } from "../../common/exceptions/UnauthorizedException";
 import { getUserResponseDto, UserResponseTwoFactorAuthDto } from "../user/user.dto";
 import {
 	ActivateTwoFactorAuthDto,
 	ActivateTwoFactorAuthSchema,
 	SetupTwoFactorAuthResponseDto,
-	VerifyTotpBodyDto,
-	VerifyTotpBodyDtoSchema,
-	VerifyTotpParamsDto,
-	VerifyTotpParamsDtoSchema,
 	VerifyTwoFactorAuthDto,
 	VerifyTwoFactorAuthDtoSchema
 } from "./auth.dto";
@@ -51,6 +44,7 @@ export const twoFactorAuthController: FastifyPluginAsync = async (app) => {
 		schema: { body: ActivateTwoFactorAuthSchema },
 		handler: async (request, reply) => {
 			const { totpCode } = request.body as ActivateTwoFactorAuthDto;
+			console.log("totpCode=" + totpCode);
 			const em = request.entityManager;
 			const user = await app.authService.activateTwoFactorAuth(em, request.user.id, totpCode);
 
@@ -93,26 +87,4 @@ export const twoFactorAuthController: FastifyPluginAsync = async (app) => {
 				.send(payload);
 		}
 	});
-
-	app.post("/verify/totp/:userId", {
-		schema: {
-			params: VerifyTotpParamsDtoSchema,
-			body: VerifyTotpBodyDtoSchema
-		},
-		handler: async (request, reply) => {
-			const { userId } = request.params as VerifyTotpParamsDto;
-			const { totpCode: totpCode } = request.body as VerifyTotpBodyDto;
-			const em = request.entityManager;
-			const user = await app.authService.verifyTotp(em, userId, totpCode);
-
-			if (!user) {
-				return null;
-			}
-
-			const payload = getUserResponseDto(user);
-
-			return reply.code(200).send(payload);
-		}
-	});
-
 };

@@ -18,7 +18,7 @@ export type CredentialsFormProps = {
 	disabled: boolean;
 };
 
-export type TotpSubmitHandler = (toptCode: number, event?: FormEvent<HTMLFormElement>) => void;
+export type TotpSubmitHandler = (toptCode: string, event?: FormEvent<HTMLFormElement>) => void;
 
 export type TotpFormProps = {
 	onSubmit: TotpSubmitHandler;

@@ -44,25 +44,10 @@ export const SetupTwoFactorAuthResponseDtoSchema = Type.Object(
 
 export const VerifyTwoFactorAuthDtoSchema = Type.Object(
 	{
-		totpCode: Type.Number({
-			minimum: 100000,
-			maximum: 999999,
-			description: "6-digit TOTP code from authenticator app"
-		})
-	},
-	{ additionalProperties: false }
-);
-
-export const VerifyTotpParamsDtoSchema = Type.Object(
-	{ userId: Type.String({ format: "uuid", description: "User ID" }) },
-	{ additionalProperties: false }
-);
-
-export const VerifyTotpBodyDtoSchema = Type.Object(
-	{
-		totpCode: Type.Number({
-			minimum: 100000,
-			maximum: 999999,
+		totpCode: Type.String({
+			pattern: "^\\d{6}$",
+			minLength: 6,
+			maxLength: 6,
 			description: "6-digit TOTP code from authenticator app"
 		})
 	},
@@ -71,9 +56,10 @@ export const VerifyTotpBodyDtoSchema = Type.Object(
 
 export const ActivateTwoFactorAuthSchema = Type.Object(
 	{
-		totpCode: Type.Number({
-			minimum: 100000,
-			maximum: 999999,
+		totpCode: Type.String({
+			pattern: "^\\d{6}$",
+			minLength: 6,
+			maxLength: 6,
 			description: "6-digit TOTP code from authenticator app"
 		})
 	},
@@ -85,6 +71,4 @@ export type GoogleLoginDto = Static<typeof GoogleLoginDtoSchema>;
 export type CreateUserProviderDto = Static<typeof CreateUserProviderDtoSchema>;
 export type VerifyTwoFactorAuthDto = Static<typeof VerifyTwoFactorAuthDtoSchema>;
 export type SetupTwoFactorAuthResponseDto = Static<typeof SetupTwoFactorAuthResponseDtoSchema>;
-export type VerifyTotpParamsDto = Static<typeof VerifyTotpParamsDtoSchema>;
-export type VerifyTotpBodyDto = Static<typeof VerifyTotpBodyDtoSchema>;
 export type ActivateTwoFactorAuthDto = Static<typeof ActivateTwoFactorAuthSchema>;
