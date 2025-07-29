@@ -65,7 +65,7 @@ const installFastifyPlugins = async (app: FastifyInstance): Promise<void> => {
 		secret: process.env.JWT_SECRET!,
 		cookie: { cookieName: "accessToken", signed: false },
 		sign: {
-			expiresIn: "1m"
+			expiresIn: "1h"
 		}
 	});
 };
