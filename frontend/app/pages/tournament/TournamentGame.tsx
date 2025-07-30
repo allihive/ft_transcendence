@@ -75,6 +75,8 @@ export function TournamentGame(): JSX.Element {
 
 			// Override the global game over handler for tournament mode
 			(window as any).setGameOverState = handleGameComplete;
+			// Mark this as a tournament handler to prevent BabylonScene from overriding it
+			(window as any).isTournamentHandler = true;
 			
 			// Verify it was set
 
@@ -82,6 +84,7 @@ export function TournamentGame(): JSX.Element {
 			return () => {
 				// Clean up the override when component unmounts
 				delete (window as any).setGameOverState;
+				delete (window as any).isTournamentHandler;
 			};
 		} catch (error) {
 			console.error('Failed to parse tournament match data:', error);

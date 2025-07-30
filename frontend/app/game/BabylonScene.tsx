@@ -59,6 +59,13 @@ export function BabylonScene({ player1, player2, updateStats = true }: BabylonSc
 	// Global game over trigger (tournament-aware)
 	useEffect(() => {
 		console.log('Setting/updating BabylonScene game over handler');
+		
+		// Don't override if there's already a tournament handler set
+		if ((window as any).setGameOverState && (window as any).isTournamentHandler) {
+			console.log('Tournament handler already set, skipping BabylonScene handler setup');
+			return;
+		}
+		
 		(window as any).setGameOverState = async (winner: string, scores?: { player1Score: number; player2Score: number }) => {
 			console.log('🎮 Game over called! Winner:', winner, 'Scores:', scores);
 			console.log('🎮 Before setting states - gameEnded:', gameEnded, 'winnerName:', winnerName);
@@ -115,7 +122,10 @@ export function BabylonScene({ player1, player2, updateStats = true }: BabylonSc
 				}
 			}
 		};
-	}, [player1, player2, updateStats, gameEnded, winnerName, setGameEnded, setWinnerName, setPlayers]);
+		
+		// Mark this as a regular game handler (not tournament)
+		(window as any).isTournamentHandler = false;
+	}, [player1, player2, updateStats]);
 
 	// Global countdown functions
 	useEffect(() => {
