@@ -55,10 +55,10 @@ export function score(
 
         // Update scores
         if (player1Score) {
-          updatedPlayers[0].score += 0.5;
+          updatedPlayers[0].score += 1;
           console.log('player 1 scored');
         } else if (player2Score) {
-          updatedPlayers[1].score += 0.5;
+          updatedPlayers[1].score += 1;
           console.log('player 2 scored');
         }
 

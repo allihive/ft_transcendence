@@ -53,6 +53,7 @@ export async function clientLoader(): Promise<{
   }
   try {
 	  const userStat = await getUserStats(user?.id);
+    console.log("USERSTAT CALLED");
 	  const userMatchHistory = await getUserMatches(user?.id);
 	  
 	  console.log(user.id);
