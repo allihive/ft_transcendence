@@ -11,10 +11,13 @@ import {
 	UpdateUserDtoSchema,
 	UpdateUserParamsDto,
 	UpdateUserParamsDtoSchema,
+	UserIdParamsDto,
+	UserIdParamsDtoSchema,
 	UsernameParamsDto,
 	UsernameParamsDtoSchema
 } from "./user.dto";
 import { UnauthorizedException } from "../../common/exceptions/UnauthorizedException";
+import { Type } from "@sinclair/typebox";
 
 export const userController: FastifyPluginAsync = async (app) => {
 	// Get paginated users and total number of users
@@ -36,6 +39,21 @@ export const userController: FastifyPluginAsync = async (app) => {
 
 			if (!user) {
 				throw new NotFoundException(`No user found with username '${username}'`);
+			}
+
+			return reply.code(200).send(user);
+		}
+	});
+
+	app.get("/:id/user", {
+		schema: { params: UserIdParamsDtoSchema },
+		handler: async (request, reply) => {
+			const em = request.entityManager;
+			const { id } = request.params as UserIdParamsDto;
+			const user = await app.userService.findUser(em, { id });
+
+			if (!user) {
+				throw new NotFoundException(`No user found with id '${id}'`);
 			}
 
 			return reply.code(200).send(user);

@@ -7,6 +7,7 @@ import { useAuth } from "~/stores/useAuth";
 import { useLoaderData } from "react-router";
 import { getUserMatches } from "~/api/stats/getUserMatches";
 import { useState } from "react";
+import { getUser } from "~/api/users/updateUser";
 
 export async function clientLoader(): Promise<{
   userStats: any[];
@@ -53,8 +54,22 @@ export async function clientLoader(): Promise<{
   }
   try {
 	  const userStat = await getUserStats(user?.id);
-    console.log("USERSTAT CALLED");
-	  const userMatchHistory = await getUserMatches(user?.id);
+	  let userMatchHistory = await getUserMatches(user?.id);
+    
+    // Hoang modify 
+    if (userMatchHistory) {
+      const usernames: string[] = [];
+      
+      for (let i = 0; i < userMatchHistory.length; i++) {
+        try {
+          const username = (await getUser(userMatchHistory[i].opponent!)).username;
+          usernames.push(username);          
+          userMatchHistory = userMatchHistory.map((userMatchHistoryElement, i) => ({ ...userMatchHistoryElement, opponent: usernames[i] }));
+        } catch (error) {
+          console.error("Couldn't get username by opponent ID : ", error);
+        }
+      }
+    }
 	  
 	  if (!userStat || !userMatchHistory) {
 		return {

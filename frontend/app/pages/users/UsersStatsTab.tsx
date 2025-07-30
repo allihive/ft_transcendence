@@ -4,6 +4,7 @@ import { MyChart } from "../../components/gameStats/UserStatsGraph";
 import type { UserStats } from "~/api/types";
 import { useAuth } from "~/stores/useAuth"
 import type { getUserMatchHistory } from "~/api/stats/types";
+import { getUser } from "~/api/users/updateUser";
 
 
 export interface PlayerGameResult {

@@ -11,3 +11,10 @@ export const updateUser = async (userUpdateData: UserUpdateData): Promise<User> 
 	return user!;
 }
 
+export const getUser = async (id: string): Promise<User> => {
+	const user = await fetchJson<User>(`${import.meta.env.VITE_API_BASE_URL}/api/users/${id}/user`, {
+		method: "GET",
+	});
+
+	return user!;
+}

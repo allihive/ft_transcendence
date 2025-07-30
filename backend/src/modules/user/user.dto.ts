@@ -6,6 +6,11 @@ export const UsernameParamsDtoSchema = Type.Object(
 	{ additionalProperties: false }
 );
 
+export const UserIdParamsDtoSchema = Type.Object(
+	{ id: Type.String({ format: "uuid" }) },
+	{ additionalProperties: false }
+);
+
 export const FindUserQueryDtoSchema = Type.Union(
 	[
 		Type.Object({ id: Type.String({ format: "uuid" }) }),
@@ -105,6 +110,7 @@ export const UserResponseTwoFactorAuthDtoSchema = Type.Object(
 );
 
 export type CreateUserDto = Static<typeof CreateUserDtoSchema>;
+export type UserIdParamsDto = Static<typeof UserIdParamsDtoSchema>;
 export type DeleteUserParamsDto = Static<typeof DeleteUserParamsDtoSchema>;
 export type FindPaginatedUsersQueryDto = Static<typeof FindPaginatedUsersQueryDtoSchema>;
 export type FindUserQueryDto = Static<typeof FindUserQueryDtoSchema>;
