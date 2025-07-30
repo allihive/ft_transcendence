@@ -38,9 +38,6 @@ export function NavBar(): JSX.Element {
 	return (
 		<>
 			<div className="flex flex-row items-center mt-8 space-x-4">
-				<button onClick={() => setOpen((prev) => !prev)}>
-					<GoSearch size={32} />
-				</button>
 			{user ?
 				<button className="hover:text-lightOrange" onClick={logoutHandler}>
 					<IoIosLogOut size={48} />

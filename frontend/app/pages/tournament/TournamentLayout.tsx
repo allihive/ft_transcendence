@@ -27,12 +27,12 @@ export function TournamentPage(): JSX.Element {
 
 	const handleCreateTournament = async () => {
 		if (!newTournamentName.trim()) {
-			toast.error(t('pleaseEnterTournamentName'));
+			toast.error(t('enterTournamentName'));
 			return;
 		}
 		
 		if (!user) {
-			toast.error(t('mustBeLoggedInToCreate'));
+			toast.error(t('tournamentError.logIn'));
 			return;
 		}
 
@@ -223,7 +223,7 @@ export function TournamentPage(): JSX.Element {
 								<li>• {t('maximum')} {maxParticipants} {t('participants')}</li>
 								<li>• {t('singleEliminationBracket')}</li>
 								<li>• {t('bestOf')} {bestOf} {t('matches')}</li>
-								<li>• {t('automaticMatchmaking')}</li>
+								<li>• {t('autoMatchmaking')}</li>
 							</ul>
 						</div>
 

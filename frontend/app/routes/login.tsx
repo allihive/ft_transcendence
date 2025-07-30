@@ -19,7 +19,7 @@ export default function Login() {
 
 	const successHandler: SuccessHandler = (user) => {
 		setUser(user);
-
+		toast.success(t("loginSuccess"));
 		if (user) {
 			navigate("/");
 		}

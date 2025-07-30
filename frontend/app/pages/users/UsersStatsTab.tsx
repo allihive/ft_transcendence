@@ -43,7 +43,7 @@ export function UsersStats({ userStats, userMatchHistory }: UsersStatsProps): JS
 				<MyChart matches={userMatchHistory} userStats={userStats} />
 			</div>
 			<div className="flex items-center justify-center w-full my-8">
-				<span className="px-4 text-black dark:text-background font-title">{t('results')}</span>
+				<span className="px-4 text-black dark:text-background font-title">{t('latestMatches')}</span>
 			</div>
 			<table className="table-auto mx-auto text-black dark:text-background">
 				<thead>
