@@ -41,6 +41,10 @@ export default function TwoFactorAuth(): JSX.Element {
 		}
 	};
 
+	if (user?.authMethod === "google") {
+		return <p>Your authentication method does not support 2FA</p>
+	}
+
 	return (
 		<div className="max-w-fit mx-auto">
 			<h1 className="text-2xl font-title font-bold mb-6">{t("2fa.setupTitle")}</h1>
