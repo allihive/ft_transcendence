@@ -36,7 +36,7 @@ export class UserStatsService {
 		const matchesPlayed = userStats.matchesPlayed + 1;
 		const matchesWon = won ? (userStats.matchesWon + 1) : userStats.matchesWon;
 		const matchesLost = won ? userStats.matchesLost : (userStats.matchesLost + 1);
-		const winRate = won ? Math.round((matchesWon / matchesPlayed) * 100 * 100) / 100 : userStats.winRate;
+		const winRate = Math.round((matchesWon / matchesPlayed) * 100 * 100) / 100;
 
 		return this.userStatsRepository.update(em, userStats, {
 			matchesPlayed,
