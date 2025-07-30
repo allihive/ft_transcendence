@@ -38,7 +38,6 @@ export type MyChartProps = {
 
 const CustomPieToolTip = ({ active, payload }: CustomTooltipProps) => {
 	const { t } = useTranslation();
-	console.log("CustomPieToolTip::payload=", payload);
 	//  console.log(payload[0].payload);
 
 	if (active && payload && payload.length) {

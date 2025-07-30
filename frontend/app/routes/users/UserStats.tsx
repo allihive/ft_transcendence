@@ -56,8 +56,6 @@ export async function clientLoader(): Promise<{
     console.log("USERSTAT CALLED");
 	  const userMatchHistory = await getUserMatches(user?.id);
 	  
-	  console.log(user.id);
-	  console.log(userStat?.winRate);
 	  if (!userStat || !userMatchHistory) {
 		return {
 		  userStats: [],
