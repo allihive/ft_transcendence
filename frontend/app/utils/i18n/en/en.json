@@ -12,7 +12,7 @@
 		"usernameRequirements": "Uppercase, lowercase, numbers, - , _ accepted",
 		"usernameMin": "Username must have 6 characters",
 		"passwordRequired": "Password is required",
-		"passwordRequirements": "One uppercase (A-Z), one lowercase (a-z), one special character(%$ or 0-9)",
+		"passwordRequirements": "One uppercase (A-Z), one lowercase (a-z), one special character (%$) and digit 0-9",
 		"passwordLen": "Password must have 6 characters",
 		"confirmPassword": "Please confirm your password",
 		"mismatchPassword": "The passwords do not match",
@@ -52,7 +52,7 @@
 	"tournaments": "Tournaments",
 	"joinTournament": "Join Tournament",
 	"tournamentError": {
-		"tournamentName": "Por favor ingresa el nombre del torneo",
+		"tournamentName": "Please put the name of the tournament",
 		"logIn":"Must be logged in to create tournament",
 		"selectTournament": "Please select tournament",
 		"noTournaments": "No tournaments available",

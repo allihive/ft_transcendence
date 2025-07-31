@@ -12,7 +12,7 @@
 		"usernameRequirements": "Se aceptan mayúsculas, minúsculas, números, -, _",
 		"usernameMin": "El nombre de usuario debe tener 6 caracteres",
 		"passwordRequired": "Contraseña es requerido",
-		"passwordRequirements": "Una mayúscula (A-Z), una minúscula (a-z), un carácter especial (%$ o 0-9)",
+		"passwordRequirements": "Una mayúscula (A-Z), una minúscula (a-z), un carácter especial (%$) y numero 0-9",
 		"passwordLen": "La contraseña debe tener 6 caracteres",
 		"confirmPassword": "Por favor confirmar su contraseña",
 		"mismatchPassword": "Las contraseñas no coinciden",
