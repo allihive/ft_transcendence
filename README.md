@@ -45,4 +45,6 @@ The backend, powered by [Fastify](https://fastify.dev/), built with TypeScript, 
 	- Live chat with message history and read receipts
 	- Room management with member invitations and moderation
 
-### Modular Monolith Architecture (MMA)
+> ## ⚠️ **ARCHIVED**
+> **This repository represents the final version of our group project.**  
+> Archived on **2025-08-01** &ndash; **no longer maintained**.
