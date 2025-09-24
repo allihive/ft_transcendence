@@ -45,6 +45,52 @@ The backend, powered by [Fastify](https://fastify.dev/), built with TypeScript, 
 	- Live chat with message history and read receipts
 	- Room management with member invitations and moderation
 
+## Frontend
+The frontend uses React Router, TailwindCSS, and Typescript
+Designed in [Figma](https://www.figma.com/design/XU7tI48GD7xVoCDh8RJfkX/ft_transcendence?node-id=1-6&t=MWOSUKktkiQTaJSS-1)
+
+![login](./assets/login_transcendence.gif)
+- Login
+	- Login flow requires player to sign in if the player wants data to be saved or to join tournament
+	- Google signin is an option 
+	- Modals used for multiple logins 
+	- Created forms using React Hook Form to validate in frontend before sending data to backend
+	- Zustand is used to save the user session and all the information
+
+![gamestats](./assets/gamestats.gif)
+- User Profile
+	- Displays stats, latest games, and winning/losing rate
+	- Ability to change user information
+	- Add 2 Factor Authentication when logging in next time
+
+- Navigation
+	- Uses sidebar and also a top navigation bar to keep it clean and minimal
+	- Protected routes for user profile page and chat page
+
+- Languages
+	- 3 languages to toggle between
+	- Uses Reacti18N and stored translations in the frontend
+
+- API
+	- Client.ts checks requests and catches errors depending on the backend
+	- Used for multiple API calls throughout the project
+
+![tournament](./assets/create_tournament.gif)
+- Game is created using BabylonJS to create a 3D game effect
+	- Tournament mode shows bracket and gives options for how many players are allowed to join
+	- Play button will play and not save any data
+	- 1 Player mode will not save any data
+	- 2 Player mode requires both players to login and will store the data
+
+![2Player](./assets/2player_transcendence.gif)
+
+## Run website
+![gameplay](./assets/gameplay.gif)
+- ```make``` wait for Docker to create containers for the front and back end
+- go to https://localhost:3000 and accept and proceed
+- go to https://localhost:5173 and also accept and proceed
+- create a profile or several (in order to play 2 player mode and tournament mode) 
+
 > ## ⚠️ **ARCHIVED**
 > **This repository represents the final version of our group project.**  
 > Archived on **2025-08-01** &ndash; **no longer maintained**.
